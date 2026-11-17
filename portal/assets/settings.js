@@ -246,7 +246,7 @@
     window.ATLAS_ASSISTANT.clearVendor(active);
     saved = window.ATLAS_ASSISTANT.view();
     activate(active, true);
-    result('此厂商配置已从这次页面内存清除。没有读取或迁移旧的后端密钥。课程和学习进度不受影响。', false);
+    result('此厂商配置已清除。它只从这次页面内存消失，没有读取或迁移旧的后端密钥。课程和学习进度不受影响。', false);
   });
   $('settings-rebind-cancel').addEventListener('click', () => {
     rebindConfirm = false;
