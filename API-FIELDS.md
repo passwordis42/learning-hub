@@ -1,6 +1,6 @@
 # 四家供应商的本机配置
 
-只覆盖已经存在的 AI 学伴和游戏助手。核磁没有模型后端，保持复制提问。设置页视觉还没到，这一轮只有接口，没有新的设置画面，也没有从旧 `.env` 导入。
+只覆盖已经存在的 AI 学伴和游戏助手。核磁没有模型后端，保持复制提问。设置页按已确认的 v6 增补实现，没有旧配置导入。
 
 Hub 只监听 `127.0.0.1`。下面的接口还要求 Host 是 `localhost`、`127.0.0.1` 或 `::1`，不发送 CORS 头，也不接受查询串。
 
@@ -8,10 +8,13 @@ Hub 只监听 `127.0.0.1`。下面的接口还要求 Host 是 `localhost`、`127
 | --- | --- | --- |
 | `/api/assistant-config` | GET | 公开视图。含 `apiKeyConfigured`，不含密钥或访问口令 |
 | `/api/assistant-config` | PUT | 请求体必须有 `save: true` 才写入。省略 `apiKey` 会保留原密钥 |
-| `/api/assistant-config/clear` | POST | `confirm` 必须是 `clear-assistant-configuration`。否则 400，并在 `effect` 说明尚未删除 |
+| `/api/assistant-config/clear` | POST | `confirm: "clear-assistant-configuration"` 清除全部。`confirm: "clear-vendor-configuration"` 加 `vendor` 只清除该厂商。确认不对时不删除，并说明影响 |
 | `/api/tutor` | GET、POST | 进程内 AI 学伴。协议、口令和上下文仍是原实现 |
 | `/api/status` | GET | 进程内游戏助手状态。`configured` 和展示用模型，没有密钥 |
 | `/api/assist` | POST | 进程内游戏助手。未配置时 503「这个 AI 服务还未在本地配置。」 |
+| `/api/assistant-config/test` | POST | `scope: "status"` 只看已保存配置，不调用模型。`scope: "model"` 还要 `confirm: "test-model-usage"`，才会真的请求模型 |
+
+这些路径也挂在 `HUB_BASE` 下面，例如 `/learning-hub/api/tutor`。助手设置页在门户页眉，返回时恢复课程、章节和滚动位置。密钥输入留空表示保留，响应只写「已在后端保存」，不回传密钥。
 
 配置文件默认 `server/secrets/assistant-config.json`（`0600`，已 gitignore），可用 `ASSISTANT_CONFIG_PATH` 更换。hub 不读 `sites/*/.env`，也不读进程中的密钥变量。
 

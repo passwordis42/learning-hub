@@ -42,7 +42,8 @@
   }
   function initial(data,params,reduced){
     const c=courseBy(data,params.get('course'))||data.courses[0];
-    const view=params.get('view')==='reader'?'reader':'overview';
+    const requested=params.get('view');
+    const view=requested==='reader'||requested==='settings'?requested:'overview';
     const explicit=params.get('module');
     const m=moduleBy(c,explicit)||(!params.has('course')?moduleBy(c,'ai-day1'):null)||(view==='reader'?c.modules[0]:null);
     const scale=[3,10,30].includes(Number(params.get('scale')))?Number(params.get('scale')):3;

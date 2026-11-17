@@ -5,7 +5,9 @@ import { assertResolvedUpstream, assertSafeUpstream } from './safe-upstream.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CLEAR_CONFIRMATION = 'clear-assistant-configuration';
+export const CLEAR_VENDOR_CONFIRMATION = 'clear-vendor-configuration';
 export const CLEAR_EFFECT = '已删除保存在本机的助手配置和密钥。AI 学伴与游戏助手在重新保存配置前都不能调用模型。核磁课程不受影响。此操作不会读取或迁移旧的 .env。';
+export const vendorIds = Object.freeze(['openai', 'anthropic', 'deepseek', 'qwen']);
 
 const vendors = {
   openai: {
@@ -14,7 +16,7 @@ const vendors = {
     paths: { ai: '/responses', game: '/chat/completions' },
   },
   anthropic: {
-    label: 'Claude',
+    label: 'Anthropic',
     defaultBase: 'https://api.anthropic.com/v1',
     paths: { ai: '/messages', game: '/messages' },
   },
@@ -147,7 +149,10 @@ export function publicConfig(config) {
       id,
       label: spec.label,
       model: config.vendors[id].model,
+      enteredModel: config.vendors[id].model,
       baseUrl: config.vendors[id].baseUrl || spec.defaultBase,
+      enteredBaseUrl: config.vendors[id].baseUrl,
+      workspaceId: config.vendors[id].workspaceId,
       region: id === 'qwen' ? config.vendors[id].region || 'beijing' : '',
       apiKeyConfigured: Boolean(config.vendors[id].apiKey),
       workspaceConfigured: Boolean(config.vendors[id].workspaceId),
@@ -155,12 +160,16 @@ export function publicConfig(config) {
         ai: {
           runtimeId: id === 'anthropic' ? 'claude' : id,
           model: resolvedModel(config, id, 'ai'),
+          enteredModel: config.vendors[id].protocols.ai.model,
+          enteredBaseUrl: config.vendors[id].protocols.ai.baseUrl,
           baseUrl: resolvedEndpoint(config, id, 'ai'),
           configured: vendorReady(config, id, 'ai'),
         },
         game: {
           runtimeId: id,
           model: resolvedModel(config, id, 'game'),
+          enteredModel: config.vendors[id].protocols.game.model,
+          enteredBaseUrl: config.vendors[id].protocols.game.baseUrl,
           baseUrl: id === 'qwen' ? '' : resolvedEndpoint(config, id, 'game'),
           configured: vendorReady(config, id, 'game'),
         },
@@ -257,9 +266,25 @@ export async function saveConfig(input) {
   return publicConfig(next);
 }
 
+export function vendorClearEffect(label) {
+  return `将清除${label}的密钥、地址、模型和覆盖项。使用该配置的 AI 学伴与游戏助手在重新保存前不能调用模型。课程与学习进度不受影响。此操作不会读取或迁移旧的 .env。`;
+}
+
 export async function clearConfig(input) {
-  if (input?.confirm !== CLEAR_CONFIRMATION) {
-    throw Object.assign(new Error(`清除尚未执行。确认时请传入 confirm: "${CLEAR_CONFIRMATION}"。`), { status: 400, effect: CLEAR_EFFECT });
+  if (input?.confirm === CLEAR_VENDOR_CONFIRMATION) {
+    const id = input.vendor;
+    if (!Object.hasOwn(vendors, id)) {
+      throw Object.assign(new Error('没有清除。请指定要清除的厂商。'), { status: 400, effect: '只清除所选厂商的密钥、地址、模型和覆盖项。课程与学习进度不受影响。' });
+    }
+    const current = await loadConfig();
+    current.vendors[id] = emptyVendor();
+    if (id === 'qwen') current.vendors[id].region = 'beijing';
+    current.revision += 1;
+    await writeConfig(current);
+    return { cleared: true, vendor: id, effect: vendorClearEffect(vendors[id].label), config: publicConfig(current) };
+  }
+  if (input?.confirm !== CLEAR_CONFIRMATION || input?.vendor) {
+    throw Object.assign(new Error(`清除尚未执行。清除全部配置需 confirm: "${CLEAR_CONFIRMATION}"。清除单一厂商需 confirm: "${CLEAR_VENDOR_CONFIRMATION}" 并指定 vendor。`), { status: 400, effect: CLEAR_EFFECT });
   }
   await rm(configFilePath(), { force: true });
   return { cleared: true, effect: CLEAR_EFFECT };

@@ -57,3 +57,35 @@ footer.shell{width:100%;max-width:none;padding:14px max(36px,calc((100% - 1440px
  .reader.is-compact-height #course-groups{flex:none;min-height:0;overflow:visible;scrollbar-gutter:auto}
  .reader.is-compact-height:focus-visible{outline:3px solid #fff9e9;outline-offset:2px;box-shadow:0 0 0 7px #123e4c}
 }
+/* Settings uses the shipped IslandSans face. The design reference pointed at the subset desk-sans.woff2, which is not a full lesson font. */
+body[data-view=settings]{background:#d7e4dc}
+.settings-page{max-width:1120px;margin:28px auto 40px;padding-inline:20px}
+.settings-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:24px}
+.settings-vendors{display:flex;flex-direction:column;gap:8px}
+.settings-card{background:#f7f4ea;color:#183f4b;padding:30px;border-radius:8px;min-width:0}
+.settings-card h1{font-size:30px;line-height:1.35}
+.settings-card h2{font-size:22px;margin-top:8px}
+.settings-card h3{font-size:18px;margin:0}
+.settings-card p,.settings-card small{overflow-wrap:anywhere}
+.settings-back,.settings-vendors button,.settings-actions button,.settings-card input,.settings-card select{font:inherit;min-height:44px;border:1px solid #779c93;border-radius:4px;background:#f7f4ea;color:#183f4b}
+.settings-back{padding:8px 12px;margin-bottom:14px}
+.settings-vendors button{text-align:left;padding:9px 12px}
+.settings-vendors button[aria-pressed=true],.settings-primary{background:#2d6a69;color:#fff;border-color:#2d6a69}
+.settings-card label{display:block;margin:18px 0 7px;font-weight:700}
+.settings-card input,.settings-card select{width:100%;max-width:100%;min-width:0;background:#fffdf7;padding:9px 12px}
+.settings-card small{display:block;font-size:14px;margin:7px 0;color:#355f58}
+.settings-card details{border-top:1px solid #c8d4c3;margin-top:24px;padding-top:18px}
+.settings-card summary{cursor:pointer;min-height:44px}
+.settings-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.settings-actions button{padding:9px 12px}
+.settings-actions button:disabled{opacity:.6;cursor:default}
+.settings-danger{color:#8c342d;border-color:#8c342d;background:#f7f4ea}
+.settings-result{background:#dce7d8;border-left:4px solid #2d6a69;padding:16px;margin:22px 0}
+.settings-result.error{background:#f3e1d4;border-color:#8c342d}
+.settings-result p{margin:0 0 8px}
+.settings-override{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.settings-status{font-size:14px}
+#settings-clear-dialog,#settings-unsaved-dialog{max-width:480px;width:calc(100% - 32px);border:1px solid #183f4b;border-radius:8px;padding:28px;color:#183f4b;background:#f7f4ea}
+#settings-clear-dialog::backdrop,#settings-unsaved-dialog::backdrop{background:#183f4b99}
+@media(max-width:680px){.settings-page{margin:18px auto}.settings-layout{grid-template-columns:minmax(0,1fr);gap:16px}.settings-vendors{display:grid;grid-template-columns:1fr 1fr}.settings-card{padding:20px}.settings-card h1{font-size:26px}.settings-override{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:390px){.settings-vendors{grid-template-columns:minmax(0,1fr)}}

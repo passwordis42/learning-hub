@@ -69,8 +69,9 @@
   function syncScene(){
     document.body.dataset.view=state.view;
     document.body.dataset.course=state.course;
-    $('explore-page').hidden=state.view==='reader';
+    $('explore-page').hidden=state.view!=='overview';
     $('learning-page').hidden=state.view!=='reader';
+    if($('settings-page')) $('settings-page').hidden=state.view!=='settings';
     document.body.dataset.focus=state.focus;
     document.body.dataset.scale=String(state.scale);
     document.body.classList.toggle('is-paused',state.paused||reduced.matches);
@@ -290,7 +291,42 @@
   });
   $('course-groups').addEventListener('click',event=>{const b=event.target.closest('[data-module]');if(b)selectModule(b.dataset.moduleCourse,b.dataset.module,b);});
   $('view-overview').addEventListener('click',()=>overview());
-  $('nav-overview').addEventListener('click',()=>{if(state.view==='reader'){returnIslands();return;}overview();reveal($('world-stage'));});
+  let settingsReturn=null;
+  let restoreScroll=null;
+  function openSettings(){
+    if(state.view==='settings')return;
+    settingsReturn={view:state.view,course:state.course,module:state.module,scroll:window.scrollY};
+    state.view='settings';
+    syncScene();writeUrl();
+    window.scrollTo({top:0,behavior:'instant'});
+    $('settings-back')?.focus({preventScroll:true});
+  }
+  function closeSettings(){
+    const back=settingsReturn||{view:state.module?'reader':'overview',course:state.course,module:state.module,scroll:0};
+    state.view=back.view==='settings'?'overview':back.view;
+    if(back.course)state.course=back.course;
+    if(back.module)state.module=back.module;
+    syncScene();renderCourse();
+    if(state.view==='reader')renderLesson();
+    writeUrl();
+    const top=back.scroll||0;
+    restoreScroll=top;
+    const apply=()=>{if(restoreScroll===top)window.scrollTo({top,behavior:'instant'});};
+    apply();
+    requestAnimationFrame(apply);
+    const pin=()=>apply();
+    addEventListener('scroll',pin);
+    setTimeout(()=>{removeEventListener('scroll',pin);if(restoreScroll===top)restoreScroll=null;},700);
+    settingsReturn=null;
+    announce('已返回刚才的课程位置。');
+  }
+  function guarded(next){
+    if(state.view==='settings'&&window.ATLAS_SETTINGS?.confirmLeave)window.ATLAS_SETTINGS.confirmLeave(next);
+    else next();
+  }
+  $('open-settings').addEventListener('click',()=>openSettings());
+  $('settings-back')?.addEventListener('click',()=>guarded(closeSettings));
+  $('nav-overview').addEventListener('click',()=>{guarded(()=>{if(state.view==='reader'){returnIslands();return;}if(state.view==='settings')closeSettings();overview();reveal($('world-stage'));});});
   $('view-selected').addEventListener('click',()=>{state.focus=state.course;syncScene();writeUrl();announce('已聚焦'+M.districts[state.course]+'。');});
   $('motion-toggle').addEventListener('click',()=>{
     if(reduced.matches){announce('已遵循系统减弱动态偏好，保持静态。');return;}
@@ -325,6 +361,8 @@
   });
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape')return;
+    if($('settings-clear-dialog')?.open||$('settings-unsaved-dialog')?.open)return;
+    if(state.view==='settings'){event.preventDefault();guarded(closeSettings);return;}
     if(state.directory){event.preventDefault();if(state.query)clearSearch();else setDirectory(false);}
     else if(state.view==='reader'){event.preventDefault();returnIslands();}
     else if(state.focus!=='overview'){event.preventDefault();overview(true);}
@@ -340,7 +378,10 @@
   }
   addEventListener('message',event=>{
     if(event.origin!==location.origin||!event.data)return;
-    if(event.data.type==='hub-embed-height'&&$('lesson-frame')) $('lesson-frame').style.height=Math.max(240,Number(event.data.height)||0)+'px';
+    if(event.data.type==='hub-embed-height'&&$('lesson-frame')){
+      $('lesson-frame').style.height=Math.max(240,Number(event.data.height)||0)+'px';
+      if(restoreScroll!=null) window.scrollTo({top:restoreScroll,behavior:'instant'});
+    }
     if(event.data.type==='hub-embed-escape'&&state.view==='reader') returnIslands();
   });
   window.ATLAS_QA=Object.freeze({

@@ -1,7 +1,8 @@
-import { lookup } from 'node:dns/promises';
+import http from 'node:http';
+import https from 'node:https';
+import { lookup as dnsLookup } from 'node:dns/promises';
 
 const loopbackHosts = new Set(['localhost', '127.0.0.1', '::1']);
-const resolutions = new Map();
 
 function ipv4(host) {
   const parts = host.split('.');
@@ -67,24 +68,111 @@ function blockedAddress(host) {
   return lower.startsWith('fe80:') || lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('ff');
 }
 
-export async function assertResolvedUpstream(raw) {
-  const normalized = assertSafeUpstream(raw);
-  const host = new URL(normalized).hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  if (ipv4(host) || host.includes(':') || loopbackHosts.has(host)) return normalized;
-  const now = Date.now();
-  const cached = resolutions.get(host);
-  if (cached && cached.expires > now) {
-    if (cached.blocked) throw new Error('上游地址解析到了内网。');
-    return normalized;
-  }
+function resolutionBlocked(address, explicitLoopback) {
+  const lower = String(address || '').toLowerCase();
+  const mapped = ipv4(lower);
+  if (explicitLoopback && (lower === '::1' || mapped?.[0] === 127)) return false;
+  if (lower === '::1' || mapped?.[0] === 127) return true;
+  return blockedAddress(lower);
+}
+
+export async function resolvePinned(raw, lookupFn = dnsLookup) {
+  const href = assertSafeUpstream(raw);
+  const url = new URL(href);
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  const explicitLoopback = loopbackHosts.has(host);
   let records;
-  try {
-    records = await lookup(host, { all: true, verbatim: true });
-  } catch {
-    throw new Error('上游地址无法确认不是内网。');
+  if (host === 'localhost') {
+    records = [{ address: '127.0.0.1', family: 4 }];
+  } else if (explicitLoopback || ipv4(host) || host.includes(':')) {
+    records = [{ address: host, family: host.includes(':') && !ipv4(host) ? 6 : 4 }];
+  } else {
+    try {
+      records = await lookupFn(host, { all: true, verbatim: true });
+    } catch {
+      throw new Error('上游地址无法确认不是内网。');
+    }
   }
-  const blocked = records.length === 0 || records.some((record) => blockedAddress(record.address));
-  resolutions.set(host, { blocked, expires: now + 30_000 });
-  if (blocked) throw new Error('上游地址解析到了内网。');
-  return normalized;
+  if (!records?.length || records.some((record) => resolutionBlocked(record.address, explicitLoopback))) {
+    throw new Error('上游地址解析到了内网。');
+  }
+  const chosen = records[0];
+  return {
+    href,
+    host,
+    address: chosen.address,
+    family: chosen.family,
+    protocol: url.protocol,
+    port: Number(url.port || (url.protocol === 'https:' ? 443 : 80)),
+    path: `${url.pathname}${url.search}`,
+  };
+}
+
+export async function assertResolvedUpstream(raw) {
+  return (await resolvePinned(raw)).href;
+}
+
+function headerEntries(headers) {
+  const output = {};
+  if (!headers) return output;
+  if (typeof headers.forEach === 'function' && !Array.isArray(headers)) {
+    headers.forEach((value, key) => { output[key] = value; });
+    return output;
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    if (value != null) output[key] = value;
+  }
+  return output;
+}
+
+export async function pinnedFetch(raw, init = {}, dependencies = {}) {
+  const plan = await resolvePinned(raw, dependencies.lookup || dnsLookup);
+  if (dependencies.transport) return dependencies.transport(plan, init);
+  const headers = headerEntries(init.headers);
+  delete headers.host;
+  headers.host = plan.host;
+  const body = init.body == null ? undefined : Buffer.from(init.body);
+  const transport = plan.protocol === 'https:' ? https : http;
+  const response = await new Promise((resolve, reject) => {
+    const request = transport.request({
+      host: plan.address,
+      family: plan.family,
+      servername: plan.protocol === 'https:' ? plan.host : undefined,
+      port: plan.port,
+      path: plan.path,
+      method: init.method || 'GET',
+      headers,
+      timeout: 20_000,
+    }, (incoming) => {
+      if (incoming.statusCode >= 300 && incoming.statusCode < 400) {
+        incoming.resume();
+        reject(Object.assign(new Error('上游重定向已被拒绝。'), { code: 'redirect-blocked' }));
+        return;
+      }
+      const chunks = [];
+      let size = 0;
+      incoming.on('data', (chunk) => {
+        size += chunk.length;
+        if (size > 1024 * 1024) {
+          request.destroy();
+          reject(new Error('上游响应过长。'));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      incoming.on('end', () => {
+        resolve(new Response(Buffer.concat(chunks), {
+          status: incoming.statusCode,
+          headers: { 'content-type': incoming.headers['content-type'] || 'application/octet-stream' },
+        }));
+      });
+    });
+    const abort = () => request.destroy(Object.assign(new Error('请求已取消。'), { name: 'AbortError' }));
+    init.signal?.addEventListener('abort', abort, { once: true });
+    request.on('timeout', () => request.destroy(Object.assign(new Error('上游响应超时。'), { name: 'TimeoutError' })));
+    request.on('error', reject);
+    if (body) request.write(body);
+    request.end();
+  });
+  return response;
 }

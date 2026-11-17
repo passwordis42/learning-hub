@@ -191,6 +191,32 @@ test('static prefix, redirects, 404, traversal, and local assistant config', asy
     assert.equal(unclear.status, 400);
     assert.match(unclearBody.effect, /不会读取或迁移旧的 .env/);
     assert.equal((await (await fetch(`${rootUrl}/api/assistant-config`)).json()).vendors.find((item) => item.id === 'openai').apiKeyConfigured, true);
+    const nestedStatus = await fetch(`${nestedUrl}/learning-hub/api/status`);
+    assert.equal(nestedStatus.status, 200);
+    const statusTest = await fetch(`${nestedUrl}/learning-hub/api/assistant-config/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope: 'status', vendor: 'openai' }),
+    });
+    const statusTestBody = await statusTest.json();
+    assert.equal(statusTest.status, 200);
+    assert.equal(statusTestBody.ai.message, '服务可达，模型调用尚未验证。');
+    assert.equal(statusTestBody.game.code, 'unconfigured');
+    assert.equal(JSON.stringify(statusTestBody).includes(secret), false);
+    const blockedModel = await fetch(`${rootUrl}/api/assistant-config/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope: 'model', vendor: 'openai' }),
+    });
+    assert.equal(blockedModel.status, 400);
+    assert.match(await blockedModel.text(), /模型调用尚未执行/);
+    const vendorClear = await fetch(`${rootUrl}/api/assistant-config/clear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'clear-vendor-configuration', vendor: 'deepseek' }),
+    });
+    assert.equal(vendorClear.status, 200);
+    assert.equal((await (await fetch(`${rootUrl}/api/assistant-config`)).json()).vendors.find((item) => item.id === 'openai').apiKeyConfigured, true);
     const cleared = await fetch(`${rootUrl}/api/assistant-config/clear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createServer } from 'node:http'
 import { pathToFileURL } from 'node:url'
-import { assertSafeUpstream } from '../../../server/safe-upstream.mjs'
+import { assertSafeUpstream, pinnedFetch } from '../../../server/safe-upstream.mjs'
 
 function configuredBase(env, name) {
   const raw = value(env, name)
@@ -222,7 +222,7 @@ async function askProvider(fetcher, id, provider, input, signal) {
   throw new TutorError(502, '模型没有返回可显示的答复，请换一种问法或换一个模型。')
 }
 
-export function createTutorServer({ env = process.env, fetcher = fetch } = {}) {
+export function createTutorServer({ env = process.env, fetcher = pinnedFetch } = {}) {
   const providers = providersFor(env)
   const accessToken = value(env, 'TUTOR_ACCESS_TOKEN')
   const host = value(env, 'TUTOR_HOST') || '127.0.0.1'

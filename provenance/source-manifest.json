@@ -37,6 +37,11 @@
       "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or DASHSCOPE_BASE_URL. Unset variables keep the original endpoints."
     },
     {
+      "path": "sites/ai-learning-atlas/src/Tutor.jsx",
+      "originalBlob": "f27895c446c26a2000c91c6c41deab70b8931b50",
+      "reason": "In hub embed mode, use the same-origin /api/tutor path, including a HUB_BASE prefix. Standalone pages still ask for a service address."
+    },
+    {
       "path": "sites/game-design-atlas/server/coach.mjs",
       "originalBlob": "e55e5308faeeb5645e51ccfa9411e023fdc44f81",
       "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or QWEN_BASE_URL. Unset variables keep the original endpoints and model defaults."

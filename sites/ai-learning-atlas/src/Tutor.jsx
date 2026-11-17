@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import './tutor.css'
 
 const providers = [
@@ -14,10 +14,18 @@ const starters = [
 ]
 const defaultQuestion = '请从一个我能独立核查的小练习开始，每次只给一个提示。'
 
+function hubTutorPath() {
+  if (new URLSearchParams(location.search).get('embed') !== '1') return ''
+  const marker = '/ai/'
+  const index = location.pathname.lastIndexOf(marker)
+  const prefix = index >= 0 ? location.pathname.slice(0, index) : ''
+  return `${prefix}/api/tutor`
+}
+
 function getEndpoint(value) {
   const entered = value.trim()
   if (!entered) return import.meta.env.DEV ? '/api/tutor' : ''
-  if (entered === '/api/tutor') return entered
+  if (/^\/(?!\/)(?:[A-Za-z0-9._~-]+\/)*api\/tutor$/.test(entered)) return entered
   try {
     const url = new URL(entered)
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
@@ -47,7 +55,8 @@ export default function Tutor({ context = '' }) {
   const promptRef = useRef(null)
   const [provider, setProvider] = useState('openai')
   const [question, setQuestion] = useState('')
-  const [gateway, setGateway] = useState('')
+  const hubPath = hubTutorPath()
+  const [gateway, setGateway] = useState(hubPath)
   const [accessToken, setAccessToken] = useState('')
   const [availability, setAvailability] = useState(null)
   const [busy, setBusy] = useState('')
@@ -57,6 +66,12 @@ export default function Tutor({ context = '' }) {
   const [answer, setAnswer] = useState(null)
   const lessonContext = context.trim().slice(0, 6000)
   const prompt = composePrompt(lessonContext, question)
+
+  useEffect(() => {
+    if (hubPath) requestTutor('check')
+    // The hub address is fixed for this page. Re-checking follows an explicit button press.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function requestTutor(mode) {
     const endpoint = getEndpoint(gateway)
@@ -155,21 +170,27 @@ export default function Tutor({ context = '' }) {
             }}>{starter}</button>
           ))}
         </div>
-        <details className="atlas-tutor__settings">
-          <summary>设置模型连接</summary>
-          <div className="atlas-tutor__connection">
-            <label className="atlas-tutor__label" htmlFor={`${id}-gateway`}>导师服务地址</label>
-            <input id={`${id}-gateway`} type="text" inputMode="url" autoComplete="off" spellCheck={false}
-              value={gateway} placeholder="http://127.0.0.1:8787/api/tutor" disabled={Boolean(busy)}
-              onChange={(event) => { setGateway(event.target.value); resetConnection() }} />
-            <label className="atlas-tutor__label" htmlFor={`${id}-token`}>导师服务访问口令（服务启用时填写）</label>
-            <input id={`${id}-token`} type="password" autoComplete="off" value={accessToken} disabled={Boolean(busy)}
-              onChange={(event) => { setAccessToken(event.target.value); resetConnection() }} />
-            <p>仅填写你信任的导师服务。各家模型的 API 密钥在服务端配置。</p>
-            <button className="atlas-tutor__muted" type="button" disabled={Boolean(busy)}
-              onClick={() => requestTutor('check')}>{busy === 'check' ? '正在检查…' : '检查连接'}</button>
-          </div>
-        </details>
+        {hubPath ? (
+          <p>已使用本机统一入口 {hubPath}。密钥在「助手设置」里保存，此页不接收密钥，也不需要再填写服务地址。</p>
+        ) : (
+          <details className="atlas-tutor__settings">
+            <summary>设置模型连接</summary>
+            <div className="atlas-tutor__connection">
+              <label className="atlas-tutor__label" htmlFor={`${id}-gateway`}>导师服务地址</label>
+              <input id={`${id}-gateway`} type="text" inputMode="url" autoComplete="off" spellCheck={false}
+                value={gateway} placeholder="http://127.0.0.1:8787/api/tutor" disabled={Boolean(busy)}
+                onChange={(event) => { setGateway(event.target.value); resetConnection() }} />
+              <label className="atlas-tutor__label" htmlFor={`${id}-token`}>导师服务访问口令（服务启用时填写）</label>
+              <input id={`${id}-token`} type="password" autoComplete="off" value={accessToken} disabled={Boolean(busy)}
+                onChange={(event) => { setAccessToken(event.target.value); resetConnection() }} />
+              <p>仅填写你信任的导师服务。各家模型的 API 密钥在服务端配置。</p>
+              <button className="atlas-tutor__muted" type="button" disabled={Boolean(busy)}
+                onClick={() => requestTutor('check')}>{busy === 'check' ? '正在检查…' : '检查连接'}</button>
+            </div>
+          </details>
+        )}
+        {hubPath && <button className="atlas-tutor__muted" type="button" disabled={Boolean(busy)}
+          onClick={() => requestTutor('check')}>{busy === 'check' ? '正在检查…' : '检查连接'}</button>}
         <p className="atlas-tutor__notice">在线提问会把本课资料、已保存的判断记录和当前问题发给所选模型。</p>
         <div className="atlas-tutor__actions">
           <label className="atlas-tutor__provider" htmlFor={`${id}-provider`}>

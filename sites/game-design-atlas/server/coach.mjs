@@ -1,4 +1,4 @@
-import { assertSafeUpstream } from '../../../server/safe-upstream.mjs';
+import { assertSafeUpstream, pinnedFetch } from '../../../server/safe-upstream.mjs';
 
 export const modes = ['coach', 'review', 'implementation'];
 
@@ -288,7 +288,7 @@ function buildResult(mode, status, questions = [], checks = [], specification = 
   return { mode, status, questions, checks, specification };
 }
 
-export async function assist(input, { env = process.env, fetcher = fetch } = {}) {
+export async function assist(input, { env = process.env, fetcher = pinnedFetch } = {}) {
   const submission = validateSubmission(input);
   const mode = submission.mode;
   if (mode === 'implementation') {

@@ -178,6 +178,151 @@ async function exercise(browser, origin, base, viewport, label) {
   await context.close();
 }
 
+async function frameBody(page) {
+  return page.frameLocator('#lesson-frame').locator('body');
+}
+
+async function readerMetrics(page) {
+  return page.evaluate(() => {
+    const frame = document.querySelector('#lesson-frame');
+    const doc = frame?.contentDocument?.documentElement;
+    const sidebar = frame?.contentDocument?.querySelector('.sidebar, .site-header, .topbar');
+    return {
+      sidebar: sidebar ? getComputedStyle(sidebar).display : 'none',
+      frameHeight: frame ? frame.getBoundingClientRect().height : 0,
+      docHeight: doc ? doc.scrollHeight : 0,
+      nested: doc ? doc.scrollHeight - doc.clientHeight : 0,
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+      tocs: document.querySelectorAll('#lesson-nav').length,
+    };
+  });
+}
+
+async function openReader(page, origin, base, course, moduleId, text) {
+  await page.goto(new URL(`${base}?view=reader&course=${course}&module=${moduleId}`, origin).href, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction((needle) => {
+    const frame = document.querySelector('#lesson-frame');
+    return frame && !frame.hidden && frame.contentDocument?.body?.innerText.includes(needle);
+  }, text, { timeout: 20000 });
+}
+
+async function features(browser, origin, base, viewport, label) {
+  const context = await browser.newContext({ viewport });
+  const page = await context.newPage();
+  const tutorCalls = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/tutor')) tutorCalls.push(request.url());
+  });
+  try {
+    if (label !== 'narrow') {
+      await openReader(page, origin, base, 'nmr', 'nmr-1-1', '仪器里有什么');
+      const lesson = await frameBody(page);
+      await lesson.getByRole('button', { name: '切换为阅读全文' }).click();
+      await lesson.locator('input[type="radio"]').first().click();
+      await lesson.getByText(/理解正确|再想一步/).waitFor();
+      await lesson.getByRole('button', { name: '我理解了，标记本版完成' }).click();
+      await page.waitForFunction(() => {
+        const saved = JSON.parse(localStorage.getItem('nmr-from-zero.progress.v2') || '{}');
+        return Array.isArray(saved.completed) && saved.completed.includes('1-1');
+      });
+      const metrics = await readerMetrics(page);
+      if (metrics.sidebar !== 'none') throw new Error(`course chrome visible: ${metrics.sidebar}`);
+      if (metrics.tocs !== 1) throw new Error(`expected one outer TOC, saw ${metrics.tocs}`);
+      if (metrics.frameHeight + 16 < metrics.docHeight) throw new Error(`iframe cropped content ${metrics.frameHeight} < ${metrics.docHeight}`);
+      if (metrics.nested > 24) throw new Error(`nested scroll ${metrics.nested}`);
+      if (metrics.overflow > 1) throw new Error(`horizontal overflow ${metrics.overflow}`);
+      if (label === 'desktop') await shot(page, 'reader_quiz_desktop.png');
+      if (label === 'phone') await shot(page, 'reader_quiz_phone.png');
+      await page.evaluate(() => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        document.body.style.minHeight = '4000px';
+        window.scrollTo({ top: 640, behavior: 'instant' });
+      });
+      await page.waitForFunction(() => window.scrollY === 640);
+      await page.evaluate(() => document.getElementById('open-settings').click());
+      await page.waitForFunction(() => document.body.dataset.view === 'settings' && document.querySelector('#settings-vendor')?.textContent);
+      await page.evaluate(() => document.getElementById('settings-back').click());
+      await page.waitForFunction(() => location.search.includes('module=nmr-1-1') && document.body.dataset.view === 'reader' && Math.abs(window.scrollY - 640) <= 2);
+
+      await openReader(page, origin, base, 'nmr', 'nmr-lab-waves', '波');
+      const opposed = (await frameBody(page)).getByRole('button', { name: '反相 · 180°' });
+      await opposed.click();
+      await page.waitForFunction(() => document.querySelector('#lesson-frame')?.contentDocument?.querySelector('button[aria-pressed="true"]')?.textContent?.includes('180'));
+      if (label === 'desktop') await shot(page, 'reader_lab_desktop.png');
+      if (label === 'phone') await shot(page, 'reader_lab_phone.png');
+
+      await openReader(page, origin, base, 'game', 'game-w01', '周');
+      const game = await frameBody(page);
+      await game.getByRole('link', { name: '交互实验' }).click();
+      await game.locator('#lab-prediction').fill('我预测主通道能回到基地，因为耗电更稳定。');
+      await game.getByRole('button', { name: '锁定预测，开始实验' }).click();
+      await game.getByRole('button', { name: '走主通道' }).click();
+      await game.getByText('需要 5 格电').waitFor();
+      if (label === 'desktop') await shot(page, 'reader_game_lab_desktop.png');
+
+      await page.evaluate(() => {
+        localStorage.setItem('learning-atlas:day-one-reflection', JSON.stringify({ rows: 2, reason: '因为示例里有重复。', evidence: '第 1 行和第 2 行。' }));
+        localStorage.setItem('learning-atlas:day-one-scope', 'true');
+      });
+      await openReader(page, origin, base, 'ai', 'ai-tutor', 'AI 学伴');
+      const tutor = await frameBody(page);
+      await tutor.getByText('已使用本机统一入口').waitFor();
+      if (await tutor.locator('input[placeholder*="8787"]').count()) throw new Error('embed tutor still asks for a service address');
+      if ((await tutor.innerText()).includes('模型调用成功')) throw new Error('tutor claimed a model call');
+      const expected = `${origin}${base}api/tutor`.replace(/([^:]\/)\/+/g, '$1');
+      if (!tutorCalls.some((url) => url.startsWith(expected))) throw new Error(`tutor did not use ${expected}: ${tutorCalls.join(' ')}`);
+      if (label === 'desktop') await shot(page, 'reader_tutor_desktop.png');
+    }
+
+    await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
+    await page.locator('#open-settings').click();
+    await page.locator('#settings-model').fill('hub-test-model');
+    await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
+    await page.locator('#settings-address').fill(`https://example.com/${'a'.repeat(48)}`);
+    await page.locator('[data-settings-vendor="anthropic"]').click();
+    await page.locator('#settings-unsaved-dialog').waitFor({ state: 'visible' });
+    const focused = await page.evaluate(() => document.activeElement?.id);
+    if (focused !== 'settings-unsaved-keep') throw new Error(`unsaved focus ${focused}`);
+    await page.locator('#settings-unsaved-keep').click();
+    if (await page.locator('#settings-model').inputValue() !== 'hub-test-model') throw new Error('vendor switch dropped the draft');
+    await page.locator('#settings-save').click();
+    await page.getByText('配置已保存').waitFor();
+    if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key was read back into the form');
+    if ((await page.locator('body').innerText()).includes('sk-browser-test-not-a-real-key')) throw new Error('key leaked into the page');
+    await page.locator('#settings-test').click();
+    await page.locator('#settings-result').getByText('AI 学伴：服务可达，模型调用尚未验证。').waitFor();
+    await page.locator('#settings-result').getByText('游戏助手：服务可达，模型调用尚未验证。').waitFor();
+    if ((await page.locator('#settings-result').innerText()).includes('模型调用成功')) throw new Error('status test claimed a model call');
+    await page.route(/\/api\/assistant-config$/, (route) => route.abort());
+    await page.locator('#settings-model').fill('another-model');
+    await page.locator('#settings-save').click();
+    await page.getByText('后端不可达').waitFor();
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    await page.locator('#settings-clear').click();
+    await page.locator('#settings-clear-dialog').waitFor({ state: 'visible' });
+    const cancelFocused = await page.evaluate(() => document.activeElement?.id);
+    if (cancelFocused !== 'settings-clear-cancel') throw new Error(`clear focus ${cancelFocused}`);
+    await page.locator('#settings-clear-cancel').click();
+    await page.locator('#settings-clear').click();
+    await page.locator('#settings-clear-confirm').click();
+    await page.getByText('此厂商配置已清除').waitFor();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if (overflow > 1) throw new Error(`settings overflow ${overflow}`);
+    if (label === 'desktop') await shot(page, 'settings_desktop.png');
+    if (label === 'phone') await shot(page, 'settings_phone.png');
+    if (label === 'narrow') await shot(page, 'settings_narrow.png');
+    await page.locator('#settings-back').click();
+    await page.waitForFunction(() => location.search.includes('module=nmr-1-1'));
+  } finally {
+    await fetch(`${origin}${base}api/assistant-config/clear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'clear-assistant-configuration' }),
+    }).catch(() => {});
+    await context.close();
+  }
+}
+
 assertNode();
 await mkdir(artifacts, { recursive: true });
 await mkdir(path.join(root, 'test-results'), { recursive: true });
@@ -274,6 +419,9 @@ try {
         await context.close();
       });
     }
+    await record(base === '/' ? 'desktop course features' : 'nested course features', () => features(browser, origin, base, { width: 1280, height: 800 }, base === '/' ? 'desktop' : 'nested'));
+    await record(base === '/' ? 'phone course features' : 'nested phone features', () => features(browser, origin, base, { width: 390, height: 844 }, base === '/' ? 'phone' : 'nested-phone'));
+    if (base === '/') await record('narrow settings', () => features(browser, origin, base, { width: 360, height: 780 }, 'narrow'));
     server.child.kill('SIGTERM');
   }
 } finally {

@@ -87,7 +87,16 @@ npm run serve
 
 `install:sites` 只在有 `package-lock.json` 的 AI 与 NMR 目录执行 `npm ci`。游戏课上游没有依赖和 lockfile，测试直接用 Node 内置测试运行器。三套依赖不合并、不升级。
 
-`npm test` 包含快照哈希、存储键审计、入口路由测试，以及三个目录原来的测试。`test:integration` 会按两个前缀分别构建，再用本机 Chrome 检查桌面和手机视口。
+`npm test` 包含快照哈希、存储键审计、入口路由、助手配置和上游地址测试，以及三个目录原来的测试。`test:integration` 会按 `/` 和 `/learning-hub/` 分别构建，再用本机 Chrome 检查桌面、390 宽和 360 宽。它会操作核磁测验与实验、游戏周次实验、统一入口里的 AI 学伴，以及助手设置的保存、状态测试、未保存确认和按厂商清除。状态测试不调用外部模型。
+
+本地预览：
+
+```sh
+npm run build
+npm run serve
+```
+
+浏览器打开 `http://127.0.0.1:8080/`。带前缀时先 `HUB_BASE=/learning-hub/ npm run build`，再 `HUB_BASE=/learning-hub/ PORT=8080 npm run serve`，打开 `http://127.0.0.1:8080/learning-hub/`。
 
 ## 首页与阅读
 

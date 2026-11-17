@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createTutorServer } from '../sites/ai-learning-atlas/server/index.mjs';
 import { CoachError, assist, getProviderStatus } from '../sites/game-design-atlas/server/coach.mjs';
 import { clearConfig, loadConfig, publicConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
+import { probeVendor, statusReport } from './assistant-probe.mjs';
 
 export const GAME_UPSTREAM = 'http://127.0.0.1:4173';
 export const TUTOR_UPSTREAM = 'http://127.0.0.1:8787';
@@ -149,6 +150,7 @@ async function tutorResponse(runtime, request, response) {
   }
   const headers = {};
   if (request.headers.authorization) headers.authorization = request.headers.authorization;
+  else if (config.accessToken) headers.authorization = `Bearer ${config.accessToken}`;
   if (request.method === 'POST') headers['content-type'] = 'application/json';
   const body = request.method === 'POST' ? await readBody(request) : undefined;
   const upstream = await fetch(`http://127.0.0.1:${runtime.port}/api/tutor`, {
@@ -185,6 +187,17 @@ async function handleAssistants(runtime, request, response, pathname) {
       runtime.revision = -1;
       return json(response, 200, cleared);
     }
+    if (pathname === '/api/assistant-config/test' && request.method === 'POST') {
+      const body = await readJson(request);
+      if (body?.scope === 'status') return json(response, 200, statusReport(await loadConfig(), body.vendor));
+      if (body?.scope === 'model') {
+        if (body.confirm !== 'test-model-usage') {
+          return json(response, 400, { error: '模型调用尚未执行。该测试会产生模型用量，需要明确确认。', effect: '未向模型服务发送请求。' });
+        }
+        return json(response, 200, await probeVendor(await loadConfig(), body.vendor));
+      }
+      return json(response, 400, { error: '请选择状态测试或模型调用测试。' });
+    }
     if (pathname === '/api/status' && request.method === 'GET') {
       request.resume();
       return json(response, 200, getProviderStatus(toGameEnv(await loadConfig())));
@@ -196,15 +209,17 @@ async function handleAssistants(runtime, request, response, pathname) {
     if (pathname === '/api/tutor' && (request.method === 'GET' || request.method === 'POST')) {
       return tutorResponse(runtime, request, response);
     }
-    if (pathname === '/api/assistant-config' || pathname === '/api/assistant-config/clear' || pathname === '/api/status' || pathname === '/api/assist' || pathname === '/api/tutor') {
+    if (pathname === '/api/assistant-config' || pathname === '/api/assistant-config/clear' || pathname === '/api/assistant-config/test' || pathname === '/api/status' || pathname === '/api/assist' || pathname === '/api/tutor') {
       return json(response, 405, { error: '此接口不支持该请求方式。' });
     }
     return json(response, 404, { error: '接口不存在。' });
   } catch (error) {
     request.resume();
     if (error instanceof CoachError) return json(response, error.status, { error: error.message, ...(error.field ? { field: error.field } : {}) });
+    const raw = String(error.message || '');
+    const leaked = /https?:\/\/\S+|Bearer\s+\S+|sk-[A-Za-z0-9_-]+/i.test(raw);
     return json(response, error.status || 500, {
-      error: error.message || '助手配置未能处理这次请求。',
+      error: leaked ? '请求未能完成。请检查已保存的配置。' : (raw.slice(0, 180) || '助手配置未能处理这次请求。'),
       ...(error.effect ? { effect: error.effect } : {}),
       ...(error.field ? { field: error.field } : {}),
     });
@@ -291,9 +306,12 @@ export function createHubServer({ distDir, hubBase }) {
       return text(response, 400, '无效地址。');
     }
 
-    if (pathname.startsWith('/api/')) {
+    const assistantPath = pathname.startsWith('/api/')
+      ? pathname
+      : (base !== '/' && pathname.startsWith(`${base}api/`) ? `/${pathname.slice(base.length)}` : '');
+    if (assistantPath) {
       if (url.search) return json(response, 404, { error: '接口不存在。' });
-      return handleAssistants(runtime, request, response, pathname);
+      return handleAssistants(runtime, request, response, assistantPath);
     }
 
     const bareBase = base === '/' ? '' : base.slice(0, -1);
