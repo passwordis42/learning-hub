@@ -9,6 +9,12 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = '/opt/cursor/artifacts';
 const shots = [];
 const checks = [];
+let hubSessionFile = '';
+
+async function sessionHeaders() {
+  const token = hubSessionFile ? (await readFile(hubSessionFile, 'utf8')).trim() : '';
+  return token ? { 'X-Hub-Session': token } : {};
+}
 
 function assertNode() {
   const major = Number(process.versions.node.split('.')[0]);
@@ -316,7 +322,7 @@ async function features(browser, origin, base, viewport, label) {
   } finally {
     await fetch(`${origin}${base}api/assistant-config/clear`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await sessionHeaders()) },
       body: JSON.stringify({ confirm: 'clear-assistant-configuration' }),
     }).catch(() => {});
     await context.close();
@@ -357,12 +363,14 @@ try {
     for (const url of urls) {
       if (!url.includes(`${base}nmr-from-zero/`)) throw new Error(`font ${url} is outside ${base}`);
     }
+    const configPath = path.join(tmpdir(), `learning-hub-assistant-${process.pid}-${port}.json`);
+    hubSessionFile = path.join(path.dirname(configPath), 'hub-session');
     const server = start(process.execPath, ['server/hub.mjs'], {
       cwd: root,
       env: cleanEnv({
         HUB_BASE: base,
         PORT: String(port),
-        ASSISTANT_CONFIG_PATH: path.join(tmpdir(), `learning-hub-assistant-${process.pid}-${port}.json`),
+        ASSISTANT_CONFIG_PATH: configPath,
       }),
     });
     processes.push(server);
@@ -385,13 +393,13 @@ try {
     }
     if (base === '/') {
       await record('game API stays honest without keys', async () => {
-        const status = await fetch(`${origin}/api/status`);
+        const status = await fetch(`${origin}/api/status`, { headers: await sessionHeaders() });
         const body = await status.json();
         if (status.status !== 200 || body.providers.some((item) => item.configured || item.key)) throw new Error(JSON.stringify(body));
         const started = Date.now();
         const assist = await fetch(`${origin}/api/assist`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(await sessionHeaders()) },
           body: JSON.stringify({
             provider: 'openai', mode: 'coach', week: 1, title: '入口检查',
             draft: '玩家选择一条路线。', rationale: '用来确认本地助手未配置。', evidence: '这次不连接外部模型。',
@@ -404,7 +412,7 @@ try {
         const directTutor = await fetch('http://127.0.0.1:8787/api/tutor');
         const tutorBody = await directTutor.json();
         if (!tutorBody.providers?.every((item) => item.configured === false)) throw new Error(JSON.stringify(tutorBody));
-        const proxiedTutor = await fetch(`${origin}/api/tutor`);
+        const proxiedTutor = await fetch(`${origin}/api/tutor`, { headers: await sessionHeaders() });
         const proxiedBody = await proxiedTutor.json();
         if (proxiedTutor.status !== 200 || proxiedBody.providers?.some((item) => item.configured || item.key)) {
           throw new Error(`tutor seam ${proxiedTutor.status} ${JSON.stringify(proxiedBody)}`);

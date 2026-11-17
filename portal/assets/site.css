@@ -88,7 +88,8 @@ body[data-view=settings]{background:#d7e4dc}
 .settings-result p{margin:0 0 8px}
 .settings-override{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .settings-status{font-size:14px}
-#settings-clear-dialog,#settings-unsaved-dialog{max-width:480px;width:calc(100% - 32px);border:1px solid #183f4b;border-radius:8px;padding:28px;color:#183f4b;background:#f7f4ea}
-#settings-clear-dialog::backdrop,#settings-unsaved-dialog::backdrop{background:#183f4b99}
+#settings-clear-dialog,#settings-unsaved-dialog,#settings-rebind-dialog,#settings-admin-dialog{max-width:480px;width:calc(100% - 32px);border:1px solid #183f4b;border-radius:8px;padding:28px;color:#183f4b;background:#f7f4ea}
+#settings-clear-dialog::backdrop,#settings-unsaved-dialog::backdrop,#settings-rebind-dialog::backdrop,#settings-admin-dialog::backdrop{background:#183f4b99}
+#settings-admin-dialog input{width:100%;margin:12px 0}
 @media(max-width:680px){.settings-page{margin:18px auto}.settings-layout{grid-template-columns:minmax(0,1fr);gap:16px}.settings-vendors{display:grid;grid-template-columns:1fr 1fr}.settings-card{padding:20px}.settings-card h1{font-size:26px}.settings-override{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:390px){.settings-vendors{grid-template-columns:minmax(0,1fr)}}

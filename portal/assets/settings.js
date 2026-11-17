@@ -8,6 +8,17 @@
   let dirty = false;
   let busy = false;
   let pending = null;
+  let rebindConfirm = false;
+
+  function requestInit(method, body) {
+    return {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      cache: 'no-store',
+      credentials: 'same-origin',
+    };
+  }
 
   function api(path) {
     const name = location.pathname.replace(/index\.html$/, '');
@@ -114,6 +125,7 @@
     };
     const key = $('settings-key').value;
     if (key) body.vendors[active].apiKey = key;
+    if (rebindConfirm) body.vendors[active].confirmKeyBinding = 'clear-key-for-new-upstream';
     if (active === 'qwen') body.vendors[active].region = $('settings-region').value;
     if (active === 'anthropic' || active === 'qwen') body.vendors[active].workspaceId = $('settings-workspace').value.trim();
     const token = $('settings-token').value;
@@ -135,13 +147,20 @@
     }
     setBusy(true);
     try {
-      const response = await fetch(api('assistant-config'), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload()),
-        cache: 'no-store',
-      });
+      const response = await fetch(api('assistant-config'), requestInit('PUT', payload()));
       const data = await response.json().catch(() => ({}));
+      if (response.status === 401 && data.code === 'admin-auth') {
+        setBusy(false);
+        $('settings-admin-dialog').showModal();
+        $('settings-admin-token').focus();
+        return;
+      }
+      if (response.status === 409 && data.code === 'upstream-key-rebinding') {
+        setBusy(false);
+        $('settings-rebind-dialog').showModal();
+        $('settings-rebind-cancel').focus();
+        return;
+      }
       if (!response.ok) {
         result(data.error || '配置没有保存。', true);
         setBusy(false);
@@ -167,14 +186,9 @@
     if (busy || dirty) return;
     setBusy(true);
     try {
-      const response = await fetch(api('assistant-config/test'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scope === 'model'
-          ? { scope, vendor: active, confirm: 'test-model-usage' }
-          : { scope: 'status', vendor: active }),
-        cache: 'no-store',
-      });
+      const response = await fetch(api('assistant-config/test'), requestInit('POST', scope === 'model'
+        ? { scope, vendor: active, confirm: 'test-model-usage' }
+        : { scope: 'status', vendor: active }));
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         result(data.error || '测试没有完成。', true);
@@ -217,6 +231,8 @@
   }
   trapDialog($('settings-clear-dialog'));
   trapDialog($('settings-unsaved-dialog'));
+  trapDialog($('settings-rebind-dialog'));
+  trapDialog($('settings-admin-dialog'));
 
   function confirmLeave(next) {
     if (!dirty || busy) { next(); return; }
@@ -251,12 +267,7 @@
     if (busy) return;
     setBusy(true);
     try {
-      const response = await fetch(api('assistant-config/clear'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: 'clear-vendor-configuration', vendor: active }),
-        cache: 'no-store',
-      });
+      const response = await fetch(api('assistant-config/clear'), requestInit('POST', { confirm: 'clear-vendor-configuration', vendor: active }));
       const data = await response.json().catch(() => ({}));
       $('settings-clear-dialog').close();
       if (!response.ok) {
@@ -264,7 +275,7 @@
         setBusy(false);
         return;
       }
-      const fresh = await fetch(api('assistant-config'), { cache: 'no-store' });
+      const fresh = await fetch(api('assistant-config'), { cache: 'no-store', credentials: 'same-origin' });
       saved = await fresh.json();
       activate(active, true);
       result('此厂商配置已清除。课程与学习进度不受影响。', false);
@@ -272,6 +283,32 @@
       $('settings-clear-dialog').close();
       unreachable(true);
       setBusy(false);
+    }
+  });
+  $('settings-rebind-cancel').addEventListener('click', () => {
+    rebindConfirm = false;
+    $('settings-rebind-dialog').close();
+    $('settings-key').focus();
+  });
+  $('settings-rebind-clear').addEventListener('click', () => {
+    rebindConfirm = true;
+    $('settings-rebind-dialog').close();
+    save().finally(() => { rebindConfirm = false; });
+  });
+  $('settings-admin-cancel').addEventListener('click', () => $('settings-admin-dialog').close());
+  $('settings-admin-submit').addEventListener('click', async () => {
+    const token = $('settings-admin-token').value;
+    $('settings-admin-token').value = '';
+    try {
+      const response = await fetch(api('assistant-session'), requestInit('POST', { token }));
+      if (!response.ok) {
+        result('管理口令没有被接受。模型密钥仍然只在保存配置时提交。', true);
+        return;
+      }
+      $('settings-admin-dialog').close();
+      save();
+    } catch {
+      unreachable(true);
     }
   });
   $('settings-unsaved-keep').addEventListener('click', () => { pending = null; $('settings-unsaved-dialog').close(); });
@@ -285,7 +322,18 @@
   });
   window.ATLAS_SETTINGS = { confirmLeave };
 
-  fetch(api('assistant-config'), { cache: 'no-store' }).then(async (response) => {
+  fetch(api('assistant-config'), { cache: 'no-store', credentials: 'same-origin' }).then(async (response) => {
+    if (response.status === 401) {
+      const data = await response.json().catch(() => ({}));
+      paint();
+      if (data.code === 'admin-auth') {
+        $('settings-admin-dialog').showModal();
+        $('settings-admin-token').focus();
+        return;
+      }
+      result(data.error || '请从入口页面重新打开。', true);
+      return;
+    }
     if (!response.ok) throw new Error('status');
     saved = await response.json();
     paint();

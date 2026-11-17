@@ -354,7 +354,7 @@
   });
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape')return;
-    if($('settings-clear-dialog')?.open||$('settings-unsaved-dialog')?.open)return;
+    if($('settings-clear-dialog')?.open||$('settings-unsaved-dialog')?.open||$('settings-rebind-dialog')?.open||$('settings-admin-dialog')?.open)return;
     if(state.view==='settings'){event.preventDefault();guarded(closeSettings);return;}
     if(state.directory){event.preventDefault();if(state.query)clearSearch();else setDirectory(false);}
     else if(state.view==='reader'){event.preventDefault();returnIslands();}

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -312,9 +312,10 @@ try {
       await page.locator('#settings-result').scrollIntoViewIfNeeded();
       await shot(page, 'settings_error_network_mock');
       await page.unrouteAll({ behavior: 'ignoreErrors' });
+      const sessionToken = (await readFile(path.join(path.dirname(clean.ASSISTANT_CONFIG_PATH), 'hub-session'), 'utf8')).trim();
       await fetch('http://127.0.0.1:8094/api/assistant-config/clear', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Hub-Session': sessionToken },
         body: JSON.stringify({ confirm: 'clear-assistant-configuration' }),
       });
       await page.close();

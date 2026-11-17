@@ -6,6 +6,7 @@ import { assertResolvedUpstream, assertSafeUpstream } from './safe-upstream.mjs'
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CLEAR_CONFIRMATION = 'clear-assistant-configuration';
 export const CLEAR_VENDOR_CONFIRMATION = 'clear-vendor-configuration';
+export const KEY_REBIND_CONFIRMATION = 'clear-key-for-new-upstream';
 export const CLEAR_EFFECT = '已删除保存在本机的助手配置和密钥。AI 学伴与游戏助手在重新保存配置前都不能调用模型。核磁课程不受影响。此操作不会读取或迁移旧的 .env。';
 export const vendorIds = Object.freeze(['openai', 'anthropic', 'deepseek', 'qwen']);
 
@@ -47,6 +48,7 @@ const emptyVendor = () => ({
   workspaceId: '',
   region: '',
   protocols: { ai: { model: '', baseUrl: '' }, game: { model: '', baseUrl: '' } },
+  keyBinding: { origins: [] },
 });
 
 export function emptyConfig() {
@@ -77,14 +79,55 @@ function optionalUrl(value) {
   return raw ? assertSafeUpstream(raw) : '';
 }
 
+function endpointOf(id, vendor, protocol) {
+  const spec = vendors[id];
+  const override = vendor.protocols[protocol].baseUrl;
+  if (override) return assertSafeUpstream(override);
+  if (id === 'qwen') return '';
+  return assertSafeUpstream(joinUrl(vendor.baseUrl || spec.defaultBase, spec.paths[protocol]));
+}
+
+function aiQwenUrl(vendor) {
+  const custom = vendor.protocols.ai.baseUrl || vendor.baseUrl;
+  if (custom) return custom;
+  const region = qwenRegions[vendor.region || 'beijing'];
+  if (vendor.workspaceId) return `https://${vendor.workspaceId}.${region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`;
+  const legacy = { 'cn-beijing': 'dashscope.aliyuncs.com', 'ap-southeast-1': 'dashscope-intl.aliyuncs.com' }[region];
+  return legacy ? `https://${legacy}/compatible-mode/v1/chat/completions` : '';
+}
+
+function gameQwenUrl(vendor) {
+  const custom = vendor.protocols.game.baseUrl || vendor.baseUrl;
+  if (custom) return custom;
+  const regions = {
+    beijing: ['cn-beijing', 'dashscope.aliyuncs.com'],
+    singapore: ['ap-southeast-1', 'dashscope-intl.aliyuncs.com'],
+    hongkong: ['cn-hongkong', 'cn-hongkong.dashscope.aliyuncs.com'],
+    virginia: ['us-east-1'],
+    tokyo: ['ap-northeast-1'],
+  };
+  const [regionDomain, legacyDomain] = regions[vendor.region || 'beijing'];
+  const domain = vendor.workspaceId ? `${vendor.workspaceId}.${regionDomain}.maas.aliyuncs.com` : legacyDomain;
+  return domain ? `https://${domain}/compatible-mode/v1/chat/completions` : '';
+}
+
+function originsFor(id, vendor) {
+  const urls = id === 'qwen' ? [aiQwenUrl(vendor), gameQwenUrl(vendor)] : [endpointOf(id, vendor, 'ai'), endpointOf(id, vendor, 'game')];
+  return [...new Set(urls.filter(Boolean).map((url) => new URL(url).origin))].sort();
+}
+
+function sameOrigins(left, right) {
+  return left.length === right.length && left.every((item, index) => item === right[index]);
+}
+
 function normalizeVendor(id, input = {}, previous = emptyVendor()) {
   const spec = vendors[id];
   if (!spec) throw new Error('未知的模型服务。');
-  const apiKey = text(input.apiKey, 400) || previous.apiKey;
-  if (apiKey && /[\r\n]/.test(apiKey)) throw new Error('密钥格式无效。');
+  const suppliedKey = text(input.apiKey, 400);
+  if (suppliedKey && /[\r\n]/.test(suppliedKey)) throw new Error('密钥格式无效。');
   const region = text(input.region, 20) || previous.region || (id === 'qwen' ? 'beijing' : '');
   if (id === 'qwen' && !Object.hasOwn(qwenRegions, region)) throw new Error('通义地区无效。');
-  const workspaceId = text(input.workspaceId, 80) || previous.workspaceId;
+  const workspaceId = input.workspaceId === undefined ? previous.workspaceId : text(input.workspaceId, 80);
   if (workspaceId && !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(workspaceId)) throw new Error('工作空间标识无效。');
   const protocols = {};
   for (const protocol of ['ai', 'game']) {
@@ -95,13 +138,28 @@ function normalizeVendor(id, input = {}, previous = emptyVendor()) {
       baseUrl: incoming.baseUrl === undefined ? prior.baseUrl : optionalUrl(incoming.baseUrl),
     };
   }
-  return {
-    apiKey,
+  const draft = {
     model: input.model === undefined ? previous.model : modelName(input.model),
     baseUrl: input.baseUrl === undefined ? previous.baseUrl : optionalUrl(input.baseUrl),
     workspaceId,
     region,
     protocols,
+  };
+  const nextOrigins = originsFor(id, draft);
+  const previousOrigins = [...(previous.keyBinding?.origins || [])].sort();
+  const originsChanged = Boolean(previous.apiKey) && !sameOrigins(previousOrigins, nextOrigins);
+  if (originsChanged && !suppliedKey && input.confirmKeyBinding !== KEY_REBIND_CONFIRMATION) {
+    throw Object.assign(new Error('更换上游地址后，已保存的密钥不会继续使用。请重新输入密钥，或确认清除该厂商密钥。'), {
+      status: 409,
+      code: 'upstream-key-rebinding',
+      field: 'apiKey',
+    });
+  }
+  const apiKey = suppliedKey || (originsChanged ? '' : previous.apiKey);
+  return {
+    ...draft,
+    apiKey,
+    keyBinding: { origins: apiKey ? nextOrigins : [] },
   };
 }
 
@@ -136,14 +194,25 @@ export function resolvedModel(config, vendorId, protocol) {
   return config.vendors[vendorId].protocols[protocol].model || config.vendors[vendorId].model;
 }
 
+function callUrl(config, vendorId, protocol) {
+  const vendor = config.vendors[vendorId];
+  return vendorId === 'qwen' ? (protocol === 'ai' ? aiQwenUrl(vendor) : gameQwenUrl(vendor)) : resolvedEndpoint(config, vendorId, protocol);
+}
+
+function keyBound(config, vendorId, protocol) {
+  const url = callUrl(config, vendorId, protocol);
+  if (!url) return false;
+  return (config.vendors[vendorId].keyBinding?.origins || []).includes(new URL(url).origin);
+}
+
 function vendorReady(config, vendorId, protocol) {
   const vendor = config.vendors[vendorId];
-  return Boolean(vendor.apiKey && resolvedModel(config, vendorId, protocol));
+  return Boolean(vendor.apiKey && resolvedModel(config, vendorId, protocol) && keyBound(config, vendorId, protocol));
 }
 
 export function publicConfig(config) {
   return {
-    save: 'PUT /api/assistant-config，且请求体必须包含 save: true。密钥只写入本机，响应和状态接口都不返回密钥。',
+    save: 'PUT /api/assistant-config，且请求体必须包含 save: true。密钥只写入本机，响应和状态接口都不返回密钥。更换上游地址时，空密钥不会沿用旧密钥。',
     clear: `POST /api/assistant-config/clear，请求体必须包含 confirm: "${CLEAR_CONFIRMATION}"。${CLEAR_EFFECT}`,
     vendors: Object.entries(vendors).map(([id, spec]) => ({
       id,
@@ -236,11 +305,46 @@ async function confirmUpstreams(config) {
   }
 }
 
+function restoreVendor(id, stored = {}) {
+  const vendor = emptyVendor();
+  const apiKey = text(stored.apiKey, 400);
+  if (apiKey && /[\r\n]/.test(apiKey)) throw new Error('密钥格式无效。');
+  vendor.apiKey = apiKey;
+  vendor.model = stored.model ? modelName(stored.model) : '';
+  vendor.baseUrl = stored.baseUrl ? optionalUrl(stored.baseUrl) : '';
+  vendor.region = text(stored.region, 20) || (id === 'qwen' ? 'beijing' : '');
+  if (id === 'qwen' && !Object.hasOwn(qwenRegions, vendor.region)) throw new Error('通义地区无效。');
+  vendor.workspaceId = text(stored.workspaceId, 80);
+  if (vendor.workspaceId && !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(vendor.workspaceId)) throw new Error('工作空间标识无效。');
+  for (const protocol of ['ai', 'game']) {
+    const item = stored.protocols?.[protocol] || {};
+    vendor.protocols[protocol] = {
+      model: item.model ? modelName(item.model) : '',
+      baseUrl: item.baseUrl ? optionalUrl(item.baseUrl) : '',
+    };
+  }
+  const storedOrigins = Array.isArray(stored.keyBinding?.origins)
+    ? stored.keyBinding.origins.filter((item) => typeof item === 'string' && item.length < 300)
+    : [];
+  const untouched = !vendor.baseUrl && !vendor.protocols.ai.baseUrl && !vendor.protocols.game.baseUrl && !vendor.workspaceId && (id !== 'qwen' || vendor.region === 'beijing');
+  vendor.keyBinding = { origins: storedOrigins.length === 0 && vendor.apiKey && untouched ? originsFor(id, vendor) : storedOrigins };
+  return vendor;
+}
+
+export function restoreStoredConfig(parsed) {
+  const config = emptyConfig();
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return config;
+  config.revision = Number.isInteger(parsed.revision) ? parsed.revision : 1;
+  const token = text(parsed.accessToken, 200);
+  config.accessToken = token.length >= 32 ? token : '';
+  for (const id of Object.keys(vendors)) config.vendors[id] = restoreVendor(id, parsed.vendors?.[id] || {});
+  return config;
+}
+
 export async function loadConfig() {
   try {
     const parsed = JSON.parse(await readFile(configFilePath(), 'utf8'));
-    const config = normalizeConfig(parsed, emptyConfig());
-    config.revision = Number.isInteger(parsed.revision) ? parsed.revision : 1;
+    const config = restoreStoredConfig(parsed);
     await confirmUpstreams(config);
     return config;
   } catch (error) {

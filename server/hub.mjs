@@ -7,6 +7,7 @@ import { createTutorServer } from '../sites/ai-learning-atlas/server/index.mjs';
 import { CoachError, assist, getProviderStatus } from '../sites/game-design-atlas/server/coach.mjs';
 import { clearConfig, loadConfig, publicConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
 import { probeVendor, statusReport } from './assistant-probe.mjs';
+import { bootstrapOk, browserNavigation, createGuard, listenAddress, originOk, remoteOptionsFromEnv, requestBoundaryOk, sessionCookie, sessionOk } from './hub-guard.mjs';
 
 export const GAME_UPSTREAM = 'http://127.0.0.1:4173';
 export const TUTOR_UPSTREAM = 'http://127.0.0.1:8787';
@@ -111,11 +112,6 @@ async function readBody(request) {
   return Buffer.concat(chunks);
 }
 
-function loopbackRequest(request) {
-  const host = String(request.headers.host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
-  return host === '127.0.0.1' || host === 'localhost' || host === '::1';
-}
-
 async function readJson(request) {
   const type = request.headers['content-type'] || '';
   if (!/^application\/json(?:\s*;.*)?$/i.test(type)) {
@@ -172,8 +168,20 @@ async function tutorResponse(runtime, request, response) {
 }
 
 async function handleAssistants(runtime, request, response, pathname) {
-  if (!loopbackRequest(request)) return json(response, 403, { error: '助手配置只接受本机地址。' });
+  if (!requestBoundaryOk(runtime.guard, request)) return json(response, 403, { error: '助手入口拒绝了这个来源。' });
+  if (!originOk(runtime.guard, request)) return json(response, 403, { error: '助手入口拒绝了跨站请求。' });
   try {
+    if (pathname === '/api/assistant-session' && request.method === 'POST') {
+      const body = await readJson(request);
+      if (!bootstrapOk(runtime.guard, body?.token)) return json(response, 401, { error: '管理会话没有建立。', code: runtime.guard.exposure === 'remote' ? 'admin-auth' : 'session' });
+      return json(response, 200, { ok: true }, { 'Set-Cookie': sessionCookie(runtime.guard) });
+    }
+    if (!sessionOk(runtime.guard, request)) {
+      return json(response, 401, {
+        error: runtime.guard.exposure === 'remote' ? '请先确认这台服务器的管理口令。这不是模型密钥。' : '请从本机入口页面重新打开。管理会话不会写进页面源码。',
+        code: runtime.guard.exposure === 'remote' ? 'admin-auth' : 'session',
+      });
+    }
     if (pathname === '/api/assistant-config' && request.method === 'GET') {
       return json(response, 200, publicConfig(await loadConfig()));
     }
@@ -209,7 +217,7 @@ async function handleAssistants(runtime, request, response, pathname) {
     if (pathname === '/api/tutor' && (request.method === 'GET' || request.method === 'POST')) {
       return tutorResponse(runtime, request, response);
     }
-    if (pathname === '/api/assistant-config' || pathname === '/api/assistant-config/clear' || pathname === '/api/assistant-config/test' || pathname === '/api/status' || pathname === '/api/assist' || pathname === '/api/tutor') {
+    if (pathname === '/api/assistant-session' || pathname === '/api/assistant-config' || pathname === '/api/assistant-config/clear' || pathname === '/api/assistant-config/test' || pathname === '/api/status' || pathname === '/api/assist' || pathname === '/api/tutor') {
       return json(response, 405, { error: '此接口不支持该请求方式。' });
     }
     return json(response, 404, { error: '接口不存在。' });
@@ -222,6 +230,7 @@ async function handleAssistants(runtime, request, response, pathname) {
       error: leaked ? '请求未能完成。请检查已保存的配置。' : (raw.slice(0, 180) || '助手配置未能处理这次请求。'),
       ...(error.effect ? { effect: error.effect } : {}),
       ...(error.field ? { field: error.field } : {}),
+      ...(error.code ? { code: error.code } : {}),
     });
   }
   return false;
@@ -234,7 +243,7 @@ function safeSegments(pathname) {
   return parts.filter(Boolean);
 }
 
-async function serveStatic(response, distDir, site, fileParts, method) {
+async function serveStatic(response, distDir, site, fileParts, method, request, guard) {
   if (method !== 'GET' && method !== 'HEAD') {
     return text(response, 405, '该路径只支持读取。', { Allow: 'GET, HEAD' });
   }
@@ -259,18 +268,25 @@ async function serveStatic(response, distDir, site, fileParts, method) {
   const name = path.basename(fileReal);
   const type = name === '.nojekyll' ? 'text/plain; charset=utf-8' : contentTypes.get(path.extname(name).toLowerCase());
   if (!type) return text(response, 404, '页面不存在。');
-  response.writeHead(200, {
+  const headers = {
     'Content-Type': type,
     'Content-Length': info.size,
     'Cache-Control': 'no-cache',
     'X-Content-Type-Options': 'nosniff',
-  });
+  };
+  if (guard?.exposure === 'loopback' && type.startsWith('text/html') && browserNavigation(request) && requestBoundaryOk(guard, request)) {
+    headers['Set-Cookie'] = sessionCookie(guard);
+  }
+  response.writeHead(200, headers);
   if (method === 'HEAD') return response.end();
   createReadStream(fileReal).pipe(response);
 }
 
-export function createHubServer({ distDir, hubBase }) {
+export function createHubServer({ distDir, hubBase, exposure, adminToken, publicOrigin, allowedHosts, trustProxy } = {}) {
   const base = normalizeHubBase(hubBase);
+  const guard = createGuard(exposure === 'remote'
+    ? { exposure, adminToken, publicOrigin, allowedHosts, trustProxy }
+    : { exposure: 'loopback' });
   let recorded = '';
   try {
     recorded = readFileSync(path.join(distDir, '.hub-base'), 'utf8').trim();
@@ -281,7 +297,7 @@ export function createHubServer({ distDir, hubBase }) {
     throw new Error(`This dist was built for ${recorded} and cannot be served at ${base}. Rebuild with the same HUB_BASE.`);
   }
 
-  const runtime = { tutor: null, port: 0, revision: -1 };
+  const runtime = { tutor: null, port: 0, revision: -1, guard };
   const httpServer = createServer({ requestTimeout: 80_000, headersTimeout: 10_000 }, async (request, response) => {
     if (!request.url || !request.url.startsWith('/') || request.url.startsWith('//')) {
       return text(response, 400, '无效地址。');
@@ -320,18 +336,19 @@ export function createHubServer({ distDir, hubBase }) {
 
     const remainder = base === '/' ? pathname.slice(1) : pathname.slice(base.length);
     if (remainder === '') {
-      return serveStatic(response, distDir, '.', ['index.html'], request.method);
+      return serveStatic(response, distDir, '.', ['index.html'], request.method, request, guard);
     }
     const segments = safeSegments(`/${remainder}`);
     if (!segments) return text(response, 400, '无效地址。');
     const site = segments[0];
-    if (!SITES.includes(site)) return serveStatic(response, distDir, '.', segments, request.method);
+    if (!SITES.includes(site)) return serveStatic(response, distDir, '.', segments, request.method, request, guard);
     if (segments.length === 1 && !remainder.endsWith('/')) return redirect(response, `${base}${site}/`);
     const fileParts = segments.slice(1);
     if (!fileParts.length) fileParts.push('index.html');
-    return serveStatic(response, distDir, site, fileParts, request.method);
+    return serveStatic(response, distDir, site, fileParts, request.method, request, guard);
   });
   httpServer.on('close', () => runtime.tutor?.close());
+  httpServer.hubSession = guard.token;
   return httpServer;
 }
 
@@ -346,14 +363,15 @@ function assertNode() {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   assertNode();
   const hubBase = normalizeHubBase(process.env.HUB_BASE ?? '/');
+  const remote = remoteOptionsFromEnv(process.env);
   const port = Number(process.env.PORT || 8080);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     process.stderr.write('PORT 必须为 1–65535 之间的整数。\n');
     process.exit(1);
   }
   const distDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
-  const server = createHubServer({ distDir, hubBase });
-  server.listen(port, '127.0.0.1', () => {
+  const server = createHubServer({ distDir, hubBase, ...remote });
+  server.listen(port, listenAddress(process.env), () => {
     const display = hubBase === '/' ? '/' : hubBase;
     process.stdout.write(`统一学习入口 http://127.0.0.1:${port}${display}\n`);
   });

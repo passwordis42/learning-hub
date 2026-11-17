@@ -3,7 +3,8 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { clearConfig, loadConfig, publicConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
+import { clearConfig, loadConfig, publicConfig, restoreStoredConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
+import { probeVendor } from './assistant-probe.mjs';
 import { assertResolvedUpstream, assertSafeUpstream } from './safe-upstream.mjs';
 
 const secret = 'sk-test-value-that-must-never-leak';
@@ -56,10 +57,37 @@ test('saved keys stay on disk and out of AI until that protocol has its own mode
     const ai = toAiEnv(await loadConfig());
     assert.equal(ai.OPENAI_API_KEY, secret);
     assert.equal(ai.OPENAI_MODEL, 'shared-model');
-    await saveConfig({ save: true, vendors: { openai: { baseUrl: 'https://example.com/v1' } } });
-    const routed = await loadConfig();
-    assert.equal(toAiEnv(routed).OPENAI_BASE_URL, 'https://example.com/v1/responses');
-    assert.equal(toGameEnv(routed).OPENAI_BASE_URL, 'https://example.com/v1/chat/completions');
+    await assert.rejects(() => saveConfig({ save: true, vendors: { openai: { baseUrl: 'https://example.com/v1' } } }), (error) => error.status === 409 && error.code === 'upstream-key-rebinding');
+    const unchanged = await loadConfig();
+    assert.equal(unchanged.vendors.openai.baseUrl, '');
+    assert.equal(toAiEnv(unchanged).OPENAI_API_KEY, secret);
+    assert.equal(toAiEnv(unchanged).OPENAI_BASE_URL, 'https://api.openai.com/v1/responses');
+    let forwarded = 0;
+    await probeVendor(unchanged, 'openai', async () => { forwarded += 1; return new Response('{}', { status: 401 }); });
+    const edited = restoreStoredConfig(JSON.parse(await readFile(process.env.ASSISTANT_CONFIG_PATH, 'utf8')));
+    edited.vendors.openai.baseUrl = 'https://example.com/v1';
+    assert.equal(toAiEnv(edited).OPENAI_API_KEY, undefined);
+    assert.equal(toGameEnv(edited).OPENAI_API_KEY, undefined);
+    await probeVendor(edited, 'openai', async () => { forwarded += 1; return new Response('{}', { status: 200 }); });
+    assert.equal(forwarded, 2);
+    const routed = await saveConfig({
+      save: true,
+      vendors: { openai: { baseUrl: 'https://example.com/v1', apiKey: 'sk-rebound-value-not-the-old-key' } },
+    });
+    assert.equal(JSON.stringify(routed).includes(secret), false);
+    assert.equal(JSON.stringify(routed).includes('sk-rebound-value-not-the-old-key'), false);
+    const routedConfig = await loadConfig();
+    assert.equal(toAiEnv(routedConfig).OPENAI_BASE_URL, 'https://example.com/v1/responses');
+    assert.equal(toGameEnv(routedConfig).OPENAI_BASE_URL, 'https://example.com/v1/chat/completions');
+    assert.equal(toAiEnv(routedConfig).OPENAI_API_KEY, 'sk-rebound-value-not-the-old-key');
+    await saveConfig({
+      save: true,
+      vendors: { openai: { baseUrl: 'https://example.com/v1', protocols: { ai: { baseUrl: 'https://example.org/v1' } }, confirmKeyBinding: 'clear-key-for-new-upstream' } },
+    });
+    const clearedKey = await loadConfig();
+    assert.equal(clearedKey.vendors.openai.apiKey, '');
+    assert.equal(toAiEnv(clearedKey).OPENAI_API_KEY, undefined);
+    await saveConfig({ save: true, vendors: { openai: { apiKey: secret, model: 'shared-model', baseUrl: 'https://example.com/v1', protocols: { ai: { baseUrl: '' } } } } });
     await saveConfig({ save: true, vendors: { openai: { model: '', protocols: { ai: { model: 'ai-only-model' } } } } });
     const isolated = await loadConfig();
     assert.equal(toAiEnv(isolated).OPENAI_MODEL, 'ai-only-model');
