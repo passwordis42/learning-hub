@@ -38,7 +38,7 @@ export function remoteOptionsFromEnv(env = process.env) {
   if (url.protocol !== 'https:' || url.origin !== origin || url.username || url.password) {
     throw new Error('HUB_PUBLIC_ORIGIN 必须是不含路径、账号和查询的 https 源。');
   }
-  if (!allowedHosts.includes(url.host.toLowerCase())) throw new Error('HUB_ALLOWED_HOSTS 必须包含公开源的主机。');
+  if (!allowedHosts.includes(url.hostname.toLowerCase())) throw new Error('HUB_ALLOWED_HOSTS 必须包含公开源的主机。');
   if (env.HUB_TRUST_PROXY !== '1') throw new Error('HUB_EXPOSURE=remote 需要 HUB_TRUST_PROXY=1，由 HTTPS 反向代理终止 TLS。');
   return { exposure: 'remote', adminToken: token, publicOrigin: origin, allowedHosts, trustProxy: true };
 }

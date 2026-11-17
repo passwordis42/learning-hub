@@ -27,4 +27,4 @@ HUB_BASE=/learning-hub/ npm run serve
 npm run test:integration
 ```
 
-可选的 AI 学伴和游戏助手仍在各自目录里单独启动，密钥只放在不提交的本地 `.env`。入口进程不会保存或转发密钥。
+可选的 AI 学伴和游戏助手由入口进程在服务端调用。供应商密钥由设置页写入本机配置文件（默认 `server/secrets/assistant-config.json`，权限 `0600`，不提交）。响应、状态和日志不回显密钥。独立课程目录里的 `.env` 不会被入口读取。部署条件和远程模式见 [deploy/README.md](deploy/README.md)。

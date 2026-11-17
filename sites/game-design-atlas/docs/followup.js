@@ -1,7 +1,6 @@
-import { credentialMode } from './credential-mode.js';
+import { assistantRoot, credentialMode } from './credential-mode.js';
 
-const localNames = ['127.0.0.1', 'localhost', '[::1]'];
-const configuredLocal = () => localNames.includes(location.hostname) ? location.origin : 'http://127.0.0.1:4173';
+const configuredLocal = () => assistantRoot(location);
 const setup = 'https://github.com/passwordis42/game-design-atlas#本地启动与-ai-服务';
 
 export function mountFollowup(root, submission) {

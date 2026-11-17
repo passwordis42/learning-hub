@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { credentialMode as aiMode } from '../sites/ai-learning-atlas/src/credential-mode.js';
-import { credentialMode as gameMode } from '../sites/game-design-atlas/docs/credential-mode.js';
+import { assistantRoot, credentialMode as gameMode } from '../sites/game-design-atlas/docs/credential-mode.js';
 
 const cases = [
   ['http://127.0.0.1:8080', '/api/tutor', 'same-origin'],
@@ -21,3 +21,24 @@ for (const mode of [aiMode, gameMode]) {
     }
   });
 }
+
+test('hub embed uses the page origin on a public host and both path prefixes', () => {
+  assert.equal(assistantRoot({
+    origin: 'https://learn.hub.test:8443',
+    hostname: 'learn.hub.test',
+    pathname: '/game/',
+    search: '?embed=1',
+  }), 'https://learn.hub.test:8443');
+  assert.equal(assistantRoot({
+    origin: 'https://learn.hub.test:8443',
+    hostname: 'learn.hub.test',
+    pathname: '/learning-hub/game/',
+    search: '?embed=1',
+  }), 'https://learn.hub.test:8443/learning-hub');
+  assert.equal(assistantRoot({
+    origin: 'https://learn.example',
+    hostname: 'learn.example',
+    pathname: '/game/index.html',
+    search: '',
+  }), 'http://127.0.0.1:4173');
+});

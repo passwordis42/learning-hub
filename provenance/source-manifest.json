@@ -79,12 +79,12 @@
     {
       "path": "sites/game-design-atlas/docs/coach.js",
       "originalBlob": "366c45f06ecf266a7f9193172c5461e1da76a166",
-      "reason": "Same-origin assistant calls include the hub session. Requests to any other origin omit credentials."
+      "reason": "Hub embed uses the page origin for assistant calls on any host, including a public name and a path prefix. Standalone pages on other hosts still use the explicit local assistant and omit credentials."
     },
     {
       "path": "sites/game-design-atlas/docs/followup.js",
       "originalBlob": "a49443a9d437e2034a49676cbab9e33983b6781a",
-      "reason": "Same-origin follow-up calls include the hub session. Requests to any other origin omit credentials."
+      "reason": "Hub embed follow-ups use the page origin on any host. Standalone pages on other hosts still target the explicit local assistant and omit credentials."
     },
     {
       "path": "sites/ai-learning-atlas/src/Tutor.jsx",

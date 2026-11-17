@@ -41,6 +41,13 @@ test('loopback stays the listen address unless remote bind is explicit', () => {
   assert.equal(listenAddress({ HUB_EXPOSURE: 'remote', HUB_BIND: '0.0.0.0' }), '0.0.0.0');
   assert.throws(() => remoteOptionsFromEnv({ HUB_EXPOSURE: 'remote' }), /HUB_ADMIN_TOKEN/);
   assert.throws(() => remoteOptionsFromEnv({ HUB_EXPOSURE: 'remote', HUB_ADMIN_TOKEN: 'x'.repeat(32), HUB_PUBLIC_ORIGIN: 'http://learn.example' }), /https/);
+  assert.equal(remoteOptionsFromEnv({
+    HUB_EXPOSURE: 'remote',
+    HUB_ADMIN_TOKEN: 'x'.repeat(32),
+    HUB_PUBLIC_ORIGIN: 'https://learn.hub.test:8443',
+    HUB_ALLOWED_HOSTS: 'learn.hub.test',
+    HUB_TRUST_PROXY: '1',
+  }).publicOrigin, 'https://learn.hub.test:8443');
 });
 
 test('hub base accepts only safe prefixes', () => {
