@@ -112,6 +112,27 @@
 .guide-step-dot { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #d4cddf; background: #faf8fc; color: #544a67; font-size: 11px; font-weight: 750; }
 .guide-outline-item[data-state="current"] .guide-step-dot { border-color: var(--accent); background: var(--accent); color: white; }
 .guide-outline-item[data-state="done"] .guide-step-dot { border-color: #d4caed; background: var(--violet); color: var(--accent-deep); }
+
+html.is-hub-embed .guide-quiz-table thead { background: #f4f7f1; }
+html.is-hub-embed .guide-sample summary,
+html.is-hub-embed .guide-resources summary,
+html.is-hub-embed .guide-prompt-label,
+html.is-hub-embed .guide-resources a,
+html.is-hub-embed .guide-file-flow code,
+html.is-hub-embed .guide-instructions code,
+html.is-hub-embed .guide-block > p code { color: #183f4b; }
+html.is-hub-embed .guide-outline-item > :is(button, a):hover:not(:disabled) { background: #e7f0ea; }
+html.is-hub-embed .guide-outline-item[data-state="current"] { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed .guide-outline-item[data-state="done"] .guide-step-dot { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed .guide-step-dot { border-color: #a8bab0; background: #fffef4; color: #42606a; }
+html.is-hub-embed .guided-lesson { --guide-tint: #f4f7f1; }
+html.is-hub-embed .guide-progress progress,
+html.is-hub-embed .guide-progress progress::-webkit-progress-bar { background: #e7f0ea; }
+html.is-hub-embed .guide-content .concept-grid article { border-color: #c8d4c3; background: #f4f7f1; }
+html.is-hub-embed .guide-note { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed .guide-file-flow li { border-color: #d5e0d6; }
+html.is-hub-embed .guide-code { background: #fffef4; border-color: #c8d4c3; color: #183f4b; }
+html.is-hub-embed .guide-test-cases article { border-color: #c8d4c3; }
 .guide-step-dot svg { width: 13px; height: 13px; }
 
 @container (min-width: 520px) {

@@ -37,6 +37,41 @@
       "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or DASHSCOPE_BASE_URL. Unset variables keep the original endpoints."
     },
     {
+      "path": "sites/ai-learning-atlas/src/csv-walkthrough.css",
+      "originalBlob": "10eed717dd8fa3be5ae22384534ae2a2d0f1ec8f",
+      "reason": "Hub embed restyles the CSV walkthrough card. Standalone purple remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/practice-labs.css",
+      "originalBlob": "0ebfcd9b2533c3f4424096a84341a4b331cddee4",
+      "reason": "Hub embed restyles practice grids. Wall cells stay neutral brown."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/graph.css",
+      "originalBlob": "0fece924f7c2ac27bb06bf69e9a87795189451a3",
+      "reason": "Hub embed restyles the course map. Optional gold and completed green stay."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/styles.css",
+      "originalBlob": "cfd509109e519c42bf5b8b2241d47c411722ba32",
+      "reason": "Hub embed uses teal and paper for shared lesson chrome. Standalone colors stay on the original variables."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/lesson-guide.css",
+      "originalBlob": "ccdcc6d853d2a0991fc83cfc79730333d981117e",
+      "reason": "Hub embed restyles the day-one sample card, disclosures, steps, and references. Standalone purple remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/lesson-term.css",
+      "originalBlob": "fd3a2b4517af6b2f89310c86ceab8524c1e4f2f7",
+      "reason": "Hub embed restyles the term popover close control. Standalone styling remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/weekly-lesson.css",
+      "originalBlob": "efea1e25864741a58a952c2e34fb6d62ba9ab071",
+      "reason": "Hub embed restyles week data, choices, and trace chips. Correct and incorrect feedback colors stay."
+    },
+    {
       "path": "sites/ai-learning-atlas/src/tutor.css",
       "originalBlob": "86abf61705f260d4d2b43b8961c8105f31eb69c4",
       "reason": "In hub embed mode, the tutor card uses the v6 teal and paper colors. Standalone pages keep the original palette."

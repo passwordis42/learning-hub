@@ -180,6 +180,35 @@ summary::-webkit-details-marker { display: none; }
 .lesson-checklist input { margin-top: 4px; accent-color: var(--accent); flex: none; }
 .lesson-checklist .action { width: 100%; margin-top: 10px; }
 .lesson-resources a { display: flex; margin-top: 9px; font-size: 13px; }
+
+html.is-hub-embed {
+  --accent: #2d6a69;
+  --accent-deep: #183f4b;
+  --violet: #e7f0ea;
+  --ink: #183f4b;
+  --muted: #42606a;
+}
+html.is-hub-embed .code-frame { background: #fffef4; border-color: #c8d4c3; }
+html.is-hub-embed .code-frame > div { border-bottom-color: #d5e0d6; }
+html.is-hub-embed .code-frame pre,
+html.is-hub-embed .prompt-text { color: #183f4b; }
+html.is-hub-embed .small-action { color: #183f4b; border-color: #7a9d8c; background: #f7f4ea; }
+html.is-hub-embed .small-action:hover { background: #e7f0ea; }
+html.is-hub-embed .review-box { border-color: #c8d4c3; background: #f4f7f1; }
+html.is-hub-embed .primary-nav a[aria-current] { background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed .subnav button[aria-current] { background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed .top-action { color: #183f4b; border-color: #7a9d8c; }
+html.is-hub-embed .secondary { color: #183f4b; border-color: #7a9d8c; }
+html.is-hub-embed .prerequisites button { background: #f4f7f1; color: #183f4b; border-color: #c8d4c3; }
+html.is-hub-embed .project-box { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed .inline-note { border-left-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed .reflection input,
+html.is-hub-embed .reflection textarea { border-color: #c8d4c3; }
+html.is-hub-embed .sidebar-progress progress { background: #e7f0ea; }
+html.is-hub-embed .concept-grid article { background: #f4f7f1; border-color: #c8d4c3; }
+html.is-hub-embed .stage-row[open] > summary { background: #f4f7f1; }
+html.is-hub-embed .stage-expanded .stage-start-here { border-left-color: #2d6a69; background: #f4f7f1; }
+html.is-hub-embed :is(button, a, input, textarea, select, summary):focus-visible { outline-color: #123e4c; }
 .tutor-gate { max-width: 750px; }
 .tutor-gate .action { margin-top: 12px; }
 

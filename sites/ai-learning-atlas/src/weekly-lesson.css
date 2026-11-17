@@ -53,6 +53,17 @@
 .week-choices { display: grid; gap: 6px; }
 .week-choices label { display: flex; gap: 9px; align-items: flex-start; padding: 8px 9px; border: 1px solid #e7e0ee; border-radius: 7px; background: #fffefa; font-size: 14px; line-height: 1.55; cursor: pointer; }
 .week-choices label:hover, .week-choices .selected { border-color: #ad9bdc; background: var(--violet); }
+
+html.is-hub-embed .week-data { border-color: #c8d4c3; color: #183f4b; background: #fffef4; }
+html.is-hub-embed .week-trace-result { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed .week-choices label { border-color: #d5e0d6; }
+html.is-hub-embed .week-choices label:hover,
+html.is-hub-embed .week-choices .selected { border-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed .week-answer,
+html.is-hub-embed .week-evidence textarea,
+html.is-hub-embed .week-work textarea { border-color: #c8d4c3; }
+html.is-hub-embed .week-flow > div,
+html.is-hub-embed .week-work-columns > div { border-color: #c8d4c3; background: #f4f7f1; }
 .week-choices input { margin-top: 4px; flex: none; accent-color: var(--accent); }
 .week-answer, .week-evidence textarea { display: block; min-height: 40px; max-width: 100%; border: 1px solid #cfc5de; border-radius: 7px; padding: 7px 9px; background: #fffefa; color: var(--ink); font-size: 16px; }
 .week-answer { width: 160px; }

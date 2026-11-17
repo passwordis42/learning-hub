@@ -43,6 +43,54 @@ async function record(name, fn) {
   }
 }
 
+const evidence = [];
+
+async function measure(page, selector, inFrame) {
+  return page.evaluate(({ selector, inFrame }) => {
+    const frameNode = document.querySelector('#lesson-frame');
+    const root = inFrame ? frameNode?.contentDocument : document;
+    const node = root?.querySelector(selector);
+    if (!node || !frameNode && inFrame) return { found: false, selector };
+    const rect = node.getBoundingClientRect();
+    const origin = inFrame ? frameNode.getBoundingClientRect() : { top: 0, left: 0 };
+    const top = origin.top + rect.top;
+    const bottom = origin.top + rect.bottom;
+    const left = origin.left + rect.left;
+    const right = origin.left + rect.right;
+    const style = getComputedStyle(node);
+    return {
+      found: true,
+      selector,
+      text: (node.innerText || node.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 220),
+      fontSize: style.fontSize,
+      background: style.backgroundColor,
+      color: style.color,
+      border: style.borderColor,
+      top, bottom, left, right,
+      viewport: { width: innerWidth, height: innerHeight, scrollY },
+      visible: top < innerHeight - 8 && bottom > 8 && right > 8 && left < innerWidth - 8 && (bottom - top) > 6,
+    };
+  }, { selector, inFrame });
+}
+
+async function requireVisible(page, selector, inFrame, label) {
+  const box = await measure(page, selector, inFrame);
+  evidence.push({ label, ...box });
+  if (!box.found || !box.visible) throw new Error(`${label} not in viewport ${JSON.stringify(box)}`);
+  return box;
+}
+
+function applyTextZoom(doc) {
+  const view = doc.defaultView;
+  for (const el of [doc.body, ...doc.body.querySelectorAll('*')]) {
+    if (el.dataset.qaBaseFont) continue;
+    const px = Number.parseFloat(view.getComputedStyle(el).fontSize);
+    if (!px) continue;
+    el.dataset.qaBaseFont = String(px);
+    el.style.setProperty('font-size', `${px * 2}px`, 'important');
+  }
+}
+
 async function shot(page, name) {
   const fileName = `uiqa_${name}.png`;
   for (const directory of outDirs) {
@@ -58,6 +106,7 @@ function frame(page) {
 
 async function openReader(page, course, moduleId, text) {
   await page.goto(`http://127.0.0.1:8094/?view=reader&course=${course}&module=${moduleId}`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; });
   await page.waitForFunction((needle) => {
     const node = document.querySelector('#lesson-frame');
     return node && !node.hidden && node.contentDocument?.body?.innerText.includes(needle);
@@ -160,6 +209,7 @@ try {
     await record('settings states and danger control', async () => {
       const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
       await page.goto('http://127.0.0.1:8094/?view=settings&course=nmr&module=nmr-1-1', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; });
       await page.locator('#settings-vendor').waitFor();
       await page.waitForFunction(() => document.querySelector('#settings-key-status')?.textContent?.includes('密钥'));
       const danger = await page.locator('#settings-clear').evaluate((node) => {
@@ -177,7 +227,14 @@ try {
       await page.locator('#settings-model').fill('hub-ui-qa-model');
       await page.locator('#settings-key').fill('sk-ui-qa-not-a-real-key');
       await page.locator('#settings-save').click();
-      await page.getByText('配置已保存').waitFor();
+      await page.waitForFunction(() => document.querySelector('#settings-status')?.textContent?.includes('配置已保存'));
+      await page.evaluate(() => {
+        const node = document.querySelector('#settings-status');
+        const top = node.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo(0, Math.max(0, top - 160));
+      });
+      const saved = await requireVisible(page, '#settings-status', false, 'save success status');
+      if (!saved.text.includes('配置已保存')) throw new Error(saved.text);
       if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key read back');
       if ((await page.locator('body').innerText()).includes('sk-ui-qa-not-a-real-key')) throw new Error('key visible');
       await shot(page, 'settings_save_success');
@@ -194,11 +251,31 @@ try {
       await shot(page, 'settings_unsaved_dialog');
       await page.locator('#settings-unsaved-keep').click();
 
-      await page.locator('#settings-clear').click();
+      await page.locator('#settings-clear').scrollIntoViewIfNeeded();
+      const scrollBeforeDialog = await page.evaluate(() => window.scrollY);
+      await page.evaluate(() => {
+        const button = document.getElementById('settings-clear');
+        button.focus();
+        button.click();
+      });
       await page.locator('#settings-clear-dialog').waitFor({ state: 'visible' });
-      if (await page.evaluate(() => document.activeElement?.id) !== 'settings-clear-cancel') throw new Error('clear focus');
+      const trap = [await page.evaluate(() => document.activeElement?.id)];
+      if (trap[0] !== 'settings-clear-cancel') throw new Error(`clear focus ${trap[0]}`);
+      for (let step = 0; step < 4; step += 1) {
+        await page.keyboard.press('Tab');
+        trap.push(await page.evaluate(() => ({
+          id: document.activeElement?.id || document.activeElement?.textContent?.slice(0, 20),
+          inside: Boolean(document.activeElement?.closest('#settings-clear-dialog')),
+        })));
+      }
+      if (trap.slice(1).some((item) => !item.inside)) throw new Error(`focus left dialog ${JSON.stringify(trap)}`);
+      evidence.push({ label: 'clear dialog tab sequence', selector: '#settings-clear-dialog', trap, scrollBeforeDialog });
       await shot(page, 'settings_clear_dialog');
       await page.locator('#settings-clear-cancel').click();
+      const afterCancel = await page.evaluate(() => ({ id: document.activeElement?.id, scrollY }));
+      if (afterCancel.id !== 'settings-clear') throw new Error(`focus not restored ${afterCancel.id}`);
+      if (Math.abs(afterCancel.scrollY - scrollBeforeDialog) > 2) throw new Error(`dialog scroll changed ${scrollBeforeDialog} -> ${afterCancel.scrollY}`);
+      evidence.push({ label: 'clear dialog cancel restoration', selector: '#settings-clear', ...afterCancel });
 
       await page.route(/\/api\/assistant-config\/test$/, async (route) => {
         const body = JSON.parse(route.request().postData() || '{}');
@@ -243,43 +320,142 @@ try {
       await page.close();
     });
 
-    await record('reader formula, code, zoom, scroll, focus and back', async () => {
+    await record('reader formula, code theme, zoom, mobile end, scroll, focus and back', async () => {
       const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-      await openReader(page, 'nmr', 'nmr-1-1', '仪器里有什么');
+      await openReader(page, 'nmr', 'nmr-2-2', '箭头的影子');
       await frame(page).getByRole('button', { name: '切换为阅读全文' }).click();
-      await frame(page).getByText('查看关系与符号').click();
-      await frame(page).locator('.katex').first().waitFor();
-      await shot(page, 'reader_formula_desktop');
-      await openReader(page, 'ai', 'ai-day1', 'tickets.csv');
-      await frame(page).getByRole('button', { name: '查看样本并预测' }).click();
-      await frame(page).locator('pre code').first().evaluate((node) => node.scrollIntoView({ block: 'center' }));
-      await shot(page, 'reader_code_desktop');
-      await openReader(page, 'nmr', 'nmr-1-1', '仪器里有什么');
-      await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
-      await page.frameLocator('#lesson-frame').locator('body').evaluate(() => { document.documentElement.style.fontSize = '32px'; });
-      await page.waitForTimeout(300);
-      const zoomed = await page.evaluate(() => ({
-        overflow: document.documentElement.scrollWidth - window.innerWidth,
-        nested: (() => {
-          const doc = document.querySelector('#lesson-frame').contentDocument.documentElement;
-          return doc.scrollHeight - doc.clientHeight;
-        })(),
-      }));
-      if (zoomed.overflow > 1) throw new Error(`zoom overflow ${zoomed.overflow}`);
-      await shot(page, 'reader_zoom_200_desktop');
-      await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      const bottom = await page.evaluate(() => {
-        const frameNode = document.querySelector('#lesson-frame');
-        const doc = frameNode.contentDocument.documentElement;
+      await frame(page).locator('.formula summary').click();
+      await page.evaluate(() => { document.documentElement.style.overflowAnchor = 'none'; });
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        await frame(page).locator('.formula .katex').first().evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await page.waitForTimeout(200);
+      }
+      const formula = await requireVisible(page, '.formula .katex', true, 'formula');
+      const formulaMarks = await page.evaluate(() => {
+        const node = document.querySelector('#lesson-frame').contentDocument.querySelector('.formula .katex');
+        const box = node.getBoundingClientRect();
+        const scripts = [...node.querySelectorAll('.mtight')].map((el) => {
+          const rect = el.getBoundingClientRect();
+          return { text: el.textContent.replace(/\s+/g, '').slice(0, 16), dy: Math.round(rect.top - box.top) };
+        });
+        const lowest = Math.max(...scripts.map((item) => item.dy));
+        const highest = Math.min(...scripts.map((item) => item.dy));
         return {
-          tocs: document.querySelectorAll('#lesson-nav').length,
-          nested: doc.scrollHeight - doc.clientHeight,
-          atEnd: window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4,
+          sub: scripts.some((item) => item.text === '0' && item.dy > highest + 6),
+          sup: scripts.some((item) => item.text.includes('−') && item.dy < lowest - 6),
+          scripts,
+          text: node.textContent.replace(/\s+/g, ' ').slice(0, 180),
         };
       });
-      if (bottom.tocs !== 1 || bottom.nested > 24 || !bottom.atEnd) throw new Error(JSON.stringify(bottom));
-      await shot(page, 'reader_scroll_bottom_desktop');
+      evidence.push({ label: 'formula structure', selector: '.formula .katex', ...formulaMarks });
+      if (!/[ωπφϕΔ]/.test(formulaMarks.text) || !formulaMarks.sub || !formulaMarks.sup) throw new Error(JSON.stringify(formulaMarks));
+      const pinned = await requireVisible(page, '.formula .katex', true, 'formula immediately before screenshot');
+      if (Math.abs(pinned.top - formula.top) > 40) throw new Error(`formula moved before shot ${formula.top} -> ${pinned.top}`);
+      await shot(page, 'reader_formula_desktop');
+      const clip = {
+        x: Math.max(0, Math.floor(pinned.left)),
+        y: Math.max(0, Math.floor(pinned.top - 36)),
+        width: Math.min(1000, Math.ceil(pinned.right - pinned.left)),
+        height: 140,
+      };
+      for (const directory of outDirs) {
+        await page.screenshot({ path: path.join(directory, 'uiqa_reader_formula_clip.png'), clip });
+      }
+      const afterShot = await measure(page, '.formula .katex', true);
+      evidence.push({ label: 'formula after screenshot', ...afterShot, clip });
+      if (!afterShot.visible || Math.abs(afterShot.top - pinned.top) > 40) throw new Error(`formula moved during shot ${JSON.stringify(afterShot)}`);
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => {
+        const frameNode = document.querySelector('#lesson-frame');
+        const done = [...frameNode.contentDocument.querySelectorAll('button')].find((node) => node.textContent.includes('标记本版完成'));
+        if (!done) return false;
+        const top = frameNode.getBoundingClientRect().top + done.getBoundingClientRect().top + scrollY;
+        return top <= document.documentElement.scrollHeight - 120;
+      });
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        await page.evaluate(() => {
+          const frameNode = document.querySelector('#lesson-frame');
+          const done = [...frameNode.contentDocument.querySelectorAll('button')].find((node) => node.textContent.includes('标记本版完成'));
+          const link = document.querySelector('#lesson-source');
+          const doneTop = frameNode.getBoundingClientRect().top + done.getBoundingClientRect().top + scrollY;
+          const linkTop = link.getBoundingClientRect().top + scrollY;
+          const target = Math.max(0, Math.min(doneTop - 80, linkTop - (innerHeight - 180)));
+          window.scrollTo({ top: target, behavior: 'instant' });
+        });
+        await page.waitForTimeout(200);
+      }
+      await requireVisible(page, '.lesson-completion button', true, 'mobile completion');
+      const completion = await measure(page, '.lesson-completion button', true);
+      if (!completion.text.includes('标记本版完成') && !completion.text.includes('已完成本课')) throw new Error(completion.text);
+      await requireVisible(page, '.lesson-pagination a', true, 'mobile next lesson');
+      await requireVisible(page, '#lesson-source', false, 'mobile standalone link');
+      await shot(page, 'reader_mobile_end');
+
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await openReader(page, 'ai', 'ai-day1', 'tickets.csv');
+      await frame(page).getByRole('button', { name: '查看样本并预测' }).click();
+      await frame(page).locator('.code-frame').evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      const card = await requireVisible(page, '.code-frame', true, 'sample card');
+      const purple = (color) => {
+        const match = String(color).match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (!match) return false;
+        const [red, green, blue] = match.slice(1).map(Number);
+        return blue > green + 15 && red > green;
+      };
+      if (purple(card.background) || purple(card.border)) throw new Error(JSON.stringify(card));
+      const download = await requireVisible(page, '.code-frame .small-action', true, 'download sample');
+      if (purple(download.color) || purple(download.background)) throw new Error(JSON.stringify(download));
+      const summary = await measure(page, '.guide-sample summary', true);
+      if (purple(summary.color)) throw new Error(JSON.stringify(summary));
+      const step = await measure(page, '.guide-step-dot', true);
+      if (purple(step.background) || purple(step.color)) throw new Error(JSON.stringify(step));
+      await frame(page).locator('.guide-outline').first().evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      await requireVisible(page, '.guide-outline', true, 'lesson steps');
+      const resources = await measure(page, '.guide-resources summary', true);
+      if (purple(resources.color)) throw new Error(JSON.stringify(resources));
+      await shot(page, 'v04_steps_desktop');
+      await frame(page).locator('.code-frame').evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      await requireVisible(page, '.code-frame', true, 'sample card in view for screenshot');
+      await shot(page, 'v04_code_card_desktop');
+      await page.setViewportSize({ width: 390, height: 844 });
+      await frame(page).locator('.code-frame').evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      await requireVisible(page, '.code-frame', true, 'sample card phone');
+      await shot(page, 'v04_code_card_phone');
+
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await openReader(page, 'nmr', 'nmr-1-1', '仪器里有什么');
+      await frame(page).locator('.page-heading p, .lesson-heading p').first().evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      const beforeTitle = await requireVisible(page, '#lesson-title', false, 'zoom passage title before');
+      const beforeBody = await requireVisible(page, '.page-heading p, .lesson-heading p', true, 'zoom passage body before');
+      await shot(page, 'reader_zoom_before');
+      await page.evaluate(applyTextZoom, await page.evaluateHandle(() => document));
+      const frameHandle = await page.evaluateHandle(() => document.querySelector('#lesson-frame').contentDocument);
+      await page.evaluate(applyTextZoom, frameHandle);
+      await frame(page).locator('.page-heading p, .lesson-heading p').first().evaluate((node) => node.scrollIntoView({ block: 'center' }));
+      const afterTitle = await requireVisible(page, '#lesson-title', false, 'zoom passage title after');
+      const afterBody = await requireVisible(page, '.page-heading p, .lesson-heading p', true, 'zoom passage body after');
+      const ratio = (next, previous) => Number.parseFloat(next) / Number.parseFloat(previous);
+      evidence.push({
+        label: '200 percent text method',
+        method: 'Once per element, read computed font-size, then set inline font-size to twice that value with !important. Applied separately to the portal document and the embedded lesson document. Not image scaling and not a font-size change on the portal root alone.',
+        viewport: afterBody.viewport,
+        title: { selector: '#lesson-title', before: beforeTitle.fontSize, after: afterTitle.fontSize, ratio: ratio(afterTitle.fontSize, beforeTitle.fontSize) },
+        passage: { selector: '.page-heading p, .lesson-heading p', before: beforeBody.fontSize, after: afterBody.fontSize, ratio: ratio(afterBody.fontSize, beforeBody.fontSize), text: afterBody.text },
+        layout: await page.evaluate(() => {
+          const frameNode = document.querySelector('#lesson-frame');
+          const doc = frameNode.contentDocument.documentElement;
+          return {
+            portalOverflowX: document.documentElement.scrollWidth - innerWidth,
+            embedOverflowX: doc.scrollWidth - frameNode.clientWidth,
+            viewport: { width: innerWidth, height: innerHeight, scrollY },
+          };
+        }),
+      });
+      if (ratio(afterTitle.fontSize, beforeTitle.fontSize) < 1.9 || ratio(afterBody.fontSize, beforeBody.fontSize) < 1.9) {
+        throw new Error(JSON.stringify(evidence.at(-1)));
+      }
+      await shot(page, 'reader_zoom_200_desktop');
       await page.locator('#lesson-title').focus();
       if (await page.evaluate(() => document.activeElement?.id) !== 'lesson-title') throw new Error('title focus');
       await page.evaluate(() => {
@@ -301,15 +477,21 @@ try {
   server.kill('SIGTERM');
 }
 
+for (const directory of outDirs) {
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, 'ui-qa-evidence.json'), JSON.stringify({ sha, checks, evidence }, null, 2));
+}
 const failed = checks.filter((item) => !item.ok);
 const report = [
-  `# UI verification after d5543e12`,
+  `# Developer UI script after 3e424630`,
   '',
-  `Commit under test: \`${sha}\`. These screenshots were produced by \`scripts/ui-qa.mjs\` after that commit's fixes. They do not belong to the earlier review of \`d5543e12\`.`,
+  `Tree under test: \`${sha}\`. Produced by \`scripts/ui-qa.mjs\` on this working tree. This is the author's own script, not an independent reviewer result. Interaction has not been accepted by an independent UI review.`,
+  '',
+  'Each screenshot below was taken only after the script measured the named element and found its rectangle inside the viewport. Measurements are in `ui-qa-evidence.json`.',
   '',
   '## Checks',
   '',
-  ...checks.map((item) => `- ${item.ok ? 'PASS' : 'FAIL'} \`${item.name}\`${item.error ? `: ${item.error}` : ''}`),
+  ...checks.map((item) => `- ${item.ok ? 'SCRIPT PASS' : 'SCRIPT FAIL'} \`${item.name}\`${item.error ? `: ${item.error}` : ''}`),
   '',
   '## Screenshots',
   '',
@@ -317,7 +499,7 @@ const report = [
   '',
   'Settings auth, timeout, and network images are labeled mock responses from the test route. They are not live provider results. The status image is the real local status check and says the model call was not made. No real API key or external model call was used.',
   '',
-  failed.length ? `Failed: ${failed.length}` : 'Failed: 0',
+  failed.length ? `Script failures: ${failed.length}` : 'Script failures: 0. Independent review is still pending.',
 ].join('\n');
 for (const directory of outDirs) {
   await mkdir(directory, { recursive: true });

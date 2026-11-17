@@ -90,3 +90,9 @@
 
   .csv-walkthrough-flow > :last-child { grid-column: 1 / -1; }
 }
+
+html.is-hub-embed .csv-walkthrough { border-color: #c8d4c3; background: #fffef4; }
+html.is-hub-embed .csv-walkthrough-table thead { background: #f4f7f1; }
+html.is-hub-embed .csv-walkthrough-table [data-current="true"] { background: #e7f0ea; }
+html.is-hub-embed .csv-walkthrough-current { color: #183f4b; }
+html.is-hub-embed .csv-walkthrough-decision { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }

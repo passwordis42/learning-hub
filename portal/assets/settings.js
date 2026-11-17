@@ -198,6 +198,26 @@
     if (focusButton) document.querySelector(`[data-settings-vendor="${id}"]`)?.focus();
   }
 
+  function trapDialog(dialog) {
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab' || !dialog.open) return;
+      const items = [...dialog.querySelectorAll('button, a, input, select, textarea')].filter((el) => !el.disabled);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items.at(-1);
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+  trapDialog($('settings-clear-dialog'));
+  trapDialog($('settings-unsaved-dialog'));
+
   function confirmLeave(next) {
     if (!dirty || busy) { next(); return; }
     pending = next;
