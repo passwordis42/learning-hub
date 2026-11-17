@@ -261,19 +261,19 @@ try {
   await openReader(page, 'ai', 'ai-tutor', 'AI 学伴');
   const tutor = page.frameLocator('#lesson-frame');
   await tutor.getByRole('button', { name: '检查连接' }).click();
-  await tutor.getByText(/暂时无法连接导师服务|导师服务连接失败/).waitFor();
+  await tutor.getByText('不能当作已经连通').waitFor();
   const tutorText = await tutor.locator('body').innerText();
-  check('AI 学伴在没有后端时不显示调用成功', !tutorText.includes('模型调用成功') && /暂时无法连接导师服务|导师服务连接失败/.test(tutorText));
+  check('AI 学伴核对配置时不显示调用成功', !tutorText.includes('模型调用成功') && tutorText.includes('不能当作已经连通'));
   await layout('AI 学伴');
   await shot(page, 'zoom_tutor_200.png');
 
   await openReader(page, 'game', 'game-coach', '我的设计');
   const coach = page.frameLocator('#lesson-frame');
   await coach.locator('#coach-draft').waitFor();
-  await coach.getByRole('button', { name: '连接本地助手' }).click();
-  await coach.getByText('连接未建立').waitFor();
+  await coach.getByRole('button', { name: /连接本地助手|检查连接/ }).click();
+  await coach.getByText('没有连接供应商').waitFor();
   const coachText = await coach.locator('body').innerText();
-  check('游戏助手在没有后端时不显示已连接', coachText.includes('连接未建立') && !coachText.includes('已连接本地助手'));
+  check('游戏助手在没有配置时不显示已连接', coachText.includes('没有连接供应商') && !coachText.includes('已连接本地助手'));
   await layout('游戏助手');
   await shot(page, 'zoom_game_coach_200.png');
 
@@ -287,7 +287,7 @@ try {
   await page.locator('#settings-model').fill('zoom-check-model');
   const modelValue = await page.locator('#settings-model').inputValue();
   check('设置页打开后焦点在返回课程', settingsFocus === 'settings-back', settingsFocus);
-  check('静态站点设置页如实显示后端不可达', settingsCopy.includes('后端不可达') && !settingsCopy.includes('配置已保存'), settingsCopy);
+  check('静态站点设置页只把密钥留在页面内存', settingsCopy.includes('页面内存') && settingsCopy.includes('没有连接供应商') && !settingsCopy.includes('配置已保存'), settingsCopy);
   check('设置页模型输入可以填写', modelValue === 'zoom-check-model', modelValue);
   await layout('助手设置');
   await shot(page, 'zoom_settings_200.png');
@@ -312,12 +312,44 @@ try {
     await sleep(100);
   }
   check('从设置返回后恢复阅读滚动位置', restored, restoreDetail);
-  await page.locator('#return-islands').focus();
   const backFocus = await page.evaluate(() => ({
     id: document.activeElement?.id,
     hidden: Boolean(document.activeElement?.closest('[hidden]')),
   }));
-  check('返回后焦点落在可见的返回群岛', backFocus.id === 'return-islands' && !backFocus.hidden, JSON.stringify(backFocus));
+  check('返回后焦点在打开设置的按钮上', backFocus.id === 'open-settings' && !backFocus.hidden, JSON.stringify(backFocus));
+  await page.evaluate(() => window.scrollTo({ top: 480, behavior: 'instant' }));
+  await page.waitForFunction(() => Math.abs(window.scrollY - 480) <= 2);
+  const beforeMax = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  await page.evaluate(() => document.getElementById('open-settings').click());
+  await page.waitForFunction(() => document.body.dataset.view === 'settings');
+  await page.evaluate(() => {
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'hub-embed-height') event.stopImmediatePropagation();
+    }, true);
+    const frame = document.getElementById('lesson-frame');
+    frame.dataset.fullHeight = frame.style.height;
+    frame.style.height = '1px';
+    document.querySelector('.learning-sidebar').style.display = 'none';
+    document.querySelector('.lesson-article').style.display = 'none';
+  });
+  await page.evaluate(() => document.getElementById('settings-back').click());
+  await page.waitForFunction(() => document.body.dataset.view === 'reader');
+  await page.waitForTimeout(800);
+  const early = await page.evaluate(() => window.scrollY);
+  const earlyMax = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  await page.evaluate(() => {
+    document.querySelector('.learning-sidebar').style.display = '';
+    document.querySelector('.lesson-article').style.display = '';
+    const frame = document.getElementById('lesson-frame');
+    frame.style.height = frame.dataset.fullHeight || '4200px';
+  });
+  await page.waitForFunction(() => Math.abs(window.scrollY - 480) <= 2, null, { timeout: 4000 });
+  const late = await page.evaluate(() => ({ scrollY: window.scrollY, max: document.documentElement.scrollHeight - window.innerHeight }));
+  check('延迟布局稳定后恢复到 480 而不是停留在夹住的位置', early < 480 && earlyMax + 1 < 480 && Math.abs(late.scrollY - 480) <= 2, `early=${early} earlyMax=${earlyMax} late=${JSON.stringify(late)} beforeMax=${beforeMax}`);
+  await page.mouse.wheel(0, 160);
+  await page.waitForTimeout(700);
+  const manual = await page.evaluate(() => window.scrollY);
+  check('布局稳定后不再抢回滚动', Math.abs(manual - 480) > 20, `manual=${manual}`);
   await shot(page, 'zoom_reader_restored_200.png');
 } catch (error) {
   process.stderr.write(`${error.stack || error}\n`);

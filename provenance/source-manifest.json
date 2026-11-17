@@ -79,17 +79,17 @@
     {
       "path": "sites/game-design-atlas/docs/coach.js",
       "originalBlob": "366c45f06ecf266a7f9193172c5461e1da76a166",
-      "reason": "Hub embed uses the page origin for assistant calls on any host, including a public name and a path prefix. Standalone pages on other hosts still use the explicit local assistant and omit credentials."
+      "reason": "Hub embed asks the parent page for the in-memory assistant config and calls the configured vendor directly with credentials omitted. Standalone pages do not call 127.0.0.1:4173."
     },
     {
       "path": "sites/game-design-atlas/docs/followup.js",
       "originalBlob": "a49443a9d437e2034a49676cbab9e33983b6781a",
-      "reason": "Hub embed follow-ups use the page origin on any host. Standalone pages on other hosts still target the explicit local assistant and omit credentials."
+      "reason": "Hub embed follow-ups use the parent page's in-memory config and call the vendor directly. Credentials are omitted, and standalone pages do not call a local assistant."
     },
     {
       "path": "sites/ai-learning-atlas/src/Tutor.jsx",
       "originalBlob": "f27895c446c26a2000c91c6c41deab70b8931b50",
-      "reason": "Hub embed uses the same-origin /api/tutor path and sends the session only to that origin. Standalone pages still ask for a service address and omit credentials for any other origin."
+      "reason": "Hub embed gets the in-memory vendor config from the parent and calls that vendor directly with credentials omitted. Standalone pages still ask for a service address."
     },
     {
       "path": "sites/game-design-atlas/server/coach.mjs",
@@ -781,6 +781,10 @@
     "sites/nmr-from-zero/public/embed-skin.css",
     "sites/nmr-from-zero/public/embed-bridge.js",
     "sites/game-design-atlas/docs/embed-skin.css",
-    "sites/game-design-atlas/docs/embed-bridge.js"
+    "sites/game-design-atlas/docs/embed-bridge.js",
+    "sites/ai-learning-atlas/src/parent-config.js",
+    "sites/ai-learning-atlas/src/tutor-protocol.js",
+    "sites/game-design-atlas/docs/parent-config.js",
+    "sites/game-design-atlas/docs/coach-direct.js"
   ]
 }

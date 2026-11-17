@@ -286,30 +286,92 @@
   $('view-overview').addEventListener('click',()=>overview());
   let settingsReturn=null;
   let restoreScroll=null;
+  let restoreSession=null;
   function openSettings(){
     if(state.view==='settings')return;
-    settingsReturn={view:state.view,course:state.course,module:state.module,scroll:window.scrollY};
+    const focus=document.activeElement;
+    settingsReturn={view:state.view,course:state.course,module:state.module,scroll:window.scrollY,focusId:focus&&focus.id?focus.id:'open-settings'};
     state.view='settings';
     syncScene();writeUrl();
     window.scrollTo({top:0,behavior:'instant'});
     $('settings-back')?.focus({preventScroll:true});
   }
+  function releaseRestore(session){
+    if(!session||session.done)return;
+    session.done=true;
+    session.clean();
+    if(restoreSession===session){restoreSession=null;restoreScroll=null;}
+  }
+  function startScrollRestore(top){
+    if(restoreSession)releaseRestore(restoreSession);
+    const session={top,done:false,height:-1,quiet:0,sawFrame:false,applying:false};
+    restoreSession=session;
+    restoreScroll=top;
+    const cleanups=[];
+    session.clean=()=>cleanups.forEach(fn=>fn());
+    const frame=$('lesson-frame');
+    const apply=()=>{
+      if(session.done)return;
+      const max=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+      const goal=Math.min(session.top,max);
+      if(Math.abs(window.scrollY-goal)>1){
+        session.applying=true;
+        window.scrollTo({top:goal,behavior:'instant'});
+        session.applying=false;
+      }
+    };
+    const noteLayout=()=>{if(!session.done){session.quiet=0;apply();}};
+    if('ResizeObserver' in window){
+      const observer=new ResizeObserver(noteLayout);
+      observer.observe(document.documentElement);
+      if(frame)observer.observe(frame);
+      cleanups.push(()=>observer.disconnect());
+    }
+    const onFont=()=>noteLayout();
+    document.fonts?.addEventListener?.('loadingdone',onFont);
+    document.fonts?.ready?.then(()=>{if(!session.done)noteLayout();});
+    cleanups.push(()=>document.fonts?.removeEventListener?.('loadingdone',onFont));
+    const user=event=>{if(event.isTrusted&&!session.applying)releaseRestore(session);};
+    addEventListener('wheel',user,{passive:true});
+    addEventListener('touchmove',user,{passive:true});
+    const onKey=event=>{
+      if(!event.isTrusted||session.done)return;
+      if(event.target&&event.target.closest&&event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+      if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(event.key))releaseRestore(session);
+    };
+    addEventListener('keydown',onKey);
+    cleanups.push(()=>{removeEventListener('wheel',user);removeEventListener('touchmove',user);removeEventListener('keydown',onKey);});
+    const pump=()=>{
+      if(session.done)return;
+      const height=document.documentElement.scrollHeight;
+      const max=Math.max(0,height-window.innerHeight);
+      const fontsReady=!document.fonts||document.fonts.status==='loaded';
+      const images=[...document.querySelectorAll('#learning-page img, #explore-page img')].filter(img=>!img.complete);
+      const visibleFrame=frame&&!frame.hidden;
+      const tallEnough=max+1>=session.top;
+      const frameReady=!visibleFrame||session.sawFrame||tallEnough;
+      if(height===session.height)session.quiet+=1;else{session.height=height;session.quiet=0;}
+      apply();
+      if(fontsReady&&images.length===0&&frameReady&&session.quiet>=2)releaseRestore(session);
+      else requestAnimationFrame(pump);
+    };
+    requestAnimationFrame(pump);
+    const safety=setTimeout(()=>releaseRestore(session),12000);
+    cleanups.push(()=>clearTimeout(safety));
+    session.markFrame=()=>{if(!session.done){session.sawFrame=true;session.quiet=0;apply();}};
+  }
   function closeSettings(){
-    const back=settingsReturn||{view:state.module?'reader':'overview',course:state.course,module:state.module,scroll:0};
+    const back=settingsReturn||{view:state.module?'reader':'overview',course:state.course,module:state.module,scroll:0,focusId:'open-settings'};
     state.view=back.view==='settings'?'overview':back.view;
     if(back.course)state.course=back.course;
     if(back.module)state.module=back.module;
     syncScene();renderCourse();
     if(state.view==='reader')renderLesson();
     writeUrl();
-    const top=back.scroll||0;
-    restoreScroll=top;
-    const apply=()=>{if(restoreScroll===top)window.scrollTo({top,behavior:'instant'});};
-    apply();
-    requestAnimationFrame(apply);
-    const pin=()=>apply();
-    addEventListener('scroll',pin);
-    setTimeout(()=>{removeEventListener('scroll',pin);if(restoreScroll===top)restoreScroll=null;},700);
+    const focusNode=back.focusId&&$(back.focusId);
+    const focusTarget=focusNode&&!focusNode.closest('[hidden]')?focusNode:$('open-settings');
+    focusTarget?.focus({preventScroll:true});
+    startScrollRestore(back.scroll||0);
     settingsReturn=null;
     announce('已返回刚才的课程位置。');
   }
@@ -373,7 +435,8 @@
     if(event.origin!==location.origin||!event.data)return;
     if(event.data.type==='hub-embed-height'&&$('lesson-frame')){
       $('lesson-frame').style.height=Math.max(240,Number(event.data.height)||0)+'px';
-      if(restoreScroll!=null) window.scrollTo({top:restoreScroll,behavior:'instant'});
+      if(restoreSession&&!restoreSession.done)restoreSession.markFrame();
+      else if(restoreScroll!=null) window.scrollTo({top:restoreScroll,behavior:'instant'});
     }
     if(event.data.type==='hub-embed-escape'&&state.view==='reader') returnIslands();
   });

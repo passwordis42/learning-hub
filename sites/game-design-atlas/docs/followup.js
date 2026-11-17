@@ -1,6 +1,7 @@
-import { assistantRoot, credentialMode } from './credential-mode.js';
+import { directFailure, listAssistant } from './parent-config.js';
+import { askGameVendor } from './coach-direct.js';
 
-const configuredLocal = () => assistantRoot(location);
+const hubEmbed = new URLSearchParams(location.search).get('embed') === '1';
 const setup = 'https://github.com/passwordis42/game-design-atlas#本地启动与-ai-服务';
 
 export function mountFollowup(root, submission) {
@@ -45,15 +46,13 @@ export function mountFollowup(root, submission) {
     form.hidden = true;
     status.textContent = '正在检查本地助手…';
     try {
-      const result = await fetch(configuredLocal() + '/api/status', { credentials: credentialMode(configuredLocal() + '/api/status', location.origin), signal: AbortSignal.timeout(2500) });
-      if (!result.ok) throw new Error();
-      const body = await result.json();
-      const models = body.providers.filter((item) => item.configured);
+      if (!hubEmbed) throw new Error('standalone');
+      const models = (await listAssistant('game')).filter((item) => item.configured);
       provider.replaceChildren(new Option('选择服务商', '', true, true), ...models.map((item) => new Option(item.label + ' · ' + item.model, item.id)));
       form.hidden = !models.length;
-      status.textContent = models.length ? '选好服务商，再确认发送。' : '本地助手在线。配置一个模型密钥后重启即可使用。';
+      status.textContent = models.length ? '选好服务商，再确认发送。' : '入口页面还没有填写可用的密钥和模型。没有连接供应商。';
     } catch {
-      status.textContent = '当前无法连接本地助手。可按设置说明打开本地课程，并导入这份学习记录。';
+      status.textContent = '请从统一入口打开本课并在助手设置里填写。本页不会连接本地 4173。';
     } finally {
       connect.disabled = false;
     }
@@ -68,15 +67,7 @@ export function mountFollowup(root, submission) {
     questions.replaceChildren();
     status.textContent = '正在生成追问…';
     try {
-      const result = await fetch(configuredLocal() + '/api/assist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: credentialMode(configuredLocal() + '/api/assist', location.origin),
-        signal: AbortSignal.timeout(45000),
-        body: JSON.stringify({ ...submission, provider: provider.value, mode: 'coach' })
-      });
-      const body = await result.json();
-      if (!result.ok) throw new Error(body.error || '暂时无法获得追问。');
+      const body = await askGameVendor({ ...submission, provider: provider.value, mode: 'coach' });
       if (!Array.isArray(body.questions) || !body.questions.length) throw new Error('这次未获得追问，可稍后重试。');
       for (const text of body.questions) {
         const item = document.createElement('li');

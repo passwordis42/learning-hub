@@ -272,11 +272,10 @@ async function features(browser, origin, base, viewport, label) {
       });
       await openReader(page, origin, base, 'ai', 'ai-tutor', 'AI 学伴');
       const tutor = await frameBody(page);
-      await tutor.getByText('已使用本机统一入口').waitFor();
+      await tutor.getByText('配置来自统一入口这次打开的页面内存').waitFor();
       if (await tutor.locator('input[placeholder*="8787"]').count()) throw new Error('embed tutor still asks for a service address');
       if ((await tutor.innerText()).includes('模型调用成功')) throw new Error('tutor claimed a model call');
-      const expected = `${origin}${base}api/tutor`.replace(/([^:]\/)\/+/g, '$1');
-      if (!tutorCalls.some((url) => url.startsWith(expected))) throw new Error(`tutor did not use ${expected}: ${tutorCalls.join(' ')}`);
+      if (tutorCalls.some((url) => url.includes('/api/tutor'))) throw new Error(`embed tutor still called the hub: ${tutorCalls.join(' ')}`);
       if (label === 'desktop') await shot(page, 'reader_tutor_desktop.png');
     }
 
@@ -296,13 +295,14 @@ async function features(browser, origin, base, viewport, label) {
     if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key was read back into the form');
     if ((await page.locator('body').innerText()).includes('sk-browser-test-not-a-real-key')) throw new Error('key leaked into the page');
     await page.locator('#settings-test').click();
-    await page.locator('#settings-result').getByText('AI 学伴：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
-    await page.locator('#settings-result').getByText('游戏助手：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
+    await page.locator('#settings-result').getByText('AI 学伴：只核对了地址、模型和密钥是否已填写。没有向供应商发送请求，不能当作已经连通。').waitFor();
+    await page.locator('#settings-result').getByText('游戏助手：只核对了地址、模型和密钥是否已填写。没有向供应商发送请求，不能当作已经连通。').waitFor();
     if ((await page.locator('#settings-result').innerText()).includes('模型调用成功')) throw new Error('status test claimed a model call');
     await page.route(/\/api\/assistant-config$/, (route) => route.abort());
     await page.locator('#settings-model').fill('another-model');
+    await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
     await page.locator('#settings-save').click();
-    await page.getByText('后端不可达').waitFor();
+    await page.getByText('只保存在这次打开的页面内存里').waitFor();
     await page.unrouteAll({ behavior: 'ignoreErrors' });
     await page.locator('#settings-clear').click();
     await page.locator('#settings-clear-dialog').waitFor({ state: 'visible' });
@@ -422,7 +422,7 @@ try {
         const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
         const page = await context.newPage();
         await page.goto(`${origin}/game/#coach/01`, { waitUntil: 'domcontentloaded' });
-        await page.waitForFunction(() => document.body.innerText.includes('本地助手在线') && document.body.innerText.includes('API 密钥'), null, { timeout: 8000 });
+        await page.waitForFunction(() => document.body.innerText.includes('不会连接本地 4173'), null, { timeout: 8000 });
         await shot(page, 'game_assistant_unconfigured_desktop.png');
         await context.close();
       });

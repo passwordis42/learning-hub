@@ -1,4 +1,5 @@
-import { assistantRoot, credentialMode } from './credential-mode.js';
+import { directFailure, listAssistant } from './parent-config.js';
+import { askGameVendor } from './coach-direct.js';
 import { weeks } from './data/curriculum.js';
 import { weekLabel } from './graph.js';
 import { checkpointReady, completeRules, downloadFile, ruledLines } from './records.js?v=guided-3';
@@ -42,7 +43,7 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
   let mode = 'coach';
   let selectedProvider = '';
   let busy = false;
-  let connectionMessage = '';
+  let connectionMessage = hubEmbed ? '' : '请从统一入口打开本课并在助手设置里填写。本页不会连接本地 4173，也不会把密钥交给本站服务器。';
   let approvalSet = new Set();
 
   const active = () => container.firstElementChild === root;
@@ -103,7 +104,7 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
           <h2>选择 AI 如何协助</h2>
           <p class="quiet">${esc(connection)}</p>
           <div class="form-actions"><button class="outline-button" type="button" id="connect-ai" ${busy || revision ? 'disabled' : ''}>${apiProviders ? '检查连接' : '连接本地助手'}</button><a class="text-link" href="${repository}#本地启动与-ai-服务" target="_blank" rel="noopener noreferrer">设置说明 ↗</a></div>
-          <p class="quiet" role="status">${esc(connectionMessage)} ${connectionMessage && !hubEmbed && !localHost ? `<a class="text-link" href="${localUrl}/#coach/${weekLabel(week.id)}" target="_blank" rel="noopener noreferrer">打开本地课程 ↗</a>` : ''}</p>
+          <p class="quiet" role="status">${esc(connectionMessage)}</p>
           <div class="field"><label for="coach-mode">协助方式</label><select ${canUseAI() ? '' : 'disabled'} id="coach-mode"><option value="coach" ${mode === 'coach' ? 'selected' : ''}>提问 · 澄清我的想法</option><option value="review" ${mode === 'review' ? 'selected' : ''}>评审 · 检查证据与规格</option><option value="implementation" ${mode === 'implementation' ? 'selected' : ''}>委托实现 · 确认规则范围</option></select></div>
           <div class="field"><label for="coach-provider">模型服务</label><select ${canUseAI() ? '' : 'disabled'} id="coach-provider">${providerOptions()}</select></div>
           ${mode === 'implementation' ? `<fieldset class="field-group" ${canUseAI() ? '' : 'disabled'}><legend>本次允许实现的规则</legend>${formatted.length ? formatted.map((rule, index) => `<label><input type="checkbox" value="${index}" ${approvalSet.has(rule) ? 'checked' : ''}><span>${esc(rule)}</span></label>`).join('') : '<p class="quiet">先修改检查点，按四个字段写出规则，再回来逐条确认。</p>'}</fieldset>` : ''}
@@ -120,20 +121,23 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
     if (busy || revision) return;
     busy = true;
     if (manual) { connectionMessage = '正在查找本地助手…'; render(); }
-    const endpoint = assistantRoot(location);
+    if (!hubEmbed) {
+      apiProviders = null;
+      connectionMessage = '请从统一入口打开本课并在助手设置里填写。本页不会连接本地 4173，也不会把密钥交给本站服务器。';
+      busy = false;
+      render();
+      return;
+    }
     try {
-      const response = await fetch(`${endpoint}/api/status`, { signal: AbortSignal.timeout(2500), credentials: credentialMode(`${endpoint}/api/status`, location.origin) });
-      if (!response.ok) throw new Error();
-      const data = await response.json();
-      if (!Array.isArray(data?.providers)) throw new Error();
-      apiRoot = endpoint;
-      apiProviders = data.providers;
+      const providers = await listAssistant('game');
+      apiRoot = 'memory';
+      apiProviders = providers;
       if (!apiProviders.some((item) => item.configured && item.id === selectedProvider)) selectedProvider = '';
-      connectionMessage = apiProviders.some((item) => item.configured) ? '' : '本地助手在线。请配置至少一个 API 密钥，再重启助手。';
+      connectionMessage = apiProviders.some((item) => item.configured) ? '' : '入口页面还没有可用的密钥和模型。请先在助手设置里填写。没有连接供应商。';
     } catch {
       apiProviders = null;
       selectedProvider = '';
-      connectionMessage = manual ? '连接未建立。请按设置说明启动课程，或直接在本地版使用。' : '';
+      connectionMessage = manual ? '统一入口没有返回配置。本页不会连接本地 4173。' : '';
     } finally {
       busy = false;
       render();
@@ -148,14 +152,8 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
     result = null;
     render();
     try {
-      const response = await fetch(`${apiRoot}/api/assist`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: credentialMode(`${apiRoot}/api/assist`, location.origin), signal: AbortSignal.timeout(45000),
-        body: JSON.stringify({ provider: selectedProvider, mode, week: week.id, title: week.title, draft, rationale, evidence, approvedRules })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || '请求没有完成。');
-      result = data;
-    } catch (error) { result = { error: requestError(error) }; }
+      result = await askGameVendor({ provider: selectedProvider, mode, week: week.id, title: week.title, draft, rationale, evidence, approvedRules });
+    } catch (error) { result = { error: directFailure(error) }; }
     finally { busy = false; render(); }
   }
 
@@ -248,5 +246,5 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
   }
 
   render();
-  if ((hubEmbed || localHost) && !apiProviders) void connect(false);
+  if (hubEmbed && !apiProviders) void connect(false);
 }

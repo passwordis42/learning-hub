@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { credentialMode } from './credential-mode.js'
+import { directFailure, listAssistant, prepareAssistant } from './parent-config.js'
+import { callTutorVendor } from './tutor-protocol.js'
 import './tutor.css'
 
 const providers = [
@@ -15,12 +17,8 @@ const starters = [
 ]
 const defaultQuestion = '请从一个我能独立核查的小练习开始，每次只给一个提示。'
 
-function hubTutorPath() {
-  if (new URLSearchParams(location.search).get('embed') !== '1') return ''
-  const marker = '/ai/'
-  const index = location.pathname.lastIndexOf(marker)
-  const prefix = index >= 0 ? location.pathname.slice(0, index) : ''
-  return `${prefix}/api/tutor`
+function hubEmbed() {
+  return new URLSearchParams(location.search).get('embed') === '1'
 }
 
 function getEndpoint(value) {
@@ -56,8 +54,8 @@ export default function Tutor({ context = '' }) {
   const promptRef = useRef(null)
   const [provider, setProvider] = useState('openai')
   const [question, setQuestion] = useState('')
-  const hubPath = hubTutorPath()
-  const [gateway, setGateway] = useState(hubPath)
+  const embedded = hubEmbed()
+  const [gateway, setGateway] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [availability, setAvailability] = useState(null)
   const [busy, setBusy] = useState('')
@@ -68,13 +66,29 @@ export default function Tutor({ context = '' }) {
   const lessonContext = context.trim().slice(0, 6000)
   const prompt = composePrompt(lessonContext, question)
 
-  useEffect(() => {
-    if (hubPath) requestTutor('check')
-    // The hub address is fixed for this page. Re-checking follows an explicit button press.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   async function requestTutor(mode) {
+    if (embedded) {
+      setBusy(mode)
+      setFeedback('')
+      try {
+        if (mode !== 'ask') {
+          const providers = await listAssistant('ai')
+          setAvailability(new Set(providers.filter((item) => item.configured).map((item) => item.id === 'anthropic' ? 'claude' : item.id)))
+          setFeedback('只核对了入口页面里的配置。没有连接供应商，不能当作已经连通。')
+          return
+        }
+        const vendor = provider === 'claude' ? 'anthropic' : provider
+        const config = await prepareAssistant('ai', vendor)
+        const input = lessonContext ? `课程资料\n${lessonContext}\n\n学习者的问题\n${question.trim()}` : question.trim()
+        const reply = await callTutorVendor(config, input)
+        setAnswer({ label: providers.find(({ id }) => id === provider).label, text: reply })
+      } catch (error) {
+        setFeedback(directFailure(error))
+      } finally {
+        setBusy('')
+      }
+      return
+    }
     const endpoint = getEndpoint(gateway)
     const payload = mode === 'ask' ? { provider, question: question.trim(), context: lessonContext } : null
     setFeedback('')
@@ -171,8 +185,8 @@ export default function Tutor({ context = '' }) {
             }}>{starter}</button>
           ))}
         </div>
-        {hubPath ? (
-          <p>已使用本机统一入口 {hubPath}。密钥在「助手设置」里保存，此页不接收密钥，也不需要再填写服务地址。</p>
+        {embedded ? (
+          <p>配置来自统一入口这次打开的页面内存。刷新或关闭入口后要重新填写。此页不接收密钥，也不把密钥写入浏览器存储。</p>
         ) : (
           <details className="atlas-tutor__settings">
             <summary>设置模型连接</summary>
@@ -190,7 +204,7 @@ export default function Tutor({ context = '' }) {
             </div>
           </details>
         )}
-        {hubPath && <button className="atlas-tutor__muted" type="button" disabled={Boolean(busy)}
+        {embedded && <button className="atlas-tutor__muted" type="button" disabled={Boolean(busy)}
           onClick={() => requestTutor('check')}>{busy === 'check' ? '正在检查…' : '检查连接'}</button>}
         <p className="atlas-tutor__notice">在线提问会把本课资料、已保存的判断记录和当前问题发给所选模型。</p>
         <div className="atlas-tutor__actions">

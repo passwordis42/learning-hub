@@ -57,7 +57,7 @@
     $('settings-address').value = item?.enteredBaseUrl || '';
     $('settings-model').value = item?.enteredModel || '';
     $('settings-key').value = '';
-    $('settings-key-status').textContent = item?.apiKeyConfigured ? '已在后端保存' : '尚未保存密钥';
+    $('settings-key-status').textContent = item?.apiKeyConfigured ? '已留在这次打开的页面内存里。刷新或关闭后消失。' : '尚未填写密钥';
     const aiCustom = Boolean(item?.protocols?.ai?.enteredModel || item?.protocols?.ai?.enteredBaseUrl);
     const gameCustom = Boolean(item?.protocols?.game?.enteredModel || item?.protocols?.game?.enteredBaseUrl);
     $('settings-ai-mode').value = aiCustom ? 'custom' : 'inherit';
@@ -69,11 +69,11 @@
     $('settings-region').value = item?.region || 'beijing';
     $('settings-workspace').value = item?.workspaceId || '';
     $('settings-token').value = '';
-    $('settings-token-status').textContent = saved?.accessTokenConfigured ? '已在后端保存' : '尚未保存口令';
+    $('settings-token-status').textContent = '纯静态页面不使用访问口令，也不会把口令发给本站。';
     showFields();
     dirty = false;
     $('settings-status').textContent = '连接尚未验证。';
-    $('settings-hint').textContent = '请先保存，再测试。测试已保存配置只检查本机状态，不会调用模型。测试模型调用会向已保存的服务发送一次请求，可能产生用量。';
+    $('settings-hint').textContent = '请先保存，再核对。核对只看这次页面内存里的地址、模型和密钥，不会连接供应商。';
     setBusy(false);
     document.querySelectorAll('[data-settings-vendor]').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.settingsVendor === active));
@@ -128,8 +128,6 @@
     if (rebindConfirm) body.vendors[active].confirmKeyBinding = 'clear-key-for-new-upstream';
     if (active === 'qwen') body.vendors[active].region = $('settings-region').value;
     if (active === 'anthropic' || active === 'qwen') body.vendors[active].workspaceId = $('settings-workspace').value.trim();
-    const token = $('settings-token').value;
-    if (token) body.accessToken = token;
     return body;
   }
 
@@ -147,34 +145,21 @@
     }
     setBusy(true);
     try {
-      const response = await fetch(api('assistant-config'), requestInit('PUT', payload()));
-      const data = await response.json().catch(() => ({}));
-      if (response.status === 401 && data.code === 'admin-auth') {
-        setBusy(false);
-        $('settings-admin-dialog').showModal();
-        $('settings-admin-token').focus();
-        return;
-      }
-      if (response.status === 409 && data.code === 'upstream-key-rebinding') {
+      const body = payload();
+      window.ATLAS_ASSISTANT.saveVendor(active, body.vendors[active]);
+      saved = window.ATLAS_ASSISTANT.view();
+      paint();
+      $('settings-status').textContent = '配置已保存';
+      result('只保存在这次打开的页面内存里。没有连接供应商，刷新或关闭后需要重填。', false);
+      $('settings-key').value = '';
+    } catch (error) {
+      if (error.code === 'upstream-key-rebinding') {
         setBusy(false);
         $('settings-rebind-dialog').showModal();
         $('settings-rebind-cancel').focus();
         return;
       }
-      if (!response.ok) {
-        result(data.error || '配置没有保存。', true);
-        setBusy(false);
-        if (data.field === 'accessToken') $('settings-token').focus();
-        return;
-      }
-      saved = data;
-      paint();
-      $('settings-status').textContent = '配置已保存';
-      result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
-      $('settings-key').value = '';
-      $('settings-token').value = '';
-    } catch {
-      unreachable(true);
+      result(error.message || '配置没有保存。', true);
       setBusy(false);
     }
   }
@@ -183,33 +168,24 @@
     return ['ai', 'game'].map((side) => data[side] ? `${data[side].course}：${data[side].message}` : '').filter(Boolean).join('\n');
   }
 
-  async function runTest(scope) {
+  function runTest() {
     if (busy || dirty) return;
-    setBusy(true);
-    try {
-      const response = await fetch(api('assistant-config/test'), requestInit('POST', scope === 'model'
-        ? { scope, vendor: active, confirm: 'test-model-usage' }
-        : { scope: 'status', vendor: active }));
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        result(data.error || '测试没有完成。', true);
-        setBusy(false);
-        return;
-      }
-      const failed = ['ai', 'game'].some((side) => data[side] && !['ok', 'configured', 'unconfigured'].includes(data[side].code));
-      result(describe(data), failed);
-      setBusy(false);
-    } catch {
-      unreachable(false);
-      setBusy(false);
-    }
+    const lines = ['ai', 'game'].map((course) => {
+      const item = saved?.vendors?.find((vendor) => vendor.id === active);
+      const ready = item?.protocols?.[course]?.configured;
+      const label = course === 'ai' ? 'AI 学伴' : '游戏助手';
+      return ready
+        ? `${label}：只核对了地址、模型和密钥是否已填写。没有向供应商发送请求，不能当作已经连通。`
+        : `${label}：还没有同时填好地址、模型和密钥。没有向供应商发送请求。`;
+    });
+    result(lines.join('\n'), lines.some((line) => line.includes('还没有')));
   }
 
   function activate(id, focusButton) {
     active = id;
     paint();
     $('settings-result').classList.remove('error');
-    result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
+    result('尚未核对。保存只表示写进这次页面内存，没有连接供应商。', false);
     if (focusButton) document.querySelector(`[data-settings-vendor="${id}"]`)?.focus();
   }
 
@@ -255,8 +231,8 @@
     $(id).addEventListener('change', () => { showFields(); mark(); });
   });
   $('settings-save').addEventListener('click', save);
-  $('settings-test').addEventListener('click', () => runTest('status'));
-  $('settings-model-test').addEventListener('click', () => runTest('model'));
+  $('settings-test').addEventListener('click', runTest);
+  $('settings-model-test').addEventListener('click', runTest);
   $('settings-clear').addEventListener('click', () => {
     if (busy) return;
     $('settings-clear-copy').textContent = `将清除${names[active]}的密钥、地址、模型和覆盖项。使用该配置的 AI／游戏助手将暂不可用；课程和学习进度不受影响。`;
@@ -266,25 +242,11 @@
   $('settings-clear-cancel').addEventListener('click', () => $('settings-clear-dialog').close());
   $('settings-clear-confirm').addEventListener('click', async () => {
     if (busy) return;
-    setBusy(true);
-    try {
-      const response = await fetch(api('assistant-config/clear'), requestInit('POST', { confirm: 'clear-vendor-configuration', vendor: active }));
-      const data = await response.json().catch(() => ({}));
-      $('settings-clear-dialog').close();
-      if (!response.ok) {
-        result(data.effect || data.error || '没有清除。', true);
-        setBusy(false);
-        return;
-      }
-      const fresh = await fetch(api('assistant-config'), { cache: 'no-store', credentials: 'same-origin' });
-      saved = await fresh.json();
-      activate(active, true);
-      result('此厂商配置已清除。课程与学习进度不受影响。', false);
-    } catch {
-      $('settings-clear-dialog').close();
-      unreachable(true);
-      setBusy(false);
-    }
+    $('settings-clear-dialog').close();
+    window.ATLAS_ASSISTANT.clearVendor(active);
+    saved = window.ATLAS_ASSISTANT.view();
+    activate(active, true);
+    result('此厂商配置已从这次页面内存清除。没有读取或迁移旧的后端密钥。课程和学习进度不受影响。', false);
   });
   $('settings-rebind-cancel').addEventListener('click', () => {
     rebindConfirm = false;
@@ -297,20 +259,10 @@
     save().finally(() => { rebindConfirm = false; });
   });
   $('settings-admin-cancel').addEventListener('click', () => $('settings-admin-dialog').close());
-  $('settings-admin-submit').addEventListener('click', async () => {
-    const token = $('settings-admin-token').value;
+  $('settings-admin-submit').addEventListener('click', () => {
     $('settings-admin-token').value = '';
-    try {
-      const response = await fetch(api('assistant-session'), requestInit('POST', { token }));
-      if (!response.ok) {
-        result('管理口令没有被接受。模型密钥仍然只在保存配置时提交。', true);
-        return;
-      }
-      $('settings-admin-dialog').close();
-      save();
-    } catch {
-      unreachable(true);
-    }
+    $('settings-admin-dialog').close();
+    result('纯静态页面不使用管理口令。请直接在本页填写供应商密钥。', true);
   });
   $('settings-unsaved-keep').addEventListener('click', () => { pending = null; $('settings-unsaved-dialog').close(); });
   $('settings-unsaved-discard').addEventListener('click', () => {
@@ -323,24 +275,7 @@
   });
   window.ATLAS_SETTINGS = { confirmLeave };
 
-  fetch(api('assistant-config'), { cache: 'no-store', credentials: 'same-origin' }).then(async (response) => {
-    if (response.status === 401) {
-      const data = await response.json().catch(() => ({}));
-      paint();
-      if (data.code === 'admin-auth') {
-        $('settings-admin-dialog').showModal();
-        $('settings-admin-token').focus();
-        return;
-      }
-      result(data.error || '请从入口页面重新打开。', true);
-      return;
-    }
-    if (!response.ok) throw new Error('status');
-    saved = await response.json();
-    paint();
-    result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
-  }).catch(() => {
-    paint();
-    unreachable(false);
-  });
+  saved = window.ATLAS_ASSISTANT.view();
+  paint();
+  result('密钥只留在这次打开的页面内存里。刷新或关闭后消失。没有读取旧的后端配置，也还没有连接供应商。', false);
 })();

@@ -27,4 +27,4 @@ HUB_BASE=/learning-hub/ npm run serve
 npm run test:integration
 ```
 
-可选的 AI 学伴和游戏助手由入口进程在服务端调用。供应商密钥由设置页写入本机配置文件（默认 `server/secrets/assistant-config.json`，权限 `0600`，不提交）。响应、状态和日志不回显密钥。独立课程目录里的 `.env` 不会被入口读取。部署条件和远程模式见 [deploy/README.md](deploy/README.md)。
+发布用的页面是静态文件。AI 学伴和游戏助手共用助手设置里的地址、模型和密钥，由浏览器直接请求用户填写的供应商；核磁仍只复制问题。密钥只留在这次打开的页面内存里，刷新或关闭后消失，不写入浏览器存储，也不送到本站服务器。页面不会读取或迁移旧的后端密钥。GitHub Pages 工作流见 `.github/workflows/pages.yml`，目标前缀是 `/learning-hub/`；这个文件已经写好，但没有启用 Pages，也没有触发发布。细节见 [deploy/README.md](deploy/README.md)。

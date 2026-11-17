@@ -8,7 +8,11 @@
 
 本机只用 `127.0.0.1` 上的静态文件服务器做过启停：首页、`/ai/`、`/nmr-from-zero/`、`/game/` 返回 200，`/api/assistant-config` 返回 404。停掉进程再启动，首页内容的 SHA-256 仍是 `6917ea473d3ea8fad518d152bdfb424d20ef6a767c6011a4cac7a927f55bb549`。这是本机预检，不是公网部署。
 
-静态站点上的设置页会写「后端不可达」，不会显示配置已保存，也不会显示模型调用成功。AI 学伴检查连接会说明无法连接；游戏助手会说明连接未建立。
+静态站点的助手设置把地址、模型和密钥留在这次打开的页面内存里。刷新或关闭后消失。浏览器直接请求用户填写的供应商，使用 `credentials: 'omit'`，不经过本站后端，也不读取旧的 `assistant-config.json`。核对配置不会声称已经连通。仓库根目录的 `.github/workflows/pages.yml` 会在 `main` 上以 `HUB_BASE=/learning-hub/` 构建 `dist` 并交给 GitHub Pages；这次只提交了工作流，没有启用 Pages，没有运行这个工作流，也没有部署。
+
+## 助手服务不是当前发布路径
+
+下面保留的是以前的 Node 远程模式说明。纯静态页面不依赖它，也不再把「后端保存密钥」当作默认。
 
 仓库元数据：`passwordis42/learning-hub` 是私有仓库，`has_pages` 为 false，`homepage` 为空。Actions 工作流 0 个，环境 0 个，Release 0 个。`sites/*/.github/workflows/pages.yml` 是课程快照里的原文件，仓库根目录没有 `.github/workflows`，这些文件不会发布本入口。Pages 和 Deployments 接口对当前令牌返回 403，不能据此当成已经配置的站点。仓库和配置里没有发现已分配的主机名或域名。
 
