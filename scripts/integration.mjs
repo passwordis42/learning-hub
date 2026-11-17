@@ -105,11 +105,19 @@ async function exercise(browser, origin, base, viewport, label) {
   const home = new URL(base, origin).href;
   await page.goto(home, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('h1');
+  await page.waitForFunction(() => !document.querySelector('#veil'));
   if (label === 'desktop-root') await shot(page, 'hub_home_desktop.png');
   if (label === 'phone-root') await shot(page, 'hub_home_phone.png');
   if (label === 'desktop-nested') await shot(page, 'hub_home_nested_desktop.png');
 
-  await page.waitForFunction(() => document.querySelectorAll('[role="img"][aria-label*="待开发"]').length === 4);
+  await page.waitForFunction(() => {
+    const dock = document.querySelector('#dock');
+    return document.querySelector('#sea')
+      && document.body.innerText.includes('学习入口')
+      && dock
+      && dock.getAttribute('aria-hidden') === 'true'
+      && document.querySelectorAll('.w-isle').length >= 3;
+  });
   await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {
     const frame = document.querySelector('#lesson-frame');
@@ -124,8 +132,10 @@ async function exercise(browser, origin, base, viewport, label) {
   });
   if (!chromeHidden) throw new Error('embedded lesson still shows its own sidebar');
   if (label === 'desktop-root' || label === 'phone-root') await shot(page, label === 'phone-root' ? 'reader_nmr_phone.png' : 'reader_nmr_desktop.png');
-  await page.locator('#return-islands').click();
-  await page.waitForFunction(() => document.body.innerText.includes('向好奇的方向'));
+  await page.locator('#backLink').click();
+  await page.waitForFunction(() => document.querySelector('.harbor') && document.body.innerText.includes('从零看懂核磁共振'));
+  await page.locator('#backLink').click();
+  await page.waitForFunction(() => document.body.innerText.includes('今天，去哪座岛') && !document.querySelector('.harbor'));
   if (label === 'desktop-root') await shot(page, 'hub_back_desktop.png');
 
   requests.length = 0;
@@ -171,12 +181,16 @@ async function exercise(browser, origin, base, viewport, label) {
   });
   const stored = await page.evaluate(async () => ({
     keys: Object.keys(localStorage).sort(),
+    readingSize: localStorage.getItem('lh-fs'),
     databases: 'databases' in indexedDB ? (await indexedDB.databases()).map((item) => item.name) : [],
     caches: await caches.keys(),
   }));
-  const foreign = stored.keys.filter((key) => !key.startsWith('learning-atlas:') && !key.startsWith('nmr-from-zero.') && !key.startsWith('game-design-atlas:'));
+  const foreign = stored.keys.filter((key) => key !== 'lh-fs' && !key.startsWith('learning-atlas:') && !key.startsWith('nmr-from-zero.') && !key.startsWith('game-design-atlas:'));
   if (foreign.length || !stored.keys.includes('learning-atlas:chapters') || !stored.keys.includes('nmr-from-zero.progress.v2') || !stored.keys.includes('game-design-atlas:learning:v1')) {
     throw new Error(`storage keys ${stored.keys.join(',')}`);
+  }
+  if (!/^(1[5-9]|2[0-4])$/.test(stored.readingSize || '')) {
+    throw new Error(`lh-fs must be an integer font size from 15 to 24, got ${stored.readingSize}`);
   }
   if (stored.databases.length || stored.caches.length) {
     throw new Error(`unexpected web storage ${JSON.stringify(stored)}`);

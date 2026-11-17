@@ -167,8 +167,8 @@ try {
     shots.push(path.join(outDir, `direct_tutor_${label}.png`));
 
     const gameBefore = calls.length;
-    await page.locator('#learning-page button[data-course="game"]').click();
-    await page.evaluate(() => document.querySelector('#lesson-nav button[data-lesson-module="game-coach"]').click());
+    await page.locator('#switcher a[data-course="game"]').click();
+    await page.locator('a[data-lesson-module="game-coach"]').click();
     const game = page.frameLocator('#lesson-frame');
     await game.locator('#coach-draft').waitFor();
     await game.locator('#coach-draft').fill('玩家先选一条路，再看电量够不够走回去。');
@@ -199,8 +199,8 @@ try {
     await page.getByText('只保存在这次打开的页面内存里').waitFor();
     const switched = calls.length;
     await page.locator('#settings-back').click();
-    await page.locator('#learning-page button[data-course="ai"]').click();
-    await page.evaluate(() => document.querySelector('#lesson-nav button[data-lesson-module="ai-tutor"]').click());
+    await page.locator('#switcher a[data-course="ai"]').click();
+    await page.locator('a[data-lesson-module="ai-tutor"]').click();
     await page.frameLocator('#lesson-frame').locator('textarea').first().fill('换地址后再问一次。');
     await page.frameLocator('#lesson-frame').getByRole('button', { name: '向导师提问' }).click();
     await page.frameLocator('#lesson-frame').getByText('模拟回复：课程上下文已收到').waitFor({ timeout: 20000 });
@@ -235,4 +235,4 @@ await mkdir(outDir, { recursive: true });
 await writeFile(path.join(outDir, 'direct-browser-report.md'), report);
 await writeFile(path.join(outDir, 'direct-browser-requests.json'), JSON.stringify(calls, null, 2));
 process.stdout.write(`${report}\n`);
-if (checks.some((item) => !item.ok)) process.exit(1);
+process.exit(checks.some((item) => !item.ok) ? 1 : 0);

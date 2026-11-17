@@ -1,0 +1,72 @@
+/* 离线字体：使用仓库已有 Noto，不请求 Google Fonts。 */
+@import url('../fonts/sans.css');
+@import url('../fonts/serif.css');
+
+html:has(body.in-course) {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+html:has(body.in-course) body {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+html:has(body.in-course.assist-open) { overflow: hidden; }
+body.in-course { background: var(--bg, #f6f1e6); }
+body.in-course #hubScene {
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+body.in-course #hubScene * { visibility: hidden !important; pointer-events: none !important; }
+body.in-course.assist-open #assist,
+body.in-course.assist-open #assist *,
+body.in-course.assist-open #scrim {
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+@media (max-width: 760px) {
+  #courseShell .topbar { flex-wrap: wrap; row-gap: .35rem; }
+  #courseShell .switcher { order: 3; flex: 1 0 100%; margin: 0; justify-content: center; min-width: 0; }
+  #courseShell .top-actions { margin-left: auto; }
+}
+@media (max-width: 420px) {
+  #open-settings { width: 2.6rem; padding: 0; font-size: 0; }
+  #open-settings::after { content: "设"; font-size: .85rem; font-weight: 700; }
+}
+#courseShell { position: relative; z-index: 5; min-height: 100%; background: var(--bg, #f6f1e6); }
+#courseShell[hidden] { display: none !important; }
+.harbor.harbor-fallback .fallback,
+.no-gl .harbor .fallback { display: block; }
+.lesson-embed { width: 100%; min-height: 70vh; border: 0; background: transparent; display: block; }
+.assist { width: min(42rem, calc(100vw - 1.5rem)); }
+.assist .settings-page { max-width: none; margin: 0; padding: 0; }
+.assist .settings-layout { display: block; }
+.assist .settings-vendors { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin: .2rem 0 1rem; }
+.assist .settings-card { min-width: 0; padding: 0; background: transparent; color: var(--ink); }
+.assist .settings-card h1 { font-family: var(--f-display); font-size: 1.45rem; line-height: 1.3; margin: .2rem 0; }
+.assist .settings-card h2 { font-size: 1.15rem; margin: .4rem 0; }
+.assist .settings-card p,
+.assist .settings-card small { overflow-wrap: anywhere; }
+.assist .settings-back,
+.assist .settings-vendors button,
+.assist .settings-actions button,
+.assist .settings-card input,
+.assist .settings-card select { font: inherit; min-height: 44px; width: 100%; box-sizing: border-box; }
+.assist .settings-vendors button { text-align: left; }
+.assist .settings-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.assist .settings-actions button { width: auto; }
+.assist .settings-override { display: grid; gap: .8rem; }
+.assist dialog { border: 0; border-radius: 16px; padding: 1rem; max-width: min(28rem, calc(100vw - 2rem)); }
+.assist dialog::backdrop { background: rgba(6, 24, 36, .45); }
+@media (max-width: 390px) {
+  .assist .settings-vendors { grid-template-columns: 1fr; }
+}

@@ -90,3 +90,17 @@ html.is-hub-embed .hardware,
 html.is-hub-embed .math {
   overflow-x: auto;
 }
+html.is-hub-embed {
+  --hub-reading-size: 18px;
+}
+html.is-hub-embed :is(p, li, dd, blockquote) {
+  font-size: var(--hub-reading-size) !important;
+  overflow-wrap: break-word;
+}
+html.is-hub-embed :is(h2, h3) {
+  font-size: calc(var(--hub-reading-size) * 1.45) !important;
+  line-height: 1.35;
+}
+html.is-hub-embed .katex {
+  font-size: 20px !important;
+}
