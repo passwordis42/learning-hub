@@ -34,7 +34,13 @@ test('opus redesign keeps the original ocean and the real course shell', async (
   assert.match(bind, /ATLAS_CATALOG/);
   assert.match(reader, /id="lesson-frame"/);
   assert.match(reader, /LH_RESTORE/);
-  assert.doesNotMatch(reader, /设计稿说明|示例正文|lessons\.js/);
+  assert.match(reader, /hub-reading-size/);
+  assert.doesNotMatch(reader, /设计稿说明|示例正文|lessons\.js|只改变纸面标题|只改标题/);
+  const bridge = await readFile(path.join(root, 'portal/assets/embed-bridge.js'), 'utf8');
+  const skin = await readFile(path.join(root, 'portal/assets/embed-skin.css'), 'utf8');
+  assert.match(bridge, /hub-reading-size/);
+  assert.match(skin, /--hub-reading-size/);
+  assert.doesNotMatch(skin, /zoom\s*:|transform\s*:\s*scale/);
 
   const allowed = new Set(['lh-motion', 'lh-quality', 'lh-welcome', 'lh-theme', 'lh-fs']);
   const opusFiles = await filesIn(path.join(root, 'portal/assets/opus'));

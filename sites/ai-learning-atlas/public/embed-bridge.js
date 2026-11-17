@@ -17,4 +17,12 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
       window.parent.postMessage({ type: 'hub-embed-escape' }, location.origin);
     }
   });
+  addEventListener('message', (event) => {
+    if (event.origin !== location.origin || event.source !== window.parent) return;
+    if (!event.data || event.data.type !== 'hub-reading-size') return;
+    const px = Math.round(Number(event.data.px));
+    if (!Number.isFinite(px)) return;
+    document.documentElement.style.setProperty('--hub-reading-size', `${Math.min(24, Math.max(15, px))}px`);
+    report();
+  });
 }

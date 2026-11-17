@@ -36,6 +36,24 @@
   function motionOn() {
     return window.LH_MOTION ? window.LH_MOTION.on : !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
+  function clampReading(value) {
+    var size = parseInt(value, 10);
+    if (!size) return 18;
+    return Math.max(15, Math.min(24, size));
+  }
+  function currentReading() {
+    return clampReading(getComputedStyle(document.documentElement).getPropertyValue('--fs'));
+  }
+  function publishReading(px) {
+    var next = clampReading(px);
+    document.documentElement.style.setProperty('--fs', next + 'px');
+    try { localStorage.setItem('lh-fs', String(next)); } catch (err) {}
+    var frame = document.getElementById('lesson-frame');
+    if (frame && frame.contentWindow && frame.contentWindow !== window) {
+      frame.contentWindow.postMessage({ type: 'hub-reading-size', px: next }, location.origin);
+    }
+    return next;
+  }
 
   var restoreSession = null;
   function release(session) {
@@ -297,7 +315,9 @@
         '<article class="lesson lesson-article">' +
           '<header class="lesson-head"><div class="crumbs"><a data-hub-route href="' + esc(location.pathname + '#' + course.id) + '">群岛</a><span>›</span><a href="' + esc(course.href) + '">' + esc(course.fullName) + '</a><span>›</span><span>' + esc(current.g) + '</span></div>' +
           '<h1 id="lt">' + esc(current.t) + '</h1>' +
-          '<div class="meta"><span class="pill accent">' + esc(course.facility) + '</span><span class="pill">' + esc(current.g) + '</span><span class="pill">正式课程</span></div></header>' +
+          '<div class="meta"><span class="pill accent">' + esc(course.facility) + '</span><span class="pill">' + esc(current.g) + '</span><span class="pill">正式课程</span>' +
+          '<span class="fs-ctl" role="group" aria-label="阅读字号"><button id="fsDown" type="button" aria-label="缩小阅读字号">A−</button><button id="fsUp" type="button" aria-label="放大阅读字号">A+</button></span></div>' +
+          '<p class="reading-size-note">这个字号作用于课程正文，不是浏览器页面缩放。</p></header>' +
           wave +
           '<iframe id="lesson-frame" class="lesson-embed" title="' + esc(current.t) + '" src="' + esc(frameSrc(current.local)) + '"></iframe>' +
           '<nav class="pager" aria-label="上一节 / 下一节">' +
@@ -307,7 +327,6 @@
         '</article>' +
         '<aside class="rail" aria-label="本课工具">' +
           '<div class="box"><h4>这一节</h4><p>正文、公式、实验和小测在左侧纸面里的正式课程中，不使用设计稿示例。</p></div>' +
-          '<div class="box"><h4>阅读字号</h4><div class="fs-ctl"><button id="fsDown" type="button" aria-label="缩小纸面字号">A−</button><button id="fsUp" type="button" aria-label="放大纸面字号">A+</button></div><p>这只改变纸面标题字号，不是浏览器缩放。</p></div>' +
           '<div class="box"><h4>原课程</h4><a class="mini" href="' + esc(course.origin) + '">在独立页面打开</a></div>' +
         '</aside></div>';
     var search = document.getElementById('tocSearch');
@@ -322,12 +341,9 @@
       document.body.classList.remove('toc-open');
       if (tocBtn) tocBtn.setAttribute('aria-expanded', 'false');
     });
-    function setFs(delta) {
-      var currentSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fs'), 10) || 18;
-      var next = Math.max(15, Math.min(24, currentSize + delta));
-      document.documentElement.style.setProperty('--fs', next + 'px');
-      try { localStorage.setItem('lh-fs', String(next)); } catch (err) {}
-    }
+    function setFs(delta) { publishReading(currentReading() + delta); }
+    var frameEl = document.getElementById('lesson-frame');
+    if (frameEl) frameEl.addEventListener('load', function () { publishReading(currentReading()); });
     var down = document.getElementById('fsDown');
     var up = document.getElementById('fsUp');
     if (down) down.addEventListener('click', function () { setFs(-1); });
@@ -412,7 +428,7 @@
   paintCourseMotion();
   try {
     var storedSize = localStorage.getItem('lh-fs');
-    if (storedSize) document.documentElement.style.setProperty('--fs', storedSize + 'px');
+    if (storedSize) publishReading(storedSize);
   } catch (err) {}
   render();
 })();
