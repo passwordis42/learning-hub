@@ -1,4 +1,16 @@
+import { assertSafeUpstream } from '../../../server/safe-upstream.mjs';
+
 export const modes = ['coach', 'review', 'implementation'];
+
+function configuredBase(env, name) {
+  const raw = env[name]?.trim() || '';
+  if (!raw) return null;
+  try {
+    return assertSafeUpstream(raw);
+  } catch {
+    return '';
+  }
+}
 
 const reviewDimensions = {
   goal: ['你希望哪个玩家在这个情境下获得什么感受？', '核对草案是否说明了目标玩家和体验。', '请补写这条规则服务的玩家体验。'],
@@ -52,6 +64,7 @@ const qwenRegions = {
 };
 
 function qwenEndpoint(env) {
+  if (env.QWEN_BASE_URL?.trim()) return configuredBase(env, 'QWEN_BASE_URL') || '';
   const region = env.QWEN_REGION?.trim().toLowerCase() || 'beijing';
   if (!Object.hasOwn(qwenRegions, region)) return '';
 
@@ -67,7 +80,9 @@ export function configuredProviders(env) {
   return Object.fromEntries(Object.entries(providerDefinitions).map(([id, definition]) => {
     const key = env[definition.key]?.trim();
     const model = env[definition.modelEnv]?.trim() || definition.model;
-    const url = id === 'qwen' ? qwenEndpoint(env) : definition.url;
+    const overrideName = { openai: 'OPENAI_BASE_URL', anthropic: 'ANTHROPIC_BASE_URL', deepseek: 'DEEPSEEK_BASE_URL' }[id];
+    const override = overrideName ? configuredBase(env, overrideName) : null;
+    const url = id === 'qwen' ? qwenEndpoint(env) : (override ?? definition.url);
     return [id, { id, label: definition.label, model, key, url, configured: Boolean(key && url) }];
   }));
 }

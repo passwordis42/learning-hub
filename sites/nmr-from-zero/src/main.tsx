@@ -3,4 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import 'katex/dist/katex.min.css';
 import './styles.css';
+
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.documentElement.classList.add('is-hub-embed');
+}
 createRoot(document.getElementById('root')!).render(<StrictMode><App/></StrictMode>);

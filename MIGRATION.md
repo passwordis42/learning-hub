@@ -18,7 +18,7 @@
 
 ```text
 public/index.html                 占位入口
-server/hub.mjs                    静态服务与固定回环代理
+server/hub.mjs                    静态服务与本机助手配置
 sites/ai-learning-atlas/          独立 lockfile，Vite base 仍是 ./
 sites/nmr-from-zero/              独立 lockfile
 sites/game-design-atlas/          无依赖、无 lockfile，直接提供 docs/
@@ -58,14 +58,18 @@ dist/                             npm run build 生成，不入库
 
 ## 可选模型助手
 
-静态页面本身不代理，也不包含 API 密钥。
+静态页面不包含 API 密钥。hub 在进程内调用两门课原有的助手实现，不再把请求转发到 8787 或 4173。
 
-- AI 学伴源码仍在 `sites/ai-learning-atlas/server/`。生产构建不会自动请求 `/api/tutor`；页面要求填写服务地址，默认示例是 `http://127.0.0.1:8787/api/tutor`。在该目录复制 `.env.example` 为不提交的 `.env` 后执行 `npm run tutor`。hub 对 `/api/tutor` 返回 404。
-- 游戏助手源码仍在 `sites/game-design-atlas/server/`。它只监听 `127.0.0.1`，并只接受本机 Host。在该目录执行 `npm start`，默认端口 4173。
-- 浏览器若从 `localhost`、`127.0.0.1` 或 `[::1]` 打开游戏页，课程脚本会请求当前源站的 `GET /api/status` 和 `POST /api/assist`。`npm run serve` 只把这两个精确路径和方法转发到固定的 `http://127.0.0.1:4173`。不接受查询串，不转发 `Authorization`、`Cookie` 或 `Origin`，不使用请求里的地址，不返回上游的 CORS 或 `Set-Cookie`，也不记录请求体。助手没启动时返回 503，页面保持原来的连接失败说明。密钥未配置时，游戏服务返回 503「这个 AI 服务还未在本地配置。」，请求在调用外部模型之前结束。
-- 非本机页面仍按原逻辑直接访问 `http://127.0.0.1:4173`，并继续受游戏服务自己的 `TRUSTED_SITE_ORIGIN` 约束。
+- `GET /api/assistant-config` 返回供应商、模型和地址是否已配置，不返回密钥或访问口令。
+- `PUT /api/assistant-config` 只有请求体包含 `save: true` 才写入。省略某个 `apiKey` 会保留已保存的密钥。
+- `POST /api/assistant-config/clear` 只有 `confirm` 等于 `clear-assistant-configuration` 才删除文件，并说明这会让 AI 学伴和游戏助手在再次保存前无法调用模型，核磁不受影响，也不会读取或迁移旧 `.env`。
+- 四家供应商共用各自的地址和模型。AI 与游戏协议路径不同，所以 OpenAI 仍分别走 Responses 和 Chat Completions。某一侧没有显式模型时，不会把密钥交给那一侧，因此游戏的 `gpt-4.1-mini` 等默认模型不会套到 AI。
+- 自定义上游先做 SSRF 校验：非本机必须是 HTTPS，拒绝用户信息、查询串、内网和链路本地地址；主机名会解析，解析到内网则拒绝。
+- 配置文件默认是 `server/secrets/assistant-config.json`，权限 `0600`，已被 gitignore。可用 `ASSISTANT_CONFIG_PATH` 改位置。hub 不读取 `sites/*/.env` 或进程里的密钥环境变量。
+- 游戏页在本机打开时仍请求同源 `/api/status` 和 `/api/assist`。未配置时返回原来的 503「这个 AI 服务还未在本地配置。」状态响应不含密钥。
+- AI 学伴页面仍要求填写服务地址。把地址指到本机 hub 的 `/api/tutor` 后，使用同一份已保存配置。生产构建不会自动请求它。核磁仍只复制问题。
 
-本次没有配置真实密钥，也没有调用外部模型。学伴的现有单元测试使用模拟响应。游戏页在助手未配置时会显示需要 API 密钥，这个状态被集成测试覆盖。真正的模型回复、口令校验和付费调用没有验证。
+本次没有配置真实密钥，也没有调用外部模型。学伴的现有单元测试使用模拟响应。游戏页在助手未配置时会显示需要 API 密钥。真正的模型回复和付费调用没有验证。设置页视觉仍等设计稿，目前只有上述接口。
 
 ## 命令
 
@@ -85,9 +89,14 @@ npm run serve
 
 `npm test` 包含快照哈希、存储键审计、入口路由测试，以及三个目录原来的测试。`test:integration` 会按两个前缀分别构建，再用本机 Chrome 检查桌面和手机视口。
 
+## 首页与阅读
+
+v6 群岛首页在 `portal/`。目录来自三门课的真实课节，链到本地地址。阅读区去掉课程外框，正文仍是原模块，和页面一起滚动。对照见 `FEATURE-MAP.md`。助手字段见 `API-FIELDS.md`。字体是 SIL OFL 的 Noto Sans SC 400/700 与 Noto Serif SC 400 全量分片，不再使用只覆盖设计稿的子集。
+
 ## 限制
 
 - 构建和 `npm run serve` 必须使用同一个 `HUB_BASE`。NMR 的资源前缀在构建时写入 CSS 和 HTML。
-- hub 只监听 `127.0.0.1`。游戏代理的上游固定为 `127.0.0.1:4173`，不能通过请求改成其他地址。
+- hub 只监听 `127.0.0.1`。助手配置接口还要求 Host 是本机，并且不返回 CORS 头。
+- 没有设置页。没有从旧 `.env` 导入或自动迁移密钥。
 - 旧源站的 `localStorage` 不会迁移。
 - 外部模型调用、已配置密钥时的助手回复，以及 AI 学伴在浏览器里的真实提问，这次没有运行。

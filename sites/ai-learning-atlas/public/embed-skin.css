@@ -1,0 +1,86 @@
+@import url('../assets/fonts/sans.css');
+@import url('../assets/fonts/serif.css');
+
+html.is-hub-embed,
+html.is-hub-embed body {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  background: #f7f4ea;
+  color: #183f4b;
+  font-family: IslandSans, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 17px;
+  line-height: 1.85;
+}
+html.is-hub-embed .sidebar,
+html.is-hub-embed .topbar,
+html.is-hub-embed .footer,
+html.is-hub-embed .page-footer,
+html.is-hub-embed .site-header,
+html.is-hub-embed .menu-toggle,
+html.is-hub-embed .sidebar-backdrop,
+html.is-hub-embed .week-index,
+html.is-hub-embed .skip-link,
+html.is-hub-embed .skip {
+  display: none !important;
+}
+html.is-hub-embed .atlas-shell,
+html.is-hub-embed .workspace,
+html.is-hub-embed .study-grid {
+  display: block !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-width: none !important;
+}
+html.is-hub-embed main,
+html.is-hub-embed #main {
+  width: min(928px, 100%) !important;
+  max-width: 928px !important;
+  margin-inline: auto !important;
+  padding: 4px 0 28px !important;
+}
+html.is-hub-embed h1 {
+  font-family: IslandSerif, "Noto Serif SC", serif;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+html.is-hub-embed .primary-button,
+html.is-hub-embed .action.primary,
+html.is-hub-embed .primary-link,
+html.is-hub-embed button.primary-button {
+  background: #183f4b;
+  color: #f7f4ea;
+  border: 1px solid #183f4b;
+  border-radius: 4px;
+  min-height: 44px;
+}
+html.is-hub-embed .secondary-button,
+html.is-hub-embed .action.secondary,
+html.is-hub-embed .outline-button,
+html.is-hub-embed .quiz-option,
+html.is-hub-embed .study-step-nav a,
+html.is-hub-embed .lab-tabs a,
+html.is-hub-embed .filter-row button {
+  border-radius: 4px;
+  min-height: 40px;
+}
+html.is-hub-embed input,
+html.is-hub-embed textarea,
+html.is-hub-embed select {
+  border: 1px solid #7a9d8c;
+  border-radius: 3px;
+  background: #fffef4;
+  color: #183f4b;
+  font: inherit;
+}
+html.is-hub-embed .machine-diagram,
+html.is-hub-embed .intro-machine .machine-diagram {
+  min-width: 0 !important;
+  width: 100%;
+  max-width: 100%;
+}
+html.is-hub-embed .hardware,
+html.is-hub-embed .math {
+  overflow-x: auto;
+}

@@ -5,6 +5,41 @@
       "path": "sites/nmr-from-zero/vite.config.ts",
       "originalBlob": "e449cbe8590ab1cc002dbcbdf49b1ab8f1f874c0",
       "reason": "Read HUB_BASE at build time. Unset, empty, or / keeps the original base /nmr-from-zero/. A prefix such as /learning-hub/ builds /learning-hub/nmr-from-zero/."
+    },
+    {
+      "path": "sites/ai-learning-atlas/index.html",
+      "originalBlob": "f51dbb9ef9dcb654f1ce0592a501c12c81064ecf",
+      "reason": "Link the hub embed skin and bridge. Standalone route and lesson text stay."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/main.jsx",
+      "originalBlob": "f2baba28342a2b0568c61aa67fb634cce71f18bf",
+      "reason": "Mark embed=1 so the hub can hide the original shell."
+    },
+    {
+      "path": "sites/nmr-from-zero/index.html",
+      "originalBlob": "f926e46dee62d87cf8f8097a111fcf1f32be1ce8",
+      "reason": "Link the hub embed skin and bridge."
+    },
+    {
+      "path": "sites/nmr-from-zero/src/main.tsx",
+      "originalBlob": "7395da7797fde464b38f40e5ef54713929278e95",
+      "reason": "Mark embed=1 so the hub can hide the original shell."
+    },
+    {
+      "path": "sites/game-design-atlas/docs/index.html",
+      "originalBlob": "592b85297f4e226fd610b0801a1ca2c4a453ea96",
+      "reason": "Link the hub embed skin and bridge."
+    },
+    {
+      "path": "sites/ai-learning-atlas/server/index.mjs",
+      "originalBlob": "c896656a44d91b7df4bb095e924d68986e8d917c",
+      "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or DASHSCOPE_BASE_URL. Unset variables keep the original endpoints."
+    },
+    {
+      "path": "sites/game-design-atlas/server/coach.mjs",
+      "originalBlob": "e55e5308faeeb5645e51ccfa9411e023fdc44f81",
+      "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or QWEN_BASE_URL. Unset variables keep the original endpoints and model defaults."
     }
   ],
   "sources": [
@@ -682,5 +717,13 @@
         }
       ]
     }
+  ],
+  "additions": [
+    "sites/ai-learning-atlas/public/embed-skin.css",
+    "sites/ai-learning-atlas/public/embed-bridge.js",
+    "sites/nmr-from-zero/public/embed-skin.css",
+    "sites/nmr-from-zero/public/embed-bridge.js",
+    "sites/game-design-atlas/docs/embed-skin.css",
+    "sites/game-design-atlas/docs/embed-bridge.js"
   ]
 }

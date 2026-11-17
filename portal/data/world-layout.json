@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "purpose": "本地原创场景布局；预留岛不代表已发布课程或上线计划。",
+  "reserves": [
+    {
+      "id": "north-west",
+      "x": 100,
+      "y": 116,
+      "sx": 0.5,
+      "sy": 0.43,
+      "seed": 43,
+      "depth": "far",
+      "status": "reserved"
+    },
+    {
+      "id": "north-east",
+      "x": 858,
+      "y": 78,
+      "sx": 0.61,
+      "sy": 0.43,
+      "seed": 57,
+      "depth": "far",
+      "status": "reserved"
+    },
+    {
+      "id": "west",
+      "x": 112,
+      "y": 622,
+      "sx": 0.69,
+      "sy": 0.63,
+      "seed": 73,
+      "depth": "near",
+      "status": "reserved"
+    },
+    {
+      "id": "east",
+      "x": 937,
+      "y": 545,
+      "sx": 0.42,
+      "sy": 0.53,
+      "seed": 89,
+      "depth": "near",
+      "status": "reserved"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "week": 1,
+    "lab": "loop",
+    "file": "docs/data/lessons-01-09.js"
+  },
+  {
+    "week": 5,
+    "lab": "prototype",
+    "file": "docs/data/lessons-01-09.js"
+  },
+  {
+    "week": 7,
+    "lab": "economy",
+    "file": "docs/data/lessons-01-09.js"
+  },
+  {
+    "week": 8,
+    "lab": "funnel",
+    "file": "docs/data/lessons-01-09.js"
+  },
+  {
+    "week": 9,
+    "lab": "route",
+    "file": "docs/data/lessons-01-09.js"
+  },
+  {
+    "week": 10,
+    "lab": "route",
+    "file": "docs/data/lessons-10-18.js"
+  },
+  {
+    "week": 14,
+    "lab": "funnel",
+    "file": "docs/data/lessons-10-18.js"
+  },
+  {
+    "week": 15,
+    "lab": "funnel",
+    "file": "docs/data/lessons-10-18.js"
+  },
+  {
+    "week": 16,
+    "lab": "timing",
+    "file": "docs/data/lessons-10-18.js"
+  },
+  {
+    "week": 20,
+    "lab": "economy",
+    "file": "docs/data/lessons-19-28.js"
+  },
+  {
+    "week": 25,
+    "lab": "research-log",
+    "file": "docs/data/lessons-19-28.js"
+  },
+  {
+    "week": 26,
+    "lab": "funnel",
+    "file": "docs/data/lessons-19-28.js"
+  },
+  {
+    "week": 27,
+    "lab": "funnel",
+    "file": "docs/data/lessons-19-28.js"
+  }
+]

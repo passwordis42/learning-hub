@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -102,18 +103,23 @@ async function exercise(browser, origin, base, viewport, label) {
   if (label === 'phone-root') await shot(page, 'hub_home_phone.png');
   if (label === 'desktop-nested') await shot(page, 'hub_home_nested_desktop.png');
 
-  for (const [name, href, heading] of [
-    ['AI Learn', 'ai/', 'AI 学习图谱'],
-    ['NMR Learn', 'nmr-from-zero/', '从一杯水'],
-    ['Game Learn', 'game/', '游戏设计学习图谱'],
-  ]) {
-    await page.goto(home, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('link', { name }).click();
-    await page.waitForURL((url) => url.pathname.endsWith(`/${href}`));
-    await page.waitForFunction((text) => document.body.innerText.includes(text), heading);
-    await page.goBack({ waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => document.body.innerText.includes('统一学习入口'));
-  }
+  await page.waitForFunction(() => document.querySelectorAll('[role="img"][aria-label*="待开发"]').length === 4);
+  await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const frame = document.querySelector('#lesson-frame');
+    return frame && !frame.hidden && frame.contentDocument?.body?.innerText.includes('仪器里有什么');
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => location.search.includes('module=nmr-1-1') && document.querySelector('#lesson-frame')?.contentDocument?.body?.innerText.includes('仪器里有什么'));
+  const chromeHidden = await page.evaluate(() => {
+    const frame = document.querySelector('#lesson-frame').contentDocument;
+    const sidebar = frame.querySelector('.sidebar');
+    return !sidebar || getComputedStyle(sidebar).display === 'none';
+  });
+  if (!chromeHidden) throw new Error('embedded lesson still shows its own sidebar');
+  if (label === 'desktop-root' || label === 'phone-root') await shot(page, label === 'phone-root' ? 'reader_nmr_phone.png' : 'reader_nmr_desktop.png');
+  await page.locator('#return-islands').click();
+  await page.waitForFunction(() => document.body.innerText.includes('向好奇的方向'));
   if (label === 'desktop-root') await shot(page, 'hub_back_desktop.png');
 
   requests.length = 0;
@@ -206,7 +212,14 @@ try {
     for (const url of urls) {
       if (!url.includes(`${base}nmr-from-zero/`)) throw new Error(`font ${url} is outside ${base}`);
     }
-    const server = start(process.execPath, ['server/hub.mjs'], { cwd: root, env: cleanEnv({ HUB_BASE: base, PORT: String(port) }) });
+    const server = start(process.execPath, ['server/hub.mjs'], {
+      cwd: root,
+      env: cleanEnv({
+        HUB_BASE: base,
+        PORT: String(port),
+        ASSISTANT_CONFIG_PATH: path.join(tmpdir(), `learning-hub-assistant-${process.pid}-${port}.json`),
+      }),
+    });
     processes.push(server);
     const origin = `http://127.0.0.1:${port}`;
     await waitFor(`${origin}${base}`, server);
@@ -247,7 +260,10 @@ try {
         const tutorBody = await directTutor.json();
         if (!tutorBody.providers?.every((item) => item.configured === false)) throw new Error(JSON.stringify(tutorBody));
         const proxiedTutor = await fetch(`${origin}/api/tutor`);
-        if (proxiedTutor.status !== 404) throw new Error(`hub proxied tutor: ${proxiedTutor.status}`);
+        const proxiedBody = await proxiedTutor.json();
+        if (proxiedTutor.status !== 200 || proxiedBody.providers?.some((item) => item.configured || item.key)) {
+          throw new Error(`tutor seam ${proxiedTutor.status} ${JSON.stringify(proxiedBody)}`);
+        }
       });
       await record('game page reports assistant unconfigured', async () => {
         const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });

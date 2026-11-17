@@ -1,6 +1,17 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createServer } from 'node:http'
 import { pathToFileURL } from 'node:url'
+import { assertSafeUpstream } from '../../../server/safe-upstream.mjs'
+
+function configuredBase(env, name) {
+  const raw = value(env, name)
+  if (!raw) return null
+  try {
+    return assertSafeUpstream(raw)
+  } catch {
+    return ''
+  }
+}
 
 const endpoint = '/api/tutor'
 const bodyLimit = 40_000
@@ -26,6 +37,7 @@ function value(env, name) {
 }
 
 function dashscopeUrl(env) {
+  if (value(env, 'DASHSCOPE_BASE_URL')) return configuredBase(env, 'DASHSCOPE_BASE_URL') || ''
   const region = value(env, 'DASHSCOPE_REGION') || 'cn-beijing'
   const workspace = value(env, 'DASHSCOPE_WORKSPACE_ID')
   const regions = new Set(['cn-beijing', 'ap-southeast-1', 'us-east-1', 'cn-hongkong', 'ap-northeast-1'])
@@ -48,20 +60,20 @@ function providersFor(env) {
       label: 'OpenAI',
       key: value(env, 'OPENAI_API_KEY'),
       model: value(env, 'OPENAI_MODEL'),
-      url: 'https://api.openai.com/v1/responses',
+      url: configuredBase(env, 'OPENAI_BASE_URL') ?? 'https://api.openai.com/v1/responses',
     },
     claude: {
       label: 'Claude',
       key: value(env, 'ANTHROPIC_API_KEY'),
       model: value(env, 'ANTHROPIC_MODEL'),
-      url: 'https://api.anthropic.com/v1/messages',
+      url: configuredBase(env, 'ANTHROPIC_BASE_URL') ?? 'https://api.anthropic.com/v1/messages',
       workspace: value(env, 'ANTHROPIC_WORKSPACE_ID'),
     },
     deepseek: {
       label: 'DeepSeek',
       key: value(env, 'DEEPSEEK_API_KEY'),
       model: value(env, 'DEEPSEEK_MODEL'),
-      url: 'https://api.deepseek.com/chat/completions',
+      url: configuredBase(env, 'DEEPSEEK_BASE_URL') ?? 'https://api.deepseek.com/chat/completions',
     },
     qwen: {
       label: 'Qwen',

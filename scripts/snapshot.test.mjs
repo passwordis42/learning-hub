@@ -26,10 +26,10 @@ function blob(file) {
   return execFileSync('git', ['hash-object', file], { encoding: 'utf8' }).trim();
 }
 
-test('pinned snapshots match upstream blobs except the documented NMR base adaptation', async () => {
-  assert.equal(manifest.adaptations.length, 1);
-  const adaptation = manifest.adaptations[0];
-  assert.equal(adaptation.path, 'sites/nmr-from-zero/vite.config.ts');
+test('pinned snapshots match upstream blobs except documented adaptations', async () => {
+  const allowed = new Map(manifest.adaptations.map((item) => [item.path, item]));
+  const additions = new Set(manifest.additions || []);
+  assert.equal(allowed.has('sites/nmr-from-zero/vite.config.ts'), true);
   const seen = new Set();
   for (const source of manifest.sources) {
     assert.match(source.sha, /^[0-9a-f]{40}$/);
@@ -38,23 +38,23 @@ test('pinned snapshots match upstream blobs except the documented NMR base adapt
       seen.add(relative);
       const full = path.join(root, relative);
       const actual = blob(full);
-      if (relative === adaptation.path) {
-        assert.equal(file.blob, adaptation.originalBlob);
-        assert.notEqual(actual, file.blob);
-        const sourceText = await readFile(full, 'utf8');
-        assert.match(sourceText, /function siteBase\(\)/);
-        assert.match(sourceText, /return '\/nmr-from-zero\/'/);
-        assert.match(sourceText, /return `\$\{raw\}nmr-from-zero\/`/);
+      const adaptation = allowed.get(relative);
+      if (adaptation) {
+        assert.equal(file.blob, adaptation.originalBlob, relative);
+        assert.notEqual(actual, file.blob, relative);
       } else {
         assert.equal(actual, file.blob, relative);
       }
     }
   }
+  const vite = await readFile(path.join(root, 'sites/nmr-from-zero/vite.config.ts'), 'utf8');
+  assert.match(vite, /function siteBase\(\)/);
+  assert.match(vite, /return '\/nmr-from-zero\/'/);
   for (const source of manifest.sources) {
     const present = await filesIn(path.join(root, source.dest));
     for (const full of present) {
       const relative = path.relative(root, full).split(path.sep).join('/');
-      assert.equal(seen.has(relative), true, `unexpected file ${relative}`);
+      assert.equal(seen.has(relative) || additions.has(relative), true, `unexpected file ${relative}`);
     }
   }
 });

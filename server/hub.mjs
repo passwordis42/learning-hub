@@ -3,8 +3,12 @@ import { stat, realpath } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createTutorServer } from '../sites/ai-learning-atlas/server/index.mjs';
+import { CoachError, assist, getProviderStatus } from '../sites/game-design-atlas/server/coach.mjs';
+import { clearConfig, loadConfig, publicConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
 
 export const GAME_UPSTREAM = 'http://127.0.0.1:4173';
+export const TUTOR_UPSTREAM = 'http://127.0.0.1:8787';
 export const GAME_ROUTES = new Map([
   ['/api/status', 'GET'],
   ['/api/assist', 'POST'],
@@ -30,6 +34,7 @@ const contentTypes = new Map([
   ['.woff', 'font/woff'],
   ['.ttf', 'font/ttf'],
   ['.txt', 'text/plain; charset=utf-8'],
+  ['.md', 'text/plain; charset=utf-8'],
   ['.map', 'application/json; charset=utf-8'],
 ]);
 
@@ -105,57 +110,106 @@ async function readBody(request) {
   return Buffer.concat(chunks);
 }
 
-async function proxyGame(request, response, pathname) {
-  const method = GAME_ROUTES.get(pathname);
-  if (request.method !== method) {
-    return json(response, 405, { error: '此入口只转发课程原有的固定方法。' }, { Allow: method });
-  }
-  let body;
-  try {
-    body = request.method === 'POST' ? await readBody(request) : null;
-    if (request.method !== 'POST') request.resume();
-  } catch (error) {
-    return json(response, error.status || 400, { error: '提交内容太长。' });
-  }
+function loopbackRequest(request) {
+  const host = String(request.headers.host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
+  return host === '127.0.0.1' || host === 'localhost' || host === '::1';
+}
 
+async function readJson(request) {
+  const type = request.headers['content-type'] || '';
+  if (!/^application\/json(?:\s*;.*)?$/i.test(type)) {
+    request.resume();
+    throw Object.assign(new Error('请使用 JSON。'), { status: 415 });
+  }
+  const body = await readBody(request);
+  try {
+    return JSON.parse(body.toString('utf8') || '{}');
+  } catch {
+    throw Object.assign(new Error('请求格式有误。'), { status: 400 });
+  }
+}
+
+function rememberTutor(runtime, server) {
+  runtime.tutor?.close();
+  runtime.tutor = server;
+  runtime.revision += 1;
+}
+
+async function tutorResponse(runtime, request, response) {
+  const config = await loadConfig();
+  if (runtime.revision !== config.revision || !runtime.port) {
+    const created = createTutorServer({ env: toAiEnv(config) });
+    await new Promise((resolve, reject) => {
+      created.server.once('error', reject);
+      created.server.listen(0, '127.0.0.1', resolve);
+    });
+    rememberTutor(runtime, created.server);
+    runtime.port = created.server.address().port;
+    runtime.revision = config.revision;
+  }
   const headers = {};
-  if (request.method === 'POST') {
-    const type = request.headers['content-type'];
-    if (typeof type === 'string' && type.length <= 80 && /^application\/json(?:\s*;.*)?$/i.test(type)) {
-      headers['content-type'] = type;
-    }
-  }
-
-  let upstream;
-  try {
-    upstream = await fetch(GAME_UPSTREAM + pathname, {
-      method: request.method,
-      headers,
-      body,
-      redirect: 'error',
-      signal: AbortSignal.timeout(request.method === 'GET' ? 5000 : 50_000),
-    });
-  } catch (error) {
-    const status = error.name === 'TimeoutError' ? 504 : 503;
-    return json(response, status, {
-      error: status === 504
-        ? '本地游戏助手没有及时响应。'
-        : '本地游戏助手未在 127.0.0.1:4173 运行。课程页面仍可学习；模型协助需要单独启动游戏目录中的助手。',
-    });
-  }
-
+  if (request.headers.authorization) headers.authorization = request.headers.authorization;
+  if (request.method === 'POST') headers['content-type'] = 'application/json';
+  const body = request.method === 'POST' ? await readBody(request) : undefined;
+  const upstream = await fetch(`http://127.0.0.1:${runtime.port}/api/tutor`, {
+    method: request.method,
+    headers,
+    body,
+    redirect: 'error',
+  });
+  if (request.method !== 'POST') request.resume();
   const bytes = Buffer.from(await upstream.arrayBuffer());
-  const type = upstream.headers.get('content-type') || '';
-  if (!type.includes('application/json') || bytes.length > RESPONSE_LIMIT) {
-    return json(response, 502, { error: '本地游戏助手返回了无法显示的响应。' });
-  }
+  const type = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
   response.writeHead(upstream.status, {
-    'Content-Type': type.includes('charset') ? type : 'application/json; charset=utf-8',
+    'Content-Type': type,
     'Content-Length': bytes.length,
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
   });
   response.end(bytes);
+}
+
+async function handleAssistants(runtime, request, response, pathname) {
+  if (!loopbackRequest(request)) return json(response, 403, { error: '助手配置只接受本机地址。' });
+  try {
+    if (pathname === '/api/assistant-config' && request.method === 'GET') {
+      return json(response, 200, publicConfig(await loadConfig()));
+    }
+    if (pathname === '/api/assistant-config' && request.method === 'PUT') {
+      const saved = await saveConfig(await readJson(request));
+      runtime.revision = -1;
+      return json(response, 200, saved);
+    }
+    if (pathname === '/api/assistant-config/clear' && request.method === 'POST') {
+      const cleared = await clearConfig(await readJson(request));
+      runtime.revision = -1;
+      return json(response, 200, cleared);
+    }
+    if (pathname === '/api/status' && request.method === 'GET') {
+      request.resume();
+      return json(response, 200, getProviderStatus(toGameEnv(await loadConfig())));
+    }
+    if (pathname === '/api/assist' && request.method === 'POST') {
+      const result = await assist(await readJson(request), { env: toGameEnv(await loadConfig()) });
+      return json(response, 200, result);
+    }
+    if (pathname === '/api/tutor' && (request.method === 'GET' || request.method === 'POST')) {
+      return tutorResponse(runtime, request, response);
+    }
+    if (pathname === '/api/assistant-config' || pathname === '/api/assistant-config/clear' || pathname === '/api/status' || pathname === '/api/assist' || pathname === '/api/tutor') {
+      return json(response, 405, { error: '此接口不支持该请求方式。' });
+    }
+    return json(response, 404, { error: '接口不存在。' });
+  } catch (error) {
+    request.resume();
+    if (error instanceof CoachError) return json(response, error.status, { error: error.message, ...(error.field ? { field: error.field } : {}) });
+    return json(response, error.status || 500, {
+      error: error.message || '助手配置未能处理这次请求。',
+      ...(error.effect ? { effect: error.effect } : {}),
+      ...(error.field ? { field: error.field } : {}),
+    });
+  }
+  return false;
 }
 
 function safeSegments(pathname) {
@@ -212,7 +266,8 @@ export function createHubServer({ distDir, hubBase }) {
     throw new Error(`This dist was built for ${recorded} and cannot be served at ${base}. Rebuild with the same HUB_BASE.`);
   }
 
-  return createServer({ requestTimeout: 80_000, headersTimeout: 10_000 }, async (request, response) => {
+  const runtime = { tutor: null, port: 0, revision: -1 };
+  const httpServer = createServer({ requestTimeout: 80_000, headersTimeout: 10_000 }, async (request, response) => {
     if (!request.url || !request.url.startsWith('/') || request.url.startsWith('//')) {
       return text(response, 400, '无效地址。');
     }
@@ -236,9 +291,9 @@ export function createHubServer({ distDir, hubBase }) {
       return text(response, 400, '无效地址。');
     }
 
-    if (GAME_ROUTES.has(pathname)) {
+    if (pathname.startsWith('/api/')) {
       if (url.search) return json(response, 404, { error: '接口不存在。' });
-      return proxyGame(request, response, pathname);
+      return handleAssistants(runtime, request, response, pathname);
     }
 
     const bareBase = base === '/' ? '' : base.slice(0, -1);
@@ -252,12 +307,14 @@ export function createHubServer({ distDir, hubBase }) {
     const segments = safeSegments(`/${remainder}`);
     if (!segments) return text(response, 400, '无效地址。');
     const site = segments[0];
-    if (!SITES.includes(site)) return text(response, 404, '页面不存在。');
+    if (!SITES.includes(site)) return serveStatic(response, distDir, '.', segments, request.method);
     if (segments.length === 1 && !remainder.endsWith('/')) return redirect(response, `${base}${site}/`);
     const fileParts = segments.slice(1);
     if (!fileParts.length) fileParts.push('index.html');
     return serveStatic(response, distDir, site, fileParts, request.method);
   });
+  httpServer.on('close', () => runtime.tutor?.close());
+  return httpServer;
 }
 
 function assertNode() {

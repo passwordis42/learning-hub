@@ -45,9 +45,10 @@ test('hub base accepts only safe prefixes', () => {
   }
 });
 
-test('static prefix, redirects, 404, traversal, and fixed game API proxy', async () => {
+test('static prefix, redirects, 404, traversal, and local assistant config', async () => {
   const root = await fixture('/');
   const nested = await fixture('/learning-hub/');
+  process.env.ASSISTANT_CONFIG_PATH = path.join(root.directory, 'assistant-config.json');
   const hits = [];
   const stub = createServer((request, response) => {
     const chunks = [];
@@ -134,38 +135,69 @@ test('static prefix, redirects, 404, traversal, and fixed game API proxy', async
     assert.equal(status.headers.get('access-control-allow-origin'), null);
     assert.equal(status.headers.get('set-cookie'), null);
     const statusBody = await status.json();
-    assert.equal(statusBody.providers[0].configured, false);
+    assert.equal(statusBody.providers.every((item) => item.configured === false), true);
     assert.equal(JSON.stringify(statusBody).includes('SUPER_SECRET_TOKEN'), false);
-    assert.equal(hits.at(-1).url, '/api/status');
-    assert.equal(hits.at(-1).host, '127.0.0.1:4173');
-    assert.equal(hits.at(-1).authorization, undefined);
-    assert.equal(hits.at(-1).origin, undefined);
-    assert.equal(hits.at(-1).cookie, undefined);
+    assert.equal(hits.length, 0);
 
     const assist = await fetch(`${rootUrl}/api/assist`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer SUPER_SECRET_TOKEN' },
-      body: JSON.stringify({ provider: 'openai' }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'openai', mode: 'coach', week: 1, title: '检查',
+        draft: '玩家选择一条路线。', rationale: '确认未配置时不会外呼。', evidence: '没有保存密钥。',
+      }),
     });
-    assert.equal(assist.status, 200);
-    assert.equal(hits.at(-1).method, 'POST');
-    assert.equal(hits.at(-1).url, '/api/assist');
-    assert.equal(hits.at(-1).authorization, undefined);
-    assert.equal(hits.at(-1).body.includes('openai'), true);
+    assert.equal(assist.status, 503);
+    assert.match(await assist.text(), /还未在本地配置/);
+    assert.equal(hits.length, 0);
 
     const wrongMethod = await fetch(`${rootUrl}/api/status`, { method: 'POST' });
     assert.equal(wrongMethod.status, 405);
-    assert.equal(wrongMethod.headers.get('allow'), 'GET');
     const query = await fetch(`${rootUrl}/api/status?next=http://evil.example`);
     assert.equal(query.status, 404);
     const tutor = await fetch(`${rootUrl}/api/tutor`);
-    assert.equal(tutor.status, 404);
-    assert.equal(hits.some((hit) => hit.url !== '/api/status' && hit.url !== '/api/assist'), false);
+    const tutorBody = await tutor.json();
+    assert.equal(tutor.status, 200);
+    assert.equal(tutorBody.providers.every((item) => item.configured === false), true);
+    assert.equal(JSON.stringify(tutorBody).includes('apiKey'), false);
 
-    stub.close();
-    const down = await fetch(`${rootUrl}/api/status`);
-    assert.equal(down.status, 503);
-    assert.match(await down.text(), /127\.0\.0\.1:4173/);
+    const secret = 'sk-test-value-that-must-never-leak';
+    const denied = await fetch(`${rootUrl}/api/assistant-config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendors: { openai: { apiKey: secret, model: 'gpt-test' } } }),
+    });
+    assert.equal(denied.status, 400);
+    const saved = await fetch(`${rootUrl}/api/assistant-config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ save: true, vendors: { openai: { apiKey: secret, protocols: { ai: { model: 'ai-only-model' } } } } }),
+    });
+    const savedBody = await saved.json();
+    assert.equal(saved.status, 200);
+    assert.equal(JSON.stringify(savedBody).includes(secret), false);
+    assert.equal(savedBody.vendors.find((item) => item.id === 'openai').protocols.ai.model, 'ai-only-model');
+    const viewed = await (await fetch(`${rootUrl}/api/assistant-config`)).json();
+    assert.equal(JSON.stringify(viewed).includes(secret), false);
+    const statusAfter = await (await fetch(`${rootUrl}/api/status`)).json();
+    assert.equal(statusAfter.providers.find((item) => item.id === 'openai').configured, false);
+    assert.equal(JSON.stringify(statusAfter).includes(secret), false);
+    const unclear = await fetch(`${rootUrl}/api/assistant-config/clear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'no' }),
+    });
+    const unclearBody = await unclear.json();
+    assert.equal(unclear.status, 400);
+    assert.match(unclearBody.effect, /不会读取或迁移旧的 .env/);
+    assert.equal((await (await fetch(`${rootUrl}/api/assistant-config`)).json()).vendors.find((item) => item.id === 'openai').apiKeyConfigured, true);
+    const cleared = await fetch(`${rootUrl}/api/assistant-config/clear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'clear-assistant-configuration' }),
+    });
+    assert.equal(cleared.status, 200);
+    assert.equal((await (await fetch(`${rootUrl}/api/assistant-config`)).json()).vendors.every((item) => item.apiKeyConfigured === false), true);
   } finally {
     stub.close();
     rootServer.close();
