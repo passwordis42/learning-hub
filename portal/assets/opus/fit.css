@@ -2,8 +2,19 @@
 @import url('../fonts/sans.css');
 @import url('../fonts/serif.css');
 
-html:has(body.in-course) { height: auto; min-height: 100%; }
-body.in-course { overflow: visible; height: auto; min-height: 100%; background: var(--bg, #f6f1e6); }
+html:has(body.in-course) {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+html:has(body.in-course) body {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+html:has(body.in-course.assist-open) { overflow: hidden; }
+body.in-course { background: var(--bg, #f6f1e6); }
 body.in-course #hubScene {
   display: block !important;
   visibility: hidden;

@@ -35,6 +35,9 @@ test('opus redesign keeps the original ocean and the real course shell', async (
   assert.match(reader, /id="lesson-frame"/);
   assert.match(reader, /LH_RESTORE/);
   assert.match(reader, /hub-reading-size/);
+  const fit = await readFile(path.join(root, 'portal/assets/opus/fit.css'), 'utf8');
+  assert.match(fit, /html:has\(body\.in-course\)[\s\S]*overflow-y:\s*auto/);
+  assert.match(fit, /html:has\(body\.in-course\.assist-open\)\s*\{\s*overflow:\s*hidden/);
   assert.doesNotMatch(reader, /设计稿说明|示例正文|lessons\.js|只改变纸面标题|只改标题/);
   const bridge = await readFile(path.join(root, 'portal/assets/embed-bridge.js'), 'utf8');
   const skin = await readFile(path.join(root, 'portal/assets/embed-skin.css'), 'utf8');

@@ -373,6 +373,7 @@
       shell.hidden = true;
       main.innerHTML = '';
       document.title = '学习入口 · 群岛';
+      window.scrollTo(0, 0);
       if (!document.body.classList.contains('assist-open')) document.body.dataset.view = 'hub';
       var id = location.hash.replace('#', '');
       if (id && window.LH_SELECT) window.LH_SELECT(id);

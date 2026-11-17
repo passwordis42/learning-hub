@@ -181,12 +181,16 @@ async function exercise(browser, origin, base, viewport, label) {
   });
   const stored = await page.evaluate(async () => ({
     keys: Object.keys(localStorage).sort(),
+    readingSize: localStorage.getItem('lh-fs'),
     databases: 'databases' in indexedDB ? (await indexedDB.databases()).map((item) => item.name) : [],
     caches: await caches.keys(),
   }));
-  const foreign = stored.keys.filter((key) => !key.startsWith('learning-atlas:') && !key.startsWith('nmr-from-zero.') && !key.startsWith('game-design-atlas:'));
+  const foreign = stored.keys.filter((key) => key !== 'lh-fs' && !key.startsWith('learning-atlas:') && !key.startsWith('nmr-from-zero.') && !key.startsWith('game-design-atlas:'));
   if (foreign.length || !stored.keys.includes('learning-atlas:chapters') || !stored.keys.includes('nmr-from-zero.progress.v2') || !stored.keys.includes('game-design-atlas:learning:v1')) {
     throw new Error(`storage keys ${stored.keys.join(',')}`);
+  }
+  if (!/^(1[5-9]|2[0-4])$/.test(stored.readingSize || '')) {
+    throw new Error(`lh-fs must be an integer font size from 15 to 24, got ${stored.readingSize}`);
   }
   if (stored.databases.length || stored.caches.length) {
     throw new Error(`unexpected web storage ${JSON.stringify(stored)}`);

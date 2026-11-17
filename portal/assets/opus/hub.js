@@ -174,20 +174,33 @@
 
   /* ---------- 助手设置：沿用页面内存里的四厂商配置，不另存密钥 ---------- */
   var assistOpener = null;
+  var assistPin = null;
+  function pinAssistScroll() {
+    if (!body.classList.contains('assist-open')) return;
+    var top = body._assistScroll || 0;
+    if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top: top, behavior: 'instant' });
+  }
   function openAssist(opener) {
     closeDrawer();
+    body._assistScroll = window.scrollY;
     body.classList.add('assist-open');
     body.dataset.view = 'settings';
     $('#btnAssist').setAttribute('aria-expanded', 'true');
     var courseBtn = document.getElementById('open-settings');
     if (courseBtn) courseBtn.setAttribute('aria-expanded', 'true');
-    body._assistScroll = window.scrollY;
+    if (assistPin) removeEventListener('scroll', assistPin);
+    assistPin = pinAssistScroll;
+    addEventListener('scroll', assistPin);
+    pinAssistScroll();
+    requestAnimationFrame(pinAssistScroll);
     assistOpener = opener && opener.focus ? opener : (courseBtn || $('#btnAssist'));
     var back = document.getElementById('settings-back');
     if (back) back.focus({ preventScroll: true });
   }
   function closeAssist() {
     if (!body.classList.contains('assist-open')) return;
+    if (assistPin) removeEventListener('scroll', assistPin);
+    assistPin = null;
     body.classList.remove('assist-open');
     $('#btnAssist').setAttribute('aria-expanded', 'false');
     var courseBtn = document.getElementById('open-settings');
