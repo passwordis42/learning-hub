@@ -1,0 +1,98 @@
+.csv-walkthrough {
+  display: grid;
+  gap: 11px;
+  padding: 13px;
+  min-width: 0;
+  border: 1px solid #ded5ed;
+  border-radius: 9px;
+  background: #fcfaf5;
+  font-size: 13px;
+}
+
+.csv-walkthrough-header h3,
+.csv-walkthrough-flow h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.csv-walkthrough-header p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.csv-walkthrough-flow {
+  display: grid;
+  gap: 9px;
+}
+
+.csv-walkthrough-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: start;
+}
+
+.csv-walkthrough-table caption {
+  padding-block-end: 5px;
+  text-align: start;
+  font-size: 13px;
+  font-weight: 730;
+}
+
+.csv-walkthrough-table :is(th, td) {
+  padding: 4px 7px;
+  border-bottom: 1px solid #e9e2ee;
+  overflow-wrap: anywhere;
+}
+
+.csv-walkthrough-table :is(th, td):first-child { width: 25%; }
+.csv-walkthrough-table :is(th, td):last-child { width: 25%; }
+.csv-walkthrough-table thead { background: #f5f1f9; }
+.csv-walkthrough-table [data-current="true"] { background: #eae2fa; }
+.csv-walkthrough-current { margin-inline-start: 3px; color: #4f3980; font-size: 10px; }
+
+.csv-walkthrough-decision {
+  display: grid;
+  gap: 5px;
+  padding: 7px 8px;
+  border-left: 3px solid #a28dce;
+  background: #f4eef9;
+  color: #423668;
+}
+
+.csv-walkthrough-decision h4,
+.csv-walkthrough-output h4 { font-size: 13px; }
+.csv-walkthrough-decision p,
+.csv-walkthrough-output p,
+.csv-walkthrough-next { margin: 0; }
+.csv-walkthrough-decision .csv-walkthrough-table caption { font-weight: 500; }
+.csv-walkthrough-output p,
+.csv-walkthrough-next { color: var(--muted); }
+
+.csv-walkthrough-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.csv-walkthrough-controls > span { margin-inline-end: auto; color: var(--muted); }
+.csv-walkthrough-controls .action { min-height: 40px; padding: 6px 9px; font-size: 12px; }
+
+@container (min-width: 530px) {
+  .csv-walkthrough-flow {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .csv-walkthrough-flow > :last-child { grid-column: 1 / -1; }
+}
+
+html.is-hub-embed .csv-walkthrough { border-color: #c8d4c3; background: #fffef4; }
+html.is-hub-embed .csv-walkthrough-table thead { background: #f4f7f1; }
+html.is-hub-embed .csv-walkthrough-table [data-current="true"] { background: #e7f0ea; }
+html.is-hub-embed .csv-walkthrough-current { color: #183f4b; }
+html.is-hub-embed .csv-walkthrough-decision { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }

@@ -1,0 +1,212 @@
+.atlas-tutor {
+  --tutor-accent: #5037a6;
+  --tutor-ink: #28243a;
+  --tutor-muted: #625c70;
+  --tutor-line: #dfd8ec;
+  --tutor-light: #f4f0fb;
+  padding: clamp(1.1rem, 3vw, 2rem);
+  color: var(--tutor-ink);
+  background: #fefdfb;
+  border: 1px solid var(--tutor-line);
+  border-radius: 1.1rem;
+}
+
+.atlas-tutor__header {
+  display: grid;
+  gap: .45rem;
+  margin-block-end: 1.15rem;
+}
+
+.atlas-tutor__header h2,
+.atlas-tutor__header p,
+.atlas-tutor__feedback p,
+.atlas-tutor__answer h3,
+.atlas-tutor__answer p,
+.atlas-tutor__connection p,
+.atlas-tutor__notice {
+  margin: 0;
+}
+
+.atlas-tutor__header h2 {
+  font-size: 1.3rem;
+}
+
+.atlas-tutor__header p,
+.atlas-tutor__connection p,
+.atlas-tutor__notice {
+  color: var(--tutor-muted);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+.atlas-tutor__form {
+  display: grid;
+  gap: .65rem;
+}
+
+.atlas-tutor__label,
+.atlas-tutor__provider span {
+  color: var(--tutor-muted);
+  font-size: .82rem;
+  font-weight: 650;
+}
+
+.atlas-tutor textarea,
+.atlas-tutor input,
+.atlas-tutor select {
+  box-sizing: border-box;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: .65rem .75rem;
+  color: inherit;
+  font: inherit;
+  font-size: .9rem;
+  background: #fff;
+  border: 1px solid var(--tutor-line);
+  border-radius: .55rem;
+}
+
+.atlas-tutor textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.atlas-tutor__starters,
+.atlas-tutor__buttons,
+.atlas-tutor__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.atlas-tutor__actions {
+  margin-block-start: .28rem;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.atlas-tutor__provider {
+  display: grid;
+  gap: .3rem;
+}
+
+.atlas-tutor button {
+  min-block-size: 2.3rem;
+  padding: .53rem .8rem;
+  color: inherit;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--tutor-line);
+  border-radius: .53rem;
+  cursor: pointer;
+}
+
+.atlas-tutor button:hover:not(:disabled) {
+  background: var(--tutor-light);
+}
+
+.atlas-tutor button:disabled {
+  opacity: .58;
+  cursor: default;
+}
+
+.atlas-tutor__starters button {
+  min-block-size: 2rem;
+  padding: .38rem .65rem;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--tutor-accent);
+  border-radius: 1rem;
+}
+
+.atlas-tutor button.atlas-tutor__send {
+  color: #fff;
+  background: var(--tutor-accent);
+  border-color: var(--tutor-accent);
+}
+
+.atlas-tutor button.atlas-tutor__send:hover:not(:disabled) {
+  background: #412b8e;
+}
+
+.atlas-tutor__settings {
+  padding-block: .4rem;
+  font-size: .9rem;
+}
+
+.atlas-tutor__settings summary {
+  inline-size: fit-content;
+  color: var(--tutor-accent);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.atlas-tutor__connection {
+  display: grid;
+  justify-items: start;
+  gap: .65rem;
+  margin-block-start: .65rem;
+  padding: .85rem;
+  background: var(--tutor-light);
+  border-radius: .75rem;
+}
+
+.atlas-tutor__feedback {
+  color: var(--tutor-muted);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.atlas-tutor__notice {
+  font-size: .78rem;
+}
+
+.atlas-tutor__feedback:empty {
+  display: none;
+}
+
+.atlas-tutor__answer {
+  margin-block-start: 1rem;
+  padding: 1rem;
+  background: var(--tutor-light);
+  border: 1px solid var(--tutor-line);
+  border-radius: .75rem;
+}
+
+.atlas-tutor__answer h3 {
+  font-size: .92rem;
+}
+
+.atlas-tutor__answer p {
+  margin-block-start: .5rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.atlas-tutor :is(button, textarea, input, select, summary):focus-visible {
+  outline: 2px solid var(--tutor-accent);
+  outline-offset: 2px;
+}
+
+html.is-hub-embed .atlas-tutor {
+  --tutor-accent: #2d6a69;
+  --tutor-ink: #183f4b;
+  --tutor-muted: #42606a;
+  --tutor-line: #c8d4c3;
+  --tutor-light: #f4f7f1;
+  background: #fffef4;
+  border-radius: 8px;
+}
+
+html.is-hub-embed .atlas-tutor :is(button, textarea, input, select, summary):focus-visible {
+  outline: 3px solid #fff9e9;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 7px #123e4c;
+}

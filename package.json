@@ -1,0 +1,19 @@
+{
+  "name": "learning-hub",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "install:sites": "node scripts/run-sites.mjs ci",
+    "build": "node scripts/build.mjs",
+    "test": "node --test --test-concurrency=1 server/hub.test.mjs server/assistant-config.test.mjs server/pinned-upstream.test.mjs server/assistant-probe.test.mjs server/credential-mode.test.mjs scripts/assistant-memory.test.mjs scripts/snapshot.test.mjs scripts/storage-audit.test.mjs && node scripts/run-sites.mjs test",
+    "test:integration": "node scripts/integration.mjs",
+    "serve": "node server/hub.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "meta": {
+    "name": "开架",
+    "nameNote": "视觉提案中的门户名称，可替换。",
+    "tagline": "把几座教学仓库放在同一张桌上。",
+    "disclaimer": "教学仓库门户视觉提案 · 仅设计演示",
+    "owner": "passwordis42"
+  },
+  "courses": [
+    {
+      "id": "ai",
+      "short": "AI",
+      "title": "AI 学习图谱",
+      "fullName": "passwordis42/ai-learning-atlas",
+      "repo": "https://github.com/passwordis42/ai-learning-atlas",
+      "site": "https://passwordis42.github.io/ai-learning-atlas/",
+      "summary": "面向零基础学习者的人工智能路线。40 章分成五个通用阶段和五个方向；第一天用 10 行 CSV 做清洗练习，先写下自己的判断再使用 AI。站内有可点击图谱和可选学伴。",
+      "visualHint": "图谱节点与第一天的表格清洗台",
+      "modules": [
+        {
+          "id": "ai-map",
+          "title": "图谱总览",
+          "group": "入口",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map"
+        },
+        {
+          "id": "ai-day1",
+          "title": "第一天：让 AI 写第一个 CSV 清洗脚本",
+          "group": "入口",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#day-1"
+        },
+        {
+          "id": "ai-tutor",
+          "title": "AI 学伴",
+          "group": "入口",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#tutor"
+        },
+        {
+          "id": "ai-s1",
+          "title": "会读、会跑、会改",
+          "group": "基础阶段",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "note": "阶段在图谱页中浏览，无单独深链。"
+        },
+        {
+          "id": "ai-s2",
+          "title": "会判断模型有没有用",
+          "group": "基础阶段",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map"
+        },
+        {
+          "id": "ai-s3",
+          "title": "看懂深度学习和大模型",
+          "group": "基础阶段",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map"
+        },
+        {
+          "id": "ai-s4",
+          "title": "做一个能查资料的 AI 工具",
+          "group": "基础阶段",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map"
+        },
+        {
+          "id": "ai-s5",
+          "title": "让别人用得起来",
+          "group": "基础阶段",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map"
+        },
+        {
+          "id": "ai-s6a",
+          "title": "视觉、语音与多模态",
+          "group": "方向（选学）",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "optional": true
+        },
+        {
+          "id": "ai-s6b",
+          "title": "大模型训练与对齐",
+          "group": "方向（选学）",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "optional": true
+        },
+        {
+          "id": "ai-s6c",
+          "title": "搜索、推理与规划",
+          "group": "方向（选学）",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "optional": true
+        },
+        {
+          "id": "ai-s6d",
+          "title": "强化学习与机器人",
+          "group": "方向（选学）",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "optional": true
+        },
+        {
+          "id": "ai-s6e",
+          "title": "时间序列、图学习、因果与研究",
+          "group": "方向（选学）",
+          "url": "https://passwordis42.github.io/ai-learning-atlas/#map",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "nmr",
+      "short": "NMR",
+      "title": "从零看懂核磁共振",
+      "fullName": "passwordis42/nmr-from-zero",
+      "repo": "https://github.com/passwordis42/nmr-from-zero",
+      "site": "https://passwordis42.github.io/nmr-from-zero/",
+      "summary": "中文零基础交互教材：12 个阶段、36 节课，以及 8 组在浏览器里本地计算的教学实验。从认清仪器走到自旋、成像和整机搭建；另有硬件工坊与开源项目审计。仿真用于建立直觉，不是人体扫描方案。",
+      "visualHint": "样品、磁体、线圈，以及一次发射后的信号",
+      "modules": [
+        {
+          "id": "nmr-path",
+          "title": "学习路线",
+          "group": "入口",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/path"
+        },
+        {
+          "id": "nmr-s1",
+          "title": "认识整台仪器",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/1-1"
+        },
+        {
+          "id": "nmr-s2",
+          "title": "补齐最少的数学与电学",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/2-1"
+        },
+        {
+          "id": "nmr-s3",
+          "title": "自旋、磁化与主磁场",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/3-1"
+        },
+        {
+          "id": "nmr-s4",
+          "title": "射频如何推动磁化",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/4-1"
+        },
+        {
+          "id": "nmr-s5",
+          "title": "信号消失、恢复与回波",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/5-1"
+        },
+        {
+          "id": "nmr-s6",
+          "title": "从接收电压到数字信号",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/6-1"
+        },
+        {
+          "id": "nmr-s7",
+          "title": "磁体、场图与匀场",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/7-1"
+        },
+        {
+          "id": "nmr-s8",
+          "title": "探头与射频前端",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/8-1"
+        },
+        {
+          "id": "nmr-s9",
+          "title": "控制、时序与校准",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/9-1"
+        },
+        {
+          "id": "nmr-s10",
+          "title": "把核磁变成空间成像",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/10-1"
+        },
+        {
+          "id": "nmr-s11",
+          "title": "重建、对比与图像质量",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/11-1"
+        },
+        {
+          "id": "nmr-s12",
+          "title": "走向整机搭建与调试",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/learn/12-1"
+        },
+        {
+          "id": "nmr-lab-waves",
+          "title": "先比较两条波，再看相加的结果",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/waves"
+        },
+        {
+          "id": "nmr-lab-spin",
+          "title": "在旋转的参考系里看激发",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/spin"
+        },
+        {
+          "id": "nmr-lab-relaxation",
+          "title": "把恢复、衰减与重新聚相分开",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/relaxation"
+        },
+        {
+          "id": "nmr-lab-sampling",
+          "title": "从采样点判断能否辨认原来的波",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/sampling"
+        },
+        {
+          "id": "nmr-lab-field",
+          "title": "先读懂场图，再尝试匀场",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/field"
+        },
+        {
+          "id": "nmr-lab-coil",
+          "title": "让电路的响应峰靠近工作频率",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/coil"
+        },
+        {
+          "id": "nmr-lab-timing",
+          "title": "把接收窗口放在硬件能够工作的时间",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/timing"
+        },
+        {
+          "id": "nmr-lab-imaging",
+          "title": "从已知模体，追踪数据怎样变回图像",
+          "group": "实验",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/labs/imaging"
+        },
+        {
+          "id": "nmr-build",
+          "title": "硬件工坊",
+          "group": "工坊与资料",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/build"
+        },
+        {
+          "id": "nmr-projects",
+          "title": "开源项目审计",
+          "group": "工坊与资料",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/projects"
+        },
+        {
+          "id": "nmr-hardware",
+          "title": "整机地图",
+          "group": "工坊与资料",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/hardware"
+        },
+        {
+          "id": "nmr-resources",
+          "title": "资料库",
+          "group": "工坊与资料",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/resources"
+        },
+        {
+          "id": "nmr-glossary",
+          "title": "术语表",
+          "group": "工坊与资料",
+          "url": "https://passwordis42.github.io/nmr-from-zero/#/glossary"
+        }
+      ]
+    },
+    {
+      "id": "game",
+      "short": "GAME",
+      "title": "游戏设计学习图谱",
+      "fullName": "passwordis42/game-design-atlas",
+      "repo": "https://github.com/passwordis42/game-design-atlas",
+      "site": "https://passwordis42.github.io/game-design-atlas/",
+      "summary": "28 周 PC 游戏设计课程：站内分步教材、小测、五种浏览器实验、四个项目和八类玩法练习。每个项目都练习访谈、试玩和证据分析；另有 AI 学习工坊。",
+      "visualHint": "纸面规则与行动—回应—动机的循环",
+      "modules": [
+        {
+          "id": "game-graph",
+          "title": "打开学习图谱",
+          "group": "入口",
+          "url": "https://passwordis42.github.io/game-design-atlas/"
+        },
+        {
+          "id": "game-p1",
+          "title": "拆解与假设（第 01–04 周 · 项目一）",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/01"
+        },
+        {
+          "id": "game-p2",
+          "title": "机制与数值（第 05–08 周 · 项目二）",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/05"
+        },
+        {
+          "id": "game-p3",
+          "title": "关卡与体验（第 09–15 周 · 项目三）",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/09"
+        },
+        {
+          "id": "game-p4",
+          "title": "品类实验（第 16–23 周 · 八个小实验）",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/16"
+        },
+        {
+          "id": "game-p5",
+          "title": "试玩版交付（第 24–28 周 · 项目四）",
+          "group": "阶段",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/24"
+        },
+        {
+          "id": "game-w01",
+          "title": "第 01 周 · 游戏设计基础",
+          "group": "周次举例",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/01"
+        },
+        {
+          "id": "game-w03",
+          "title": "第 03 周 · 纸面规则原型",
+          "group": "周次举例",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/03"
+        },
+        {
+          "id": "game-w06",
+          "title": "第 06 周 · 操作手感与反馈",
+          "group": "周次举例",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/06"
+        },
+        {
+          "id": "game-w16",
+          "title": "第 16 周 · 动作与平台跳跃",
+          "group": "周次举例",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/16"
+        },
+        {
+          "id": "game-w28",
+          "title": "第 28 周 · 打包、发行与复盘",
+          "group": "周次举例",
+          "url": "https://passwordis42.github.io/game-design-atlas/#plan/28"
+        },
+        {
+          "id": "game-lab-loop",
+          "title": "给两条路线跑一遍规则",
+          "group": "课内实验",
+          "url": "https://passwordis42.github.io/game-design-atlas/",
+          "note": "实验嵌在课内，未发现独立公开深链，入口回到学习网站。"
+        },
+        {
+          "id": "game-lab-economy",
+          "title": "六回合供电台",
+          "group": "课内实验",
+          "url": "https://passwordis42.github.io/game-design-atlas/",
+          "note": "实验嵌在课内，未发现独立公开深链，入口回到学习网站。"
+        },
+        {
+          "id": "game-lab-route",
+          "title": "比较原版路口和地标版",
+          "group": "课内实验",
+          "url": "https://passwordis42.github.io/game-design-atlas/",
+          "note": "实验嵌在课内，未发现独立公开深链，入口回到学习网站。"
+        },
+        {
+          "id": "game-lab-timing",
+          "title": "跳跃容错试验台",
+          "group": "课内实验",
+          "url": "https://passwordis42.github.io/game-design-atlas/",
+          "note": "实验嵌在课内，未发现独立公开深链，入口回到学习网站。"
+        },
+        {
+          "id": "game-lab-funnel",
+          "title": "用漏斗定位上手障碍",
+          "group": "课内实验",
+          "url": "https://passwordis42.github.io/game-design-atlas/",
+          "note": "实验嵌在课内，未发现独立公开深链，入口回到学习网站。"
+        },
+        {
+          "id": "game-ai-dev",
+          "title": "AI 开发守则",
+          "group": "资料",
+          "url": "https://github.com/passwordis42/game-design-atlas/blob/main/AI-DEVELOPMENT.md"
+        }
+      ]
+    }
+  ],
+  "future": {
+    "id": "future",
+    "title": "下一本，等你打开",
+    "summary": "新的教学仓库会来到这里。",
+    "status": "future"
+  }
+}

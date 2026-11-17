@@ -1,0 +1,282 @@
+.atlas-graph {
+  --graph-ink: #272235;
+  --graph-muted: #6e6478;
+  --graph-accent: #3d30a7;
+  --graph-line: #e4deea;
+  --graph-core: #f1ecfd;
+  --graph-special: #fbf2dd;
+  min-width: 0;
+}
+
+.atlas-graph-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.atlas-graph-toolbar h2 {
+  margin: 0;
+  color: var(--graph-ink);
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  line-height: 1.2;
+}
+
+.atlas-graph-toolbar-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.atlas-graph-switch {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--graph-line);
+  border-radius: 10px;
+  background: #f6f2f9;
+}
+
+.atlas-graph-switch button,
+.atlas-graph-stage-filter {
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--graph-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.atlas-graph-switch button {
+  cursor: pointer;
+}
+
+.atlas-graph-switch button[aria-pressed="true"] {
+  border-color: var(--graph-accent);
+  color: #fff;
+  background: var(--graph-accent);
+  box-shadow: 0 1px 3px rgb(57 34 94 / 12%);
+}
+
+.atlas-graph-stage-filter {
+  max-width: 180px;
+  padding-right: 14px;
+  border-color: var(--graph-line);
+  color: var(--graph-ink);
+  background-color: #fffdfc;
+}
+
+.atlas-graph-viewport {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 368px;
+  border: 1px solid var(--graph-line);
+  border-radius: 15px;
+  background: #fcfaf8;
+}
+
+.atlas-graph-viewport--compact {
+  height: 430px;
+}
+
+.atlas-graph .react-flow {
+  --xy-background-color-default: transparent;
+  --xy-controls-button-background-color-default: #fffdfc;
+  --xy-controls-button-background-color-hover-default: #f2ecfd;
+  --xy-controls-button-color-default: var(--graph-accent);
+  --xy-controls-button-border-color-default: #eee8f3;
+}
+
+.atlas-graph .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.atlas-graph-node {
+  width: 130px;
+  height: 73px;
+}
+
+.atlas-graph-node-button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 9px 10px 10px;
+  border: 1px solid #dbcef3;
+  border-radius: 12px;
+  color: var(--graph-ink);
+  background: var(--graph-core);
+  box-shadow: 0 2px 5px rgb(60 37 94 / 6%);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.atlas-graph-node--optional .atlas-graph-node-button {
+  border-color: #e9d6aa;
+  background: var(--graph-special);
+}
+
+.atlas-graph-node--external .atlas-graph-node-button {
+  border-style: dashed;
+  border-color: #b9a5d6;
+  background: #fbf8ff;
+}
+
+.atlas-graph-node--active .atlas-graph-node-button {
+  border-color: #8759dd;
+  background: #e9defd;
+  box-shadow: 0 0 0 2px rgb(126 84 208 / 16%), 0 4px 9px rgb(89 53 147 / 13%);
+}
+
+.atlas-graph-node--active.atlas-graph-node--optional .atlas-graph-node-button {
+  border-color: #b68743;
+  background: #faedcb;
+  box-shadow: 0 0 0 2px rgb(173 122 47 / 18%), 0 4px 9px rgb(96 61 18 / 10%);
+}
+
+.atlas-graph-node-button:hover {
+  filter: brightness(0.98);
+}
+
+.atlas-graph :is(button, select):focus-visible {
+  outline: 2px solid var(--graph-accent);
+  outline-offset: 2px;
+}
+
+.atlas-graph-node-meta {
+  display: flex;
+  align-items: center;
+  min-height: 16px;
+  gap: 4px;
+  color: #7251a8;
+  cursor: grab;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.atlas-graph .react-flow__node.dragging .atlas-graph-node-meta {
+  cursor: grabbing;
+}
+
+.atlas-graph-node--optional .atlas-graph-node-meta {
+  color: #805626;
+}
+
+.atlas-graph-node-extra {
+  margin-left: auto;
+  color: var(--graph-muted);
+  font-weight: 550;
+}
+
+.atlas-graph-done {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: #235944;
+  background: #cdebd9;
+  font-size: 10px;
+}
+
+.atlas-graph-node-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--graph-ink);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.27;
+  overflow-wrap: anywhere;
+}
+
+.atlas-graph .atlas-graph-controls {
+  overflow: hidden;
+  margin: 11px;
+  border: 1px solid var(--graph-line);
+  border-radius: 9px;
+  box-shadow: 0 2px 8px rgb(55 34 90 / 8%);
+}
+
+.atlas-graph .atlas-graph-controls .react-flow__controls-button {
+  width: 30px;
+  height: 30px;
+}
+
+.atlas-graph .atlas-graph-controls .react-flow__controls-button:focus-visible {
+  outline-offset: -3px;
+}
+
+.atlas-graph-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 11px;
+  color: var(--graph-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.atlas-graph-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.atlas-graph-key {
+  display: inline-block;
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #b195e3;
+  border-radius: 3px;
+  background: var(--graph-core);
+}
+
+.atlas-graph-key--optional {
+  border-color: #c99a53;
+  background: var(--graph-special);
+}
+
+.atlas-graph-key--external {
+  border-style: dashed;
+  background: #fffdfd;
+}
+
+.atlas-graph-help {
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .atlas-graph-help {
+    margin-left: 0;
+  }
+}
+
+html.is-hub-embed .atlas-graph {
+  --graph-ink: #183f4b;
+  --graph-muted: #42606a;
+  --graph-accent: #2d6a69;
+  --graph-line: #d5e0d6;
+  --graph-core: #f4f7f1;
+}
+html.is-hub-embed .atlas-graph-node-button { border-color: #c8d4c3; }
+html.is-hub-embed .atlas-graph-node--external .atlas-graph-node-button { border-color: #7a9d8c; background: #fffef4; }
+html.is-hub-embed .atlas-graph-node--active .atlas-graph-node-button { border-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed .atlas-graph-node-meta { color: #2d6a69; }

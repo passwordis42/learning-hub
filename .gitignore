@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.hub-base
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules/
+**/dist/
+*.log
+test-results/
+playwright-report/
+.playwright/
+server/secrets/

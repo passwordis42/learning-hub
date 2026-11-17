@@ -1,0 +1,95 @@
+.week-completed { display: inline-flex; align-items: center; gap: 5px; color: #35664c; font-size: 13px; font-weight: 700; }
+.week-explanation { display: grid; gap: 7px; font-size: 15px; }
+.week-flow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+.week-flow > div {
+  padding: 10px 12px;
+  background: #f4effa;
+  border: 1px solid #e5def0;
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+.week-flow dt { color: var(--accent-deep); font-size: 12px; font-weight: 760; }
+.week-flow dd { margin: 5px 0 0; font-size: 14px; line-height: 1.6; }
+.week-terms { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px 16px; font-size: 13px; }
+.week-glossary { display: flex; align-items: baseline; gap: 7px 13px; flex-wrap: wrap; font-size: 13px; }
+.week-glossary > strong { color: var(--muted); font-weight: 700; }
+.week-review-terms .week-terms { padding-top: 7px; }
+.week-trace, .week-feedback { list-style: none; display: grid; gap: 8px; padding: 0; margin: 0; }
+.week-trace li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; align-items: start; border-bottom: 1px solid var(--guide-soft-line); padding: 7px 0; }
+.week-trace-number, .week-practice legend > span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 6px;
+  background: var(--violet);
+  color: var(--accent-deep);
+  font-size: 12px;
+  font-weight: 760;
+}
+.week-trace-result { margin-top: 5px; padding: 6px 8px; background: #f3eff8; border-radius: 6px; color: #473961; font-size: 13px; white-space: pre-wrap; }
+.week-trace-result strong { font-size: 12px; }
+.week-demo-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.week-demo-controls > span { color: var(--muted); font-size: 13px; }
+.week-data {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #e1d8ef;
+  border-radius: 9px;
+  color: #362d4d;
+  background: #f4effa;
+  font: 13px/1.65 "IBM Plex Mono", Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.week-practice { display: grid; gap: 13px; }
+.week-practice fieldset { min-width: 0; margin: 0; padding: 9px; border: 1px solid var(--line); border-radius: 9px; }
+.week-practice legend { max-width: 100%; padding: 0 5px; font-size: 14px; font-weight: 700; line-height: 1.6; }
+.week-choices { display: grid; gap: 6px; }
+.week-choices label { display: flex; gap: 9px; align-items: flex-start; padding: 8px 9px; border: 1px solid #e7e0ee; border-radius: 7px; background: #fffefa; font-size: 14px; line-height: 1.55; cursor: pointer; }
+.week-choices label:hover, .week-choices .selected { border-color: #ad9bdc; background: var(--violet); }
+
+html.is-hub-embed .week-data { border-color: #c8d4c3; color: #183f4b; background: #fffef4; }
+html.is-hub-embed .week-trace-result { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed .week-choices label { border-color: #d5e0d6; }
+html.is-hub-embed .week-choices label:hover,
+html.is-hub-embed .week-choices .selected { border-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed .week-answer,
+html.is-hub-embed .week-evidence textarea,
+html.is-hub-embed .week-work textarea { border-color: #c8d4c3; }
+html.is-hub-embed .week-flow > div,
+html.is-hub-embed .week-work-columns > div { border-color: #c8d4c3; background: #f4f7f1; }
+.week-choices input { margin-top: 4px; flex: none; accent-color: var(--accent); }
+.week-answer, .week-evidence textarea { display: block; min-height: 40px; max-width: 100%; border: 1px solid #cfc5de; border-radius: 7px; padding: 7px 9px; background: #fffefa; color: var(--ink); font-size: 16px; }
+.week-answer { width: 160px; }
+.week-answer-text { width: min(100%, 290px); }
+.week-work { display: grid; gap: 7px; }
+.week-work label { color: var(--muted); font-size: 13px; font-weight: 720; }
+.week-work textarea { width: 100%; resize: vertical; padding: 8px 10px; border: 1px solid #cfc5de; border-radius: 7px; background: #fffefa; color: var(--ink); font-size: 16px; }
+.week-work-review { display: grid; gap: 8px; }
+.week-work-review h3 { font-size: 16px; }
+.week-work-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.week-work-columns > div { padding: 9px 10px; border: 1px solid #e4daee; border-radius: 8px; background: #f6f1fb; font-size: 13px; }
+.week-work-columns p, .week-old-note { margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.week-number-field { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 9px; color: var(--muted); font-size: 12px; }
+.weekly-lesson .guide-header h1:focus { outline: none; }
+.week-feedback li { padding: 9px 11px; border: 1px solid #dcd2eb; border-left: 3px solid #9a80c7; background: #f5f1fb; border-radius: 8px; }
+.week-feedback li[data-correct="true"] { background: #eef7f0; border-color: #c7e0ce; border-left-color: #629275; }
+.week-feedback li strong { font-size: 14px; }
+.week-feedback li p { margin: 4px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.week-evidence { display: grid; gap: 8px; }
+.week-evidence h3 { font-size: 16px; }
+.week-evidence label { display: grid; gap: 5px; font-size: 13px; font-weight: 720; }
+.week-evidence label span { color: var(--muted); font-weight: 500; }
+.week-evidence textarea { width: 100%; resize: vertical; }
+.week-options { padding-left: 19px; }
+.week-options a, .week-course-links a { display: inline-flex; gap: 5px; align-items: center; color: var(--accent-deep); font-weight: 700; }
+.week-options a:hover, .week-course-links a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.week-course-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; }
+
+@media (max-width: 540px) { .week-flow, .week-work-columns { grid-template-columns: minmax(0, 1fr); } }

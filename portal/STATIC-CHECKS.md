@@ -1,0 +1,300 @@
+# v6 静态、状态与数据检查
+
+静态项目：292 通过，0 失败。纯模型独立测试：62 项（含3门课程、5种视窗的15组完整焦点标牌边界投影）。纯DOM逻辑测试：68项（无浏览器、几何为mock，不算视觉验收）。
+
+- PASS index.html: unique IDs including inline scene
+- PASS index.html: Chinese language declared
+- PASS index.html: responsive viewport
+- PASS index.html: single visible H1 in default state
+- PASS index.html: local asset assets/mark.svg
+- PASS index.html: local asset assets/desk-sans-bold.woff2
+- PASS index.html: local asset assets/site.css
+- PASS index.html: local asset assets/harbor.css
+- PASS index.html: local asset data/portal.js
+- PASS index.html: local asset assets/model.js
+- PASS index.html: local asset assets/site.js
+- PASS index.html: local anchor #reader
+- PASS index.html: local asset index.html
+- PASS index.html: local asset assets/facility-ai.svg
+- PASS index.html: external URL from original course source
+- PASS index.html: protected external tab
+- PASS index.html: external URL from original course source
+- PASS index.html: protected external tab
+- PASS index.html: external URL from original course source
+- PASS index.html: protected external tab
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-controls resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-labelledby resolves
+- PASS index.html: aria-describedby resolves
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: button has visible or accessible name
+- PASS index.html: no nested interactive content
+- PASS index.html: scene control named and keyboard reachable
+- PASS index.html: scene control named and keyboard reachable
+- PASS index.html: scene control named and keyboard reachable
+- PASS review.html: unique IDs including inline scene
+- PASS review.html: Chinese language declared
+- PASS review.html: responsive viewport
+- PASS review.html: single visible H1 in default state
+- PASS review.html: local asset assets/mark.svg
+- PASS review.html: local asset assets/review.css
+- PASS review.html: local asset assets/review.js
+- PASS review.html: local asset review.html
+- PASS review.html: local asset review.html
+- PASS review.html: local asset review.html
+- PASS review.html: local asset review.html
+- PASS review.html: local asset review.html
+- PASS review.html: local asset index.html
+- PASS review.html: local asset index.html
+- PASS review.html: local asset index.html
+- PASS review.html: frame title
+- PASS review.html: frame title
+- PASS only three real enterable world landmarks
+- PASS world landmark IDs match original courses
+- PASS visible constant pause control
+- PASS search input visibly labelled
+- PASS polite atomic state announcement
+- PASS distant demo zones do not pretend to be real course controls
+- PASS three real external learning fallbacks
+- PASS portal.json: original course data retained byte-for-byte
+- PASS portal.js: original course data retained byte-for-byte
+- PASS world source is well-formed original SVG
+- PASS world contains layered architectural/coast geometry, not three generic blobs
+- PASS separate SVG-only diagnostic generated; not a browser screenshot
+- PASS site.css: CSS parsed
+- PASS site.css: local asset desk-sans.woff2
+- PASS site.css: local asset desk-sans-bold.woff2
+- PASS site.css: local asset desk-serif.woff2
+- PASS site.css: no remote CSS/font imports
+- PASS harbor.css: CSS parsed
+- PASS harbor.css: no remote CSS/font imports
+- PASS review.css: CSS parsed
+- PASS review.css: local asset desk-sans.woff2
+- PASS review.css: local asset desk-sans-bold.woff2
+- PASS review.css: no remote CSS/font imports
+- PASS no fake font weights
+- PASS reduced-motion styles
+- PASS continuous animation actually pauses
+- PASS visible focus
+- PASS long titles wrap
+- PASS pause remains available while reading
+- PASS sticky header focus offset
+- PASS main controls 44px or larger
+- PASS no layout-dimension animation
+- PASS desktop chapters explicitly bounded and natively scrollable
+- PASS mobile chapter list stays in normal document flow
+- PASS visible scrollbar budget; no scroll chaining trap
+- PASS chapter scroll region named, described, keyboard reachable
+- PASS 3px light plus dark dual keyboard focus ring
+- PASS all scene controls have distinct outer keyboard focus frame
+- PASS nonselected focus labels are hidden
+- PASS footer contrast uses a stable solid background
+- PASS JS target exists: course-start
+- PASS JS target exists: search-clear
+- PASS JS target exists: lesson-directory-link
+- PASS JS target exists: reader-location
+- PASS JS target exists: scale-demo
+- PASS JS target exists: lesson-note
+- PASS JS target exists: chapter-scroll-hint
+- PASS JS target exists: demo-close
+- PASS JS target exists: view-selected
+- PASS JS target exists: view-label
+- PASS JS target exists: directory-close
+- PASS JS target exists: preview-title
+- PASS JS target exists: search-input
+- PASS JS target exists: lesson-course-title
+- PASS JS target exists: return-islands
+- PASS JS target exists: lesson-toc-toggle
+- PASS JS target exists: world-notice
+- PASS JS target exists: lesson-nav
+- PASS JS target exists: motion-toggle
+- PASS JS target exists: course-description
+- PASS JS target exists: course-title
+- PASS JS target exists: course-groups
+- PASS JS target exists: lesson-facility
+- PASS JS target exists: preview-content
+- PASS JS target exists: view-overview
+- PASS JS target exists: module-preview
+- PASS JS target exists: lesson-breadcrumb
+- PASS JS target exists: lesson-facility-label
+- PASS JS target exists: announcement
+- PASS JS target exists: open-learning
+- PASS JS target exists: directory-status
+- PASS JS target exists: text-directory
+- PASS JS target exists: module-direct
+- PASS JS target exists: explore-page
+- PASS JS target exists: lesson-related-list
+- PASS JS target exists: lesson-title
+- PASS JS target exists: lesson-provenance
+- PASS JS target exists: lesson-course-line
+- PASS JS target exists: lesson-introduction
+- PASS JS target exists: reader
+- PASS JS target exists: world-stage
+- PASS JS target exists: learning-page
+- PASS JS target exists: lesson-related-empty
+- PASS JS target exists: lesson-source-path
+- PASS JS target exists: nav-overview
+- PASS JS target exists: lesson-repo
+- PASS JS target exists: directory-results
+- PASS JS target exists: camera
+- PASS JS target exists: world-svg
+- PASS JS target exists: lesson-source
+- PASS JS target exists: motion-label
+- PASS JS target exists: demo-toggle
+- PASS JS target exists: course-repo
+- PASS JS target exists: lesson-course-location
+- PASS JS target exists: lesson-source-note
+- PASS scene Enter keyboard action
+- PASS scene Space keyboard action
+- PASS Escape recovery
+- PASS Chinese IME composition respected
+- PASS focus restored on overview
+- PASS reduced motion declared on control
+- PASS desktop and mobile use tested complete-label camera bounds
+- PASS growth demo separated from real content
+- PASS text directory exists
+- PASS real selected-module link
+- PASS no runtime API calls, progress storage, timers or fake loading
+- PASS stale statistical source summary is not rendered on home
+- PASS assets/site.js: JavaScript syntax
+- PASS assets/model.js: JavaScript syntax
+- PASS assets/review.js: JavaScript syntax
+- PASS data/portal.js: JavaScript syntax
+- PASS test-dom.cjs: JavaScript syntax
+- PASS 62 data/state/search/placeholder/camera model tests
+- PASS context landmarks removed from accessibility tree and tab order
+- PASS font zoom / long notes select one native reader scroll fallback
+- PASS default includes four future natural islands, not thirty fake courses
+- PASS reserve geometry is driven by world-layout data
+- PASS reserved layout never fabricates subjects, dates or live URLs
+- PASS reserve layout includes two distance layers
+- PASS reserve is described artwork, never a fake enterable course
+- PASS reserve availability explicit in accessible description
+- PASS reserve is described artwork, never a fake enterable course
+- PASS reserve availability explicit in accessible description
+- PASS reserve is described artwork, never a fake enterable course
+- PASS reserve availability explicit in accessible description
+- PASS reserve is described artwork, never a fake enterable course
+- PASS reserve availability explicit in accessible description
+- PASS visible reserve legend independent from scale demo
+- PASS separate overview and reading views, not a modal over the world
+- PASS reading view has its own visible-state H1
+- PASS mobile reading directory has an explicit accessible toggle
+- PASS reading preview never claims migrated original lessons
+- PASS wide reading workspace with true directory sidebar
+- PASS mobile reading TOC is normal document flow
+- PASS reading return retains course/module and restores scroll/focus
+- PASS local reading preview is labelled separately from external teaching links
+- PASS subject facility illustration follows actual selected course
+- PASS ai: accepted main facility artwork preserved byte-for-byte
+- PASS ai: reading cutout has no misleading interactive semantics
+- PASS ai: reading cutout does not embed tiny cover labels
+- PASS nmr: accepted main facility artwork preserved byte-for-byte
+- PASS nmr: reading cutout has no misleading interactive semantics
+- PASS nmr: reading cutout does not embed tiny cover labels
+- PASS game: accepted main facility artwork preserved byte-for-byte
+- PASS game: reading cutout has no misleading interactive semantics
+- PASS game: reading cutout does not embed tiny cover labels
+- PASS review forwards overview / reader state
+- PASS review freezes 900/844 viewport budgets to prevent iframe-height feedback
+- PASS 68 logic-only DOM state tests; geometry mocked, not a browser
+- PASS desk-sans: real weight 400
+- PASS desk-sans: actual simplified Chinese face
+- PASS desk-sans: critical Chinese glyph coverage
+- PASS desk-sans: every source Han glyph included in local subset
+- PASS desk-sans-bold: real weight 700
+- PASS desk-sans-bold: actual simplified Chinese face
+- PASS desk-sans-bold: critical Chinese glyph coverage
+- PASS desk-sans-bold: every source Han glyph included in local subset
+- PASS desk-serif: real weight 400
+- PASS desk-serif: actual simplified Chinese face
+- PASS desk-serif: critical Chinese glyph coverage
+- PASS desk-serif: every source Han glyph included in local subset
+- PASS headline on shoal: 6.28:1
+- PASS header: 7.58:1
+- PASS main reading: 10.31:1
+- PASS reading description: 7.46:1
+- PASS secondary reading: 6.13:1
+- PASS primary action: 10.31:1
+- PASS scene label: 6.53:1
+- PASS world toolbar and caption: 7.82:1
+- PASS world navigation buttons: 5.60:1
+- PASS disabled demo labels: 5.34:1
+- PASS selected module: 8.52:1
+- PASS footer: 8.20:1
+- PASS AI topic action: 6.11:1
+- PASS NMR topic action: 6.74:1
+- PASS GAME topic action: 6.64:1
+- PASS NMR breadcrumb: 5.94:1
+- PASS GAME breadcrumb: 5.86:1
+- PASS 360px: readable document shell 328px
+- PASS 360px: course selector has >=100px per course
+- PASS 360px: reading text column budget 290px
+- PASS 360px: independent map close-up, not scaled desktop
+- PASS 360px: reading article has >=288px text budget
+- PASS 360px: teaching entry has >=250px inner budget
+- PASS 360px: real source action width budget fits
+- PASS 390px: readable document shell 358px
+- PASS 390px: course selector has >=100px per course
+- PASS 390px: reading text column budget 320px
+- PASS 390px: independent map close-up, not scaled desktop
+- PASS 390px: reading article has >=288px text budget
+- PASS 390px: teaching entry has >=250px inner budget
+- PASS 390px: real source action width budget fits
+
+## 不是浏览验收
+
+没有使用浏览器或 Playwright。LinkeDOM只验证真实JS的DOM状态转换，所有几何是stub，不运行CSS排版，也不用于宣称真实bounds通过。checks/world-art-diagnostic.png 只是独立SVG渲染，不包含真实HTML布局。仍需检查1280／390／360像素、新预留岛层次、各科靠岸站、阅读页、返回、相机与标签、键盘焦点、中文输入法、30项占位分组、暂停、200%字体放大和review iframe高度。静态宽度预算不等于像素级无溢出保证。

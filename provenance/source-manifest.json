@@ -1,0 +1,790 @@
+{
+  "generatedFrom": "git ls-tree blobs at the pinned commits",
+  "adaptations": [
+    {
+      "path": "sites/nmr-from-zero/vite.config.ts",
+      "originalBlob": "e449cbe8590ab1cc002dbcbdf49b1ab8f1f874c0",
+      "reason": "Read HUB_BASE at build time. Unset, empty, or / keeps the original base /nmr-from-zero/. A prefix such as /learning-hub/ builds /learning-hub/nmr-from-zero/."
+    },
+    {
+      "path": "sites/ai-learning-atlas/index.html",
+      "originalBlob": "f51dbb9ef9dcb654f1ce0592a501c12c81064ecf",
+      "reason": "Link the hub embed skin and bridge. Standalone route and lesson text stay."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/main.jsx",
+      "originalBlob": "f2baba28342a2b0568c61aa67fb634cce71f18bf",
+      "reason": "Mark embed=1 so the hub can hide the original shell."
+    },
+    {
+      "path": "sites/nmr-from-zero/index.html",
+      "originalBlob": "f926e46dee62d87cf8f8097a111fcf1f32be1ce8",
+      "reason": "Link the hub embed skin and bridge."
+    },
+    {
+      "path": "sites/nmr-from-zero/src/main.tsx",
+      "originalBlob": "7395da7797fde464b38f40e5ef54713929278e95",
+      "reason": "Mark embed=1 so the hub can hide the original shell."
+    },
+    {
+      "path": "sites/game-design-atlas/docs/index.html",
+      "originalBlob": "592b85297f4e226fd610b0801a1ca2c4a453ea96",
+      "reason": "Link the hub embed skin and bridge."
+    },
+    {
+      "path": "sites/ai-learning-atlas/server/index.mjs",
+      "originalBlob": "c896656a44d91b7df4bb095e924d68986e8d917c",
+      "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or DASHSCOPE_BASE_URL. Unset variables keep the original endpoints."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/csv-walkthrough.css",
+      "originalBlob": "10eed717dd8fa3be5ae22384534ae2a2d0f1ec8f",
+      "reason": "Hub embed restyles the CSV walkthrough card. Standalone purple remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/practice-labs.css",
+      "originalBlob": "0ebfcd9b2533c3f4424096a84341a4b331cddee4",
+      "reason": "Hub embed restyles practice grids. Wall cells stay neutral brown."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/graph.css",
+      "originalBlob": "0fece924f7c2ac27bb06bf69e9a87795189451a3",
+      "reason": "Hub embed restyles the course map. Optional gold and completed green stay."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/styles.css",
+      "originalBlob": "cfd509109e519c42bf5b8b2241d47c411722ba32",
+      "reason": "Hub embed uses teal and paper for shared lesson chrome. Standalone colors stay on the original variables."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/lesson-guide.css",
+      "originalBlob": "ccdcc6d853d2a0991fc83cfc79730333d981117e",
+      "reason": "Hub embed restyles the day-one sample card, disclosures, steps, and references. Standalone purple remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/lesson-term.css",
+      "originalBlob": "fd3a2b4517af6b2f89310c86ceab8524c1e4f2f7",
+      "reason": "Hub embed restyles the term popover close control. Standalone styling remains."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/weekly-lesson.css",
+      "originalBlob": "efea1e25864741a58a952c2e34fb6d62ba9ab071",
+      "reason": "Hub embed restyles week data, choices, and trace chips. Correct and incorrect feedback colors stay."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/tutor.css",
+      "originalBlob": "86abf61705f260d4d2b43b8961c8105f31eb69c4",
+      "reason": "In hub embed mode, the tutor card uses the v6 teal and paper colors. Standalone pages keep the original palette."
+    },
+    {
+      "path": "sites/game-design-atlas/docs/coach.js",
+      "originalBlob": "366c45f06ecf266a7f9193172c5461e1da76a166",
+      "reason": "Hub embed asks the parent page for the in-memory assistant config and calls the configured vendor directly with credentials omitted. Standalone pages do not call 127.0.0.1:4173."
+    },
+    {
+      "path": "sites/game-design-atlas/docs/followup.js",
+      "originalBlob": "a49443a9d437e2034a49676cbab9e33983b6781a",
+      "reason": "Hub embed follow-ups use the parent page's in-memory config and call the vendor directly. Credentials are omitted, and standalone pages do not call a local assistant."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/Tutor.jsx",
+      "originalBlob": "f27895c446c26a2000c91c6c41deab70b8931b50",
+      "reason": "Hub embed gets the in-memory vendor config from the parent and calls that vendor directly with credentials omitted. Standalone pages still ask for a service address."
+    },
+    {
+      "path": "sites/game-design-atlas/server/coach.mjs",
+      "originalBlob": "e55e5308faeeb5645e51ccfa9411e023fdc44f81",
+      "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or QWEN_BASE_URL. Unset variables keep the original endpoints and model defaults."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ai-learning-atlas",
+      "repo": "https://github.com/passwordis42/ai-learning-atlas",
+      "sha": "1b325e33b8c75bc3252303279a0299817027e27d",
+      "dest": "sites/ai-learning-atlas",
+      "files": [
+        {
+          "path": ".env.example",
+          "mode": "100644",
+          "blob": "75cec659829a30a1200ebbed9c3e93827ce2e6b8"
+        },
+        {
+          "path": ".github/workflows/pages.yml",
+          "mode": "100644",
+          "blob": "ab02e4e0a5b50ab493b7c47163466404d7206eff"
+        },
+        {
+          "path": ".gitignore",
+          "mode": "100644",
+          "blob": "3690233215a84182f2e3fd3012a0b41b036f49ce"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "blob": "77b2db86b455e28365720acc34645c499ee0a718"
+        },
+        {
+          "path": "index.html",
+          "mode": "100644",
+          "blob": "f51dbb9ef9dcb654f1ce0592a501c12c81064ecf"
+        },
+        {
+          "path": "package-lock.json",
+          "mode": "100644",
+          "blob": "6ef48b38b4b280e4595b3cebd5b208fb7714929e"
+        },
+        {
+          "path": "package.json",
+          "mode": "100644",
+          "blob": "bdd50131ffcf7efd06f5182c2aa6e5256562528b"
+        },
+        {
+          "path": "public/favicon.svg",
+          "mode": "100644",
+          "blob": "3c10a33f69c4409cd3e6201d034636002477ef39"
+        },
+        {
+          "path": "server/index.mjs",
+          "mode": "100644",
+          "blob": "c896656a44d91b7df4bb095e924d68986e8d917c"
+        },
+        {
+          "path": "server/index.test.mjs",
+          "mode": "100644",
+          "blob": "55074633588891a8b3d3b03dd80dcc2bcee76e6a"
+        },
+        {
+          "path": "src/App.jsx",
+          "mode": "100644",
+          "blob": "a7b296af3fffee3508b105da975976929b3395ed"
+        },
+        {
+          "path": "src/CsvWalkthrough.jsx",
+          "mode": "100644",
+          "blob": "26983f6ba775f6137288822972c2929372d9e0af"
+        },
+        {
+          "path": "src/DayOne.jsx",
+          "mode": "100644",
+          "blob": "06c5f8f3c710b3dcc4544cb1351249d4379a926d"
+        },
+        {
+          "path": "src/DayOnePractice.jsx",
+          "mode": "100644",
+          "blob": "6a33071560d1f22bd0b71c1c8429a66c77755e6e"
+        },
+        {
+          "path": "src/KnowledgeGraph.jsx",
+          "mode": "100644",
+          "blob": "6b212e64d3c21f9e159084637840b84f6e5f4744"
+        },
+        {
+          "path": "src/LessonTerm.jsx",
+          "mode": "100644",
+          "blob": "365b44a8fb5a56a770d4b5e2bb8b412964d0fb5a"
+        },
+        {
+          "path": "src/PracticeLabs.jsx",
+          "mode": "100644",
+          "blob": "c122ca607c488183662e7dbe58a1f69cf033e06f"
+        },
+        {
+          "path": "src/Tutor.jsx",
+          "mode": "100644",
+          "blob": "f27895c446c26a2000c91c6c41deab70b8931b50"
+        },
+        {
+          "path": "src/WeeklyLesson.jsx",
+          "mode": "100644",
+          "blob": "6970976456f8ebacd4c7fd72d6f7b127ad26f2fd"
+        },
+        {
+          "path": "src/csv-walkthrough.css",
+          "mode": "100644",
+          "blob": "10eed717dd8fa3be5ae22384534ae2a2d0f1ec8f"
+        },
+        {
+          "path": "src/data/clean_tickets.py",
+          "mode": "100644",
+          "blob": "2de1c2aa41e298679448ed4e4592c5719f831a34"
+        },
+        {
+          "path": "src/data/course.js",
+          "mode": "100644",
+          "blob": "db7924ab64fb3f3b3f67fc7e67d5dca2cd3de0da"
+        },
+        {
+          "path": "src/data/course.test.js",
+          "mode": "100644",
+          "blob": "08a1fee98e4e01a75c749808610c2331686d7706"
+        },
+        {
+          "path": "src/data/elective-lessons.js",
+          "mode": "100644",
+          "blob": "48613ed536c2821c6cdab8cfdcbb24f8298cf79e"
+        },
+        {
+          "path": "src/data/lesson-check.js",
+          "mode": "100644",
+          "blob": "4aa24cabfd5950d8af7066bba4ec5e9bc4d8b17b"
+        },
+        {
+          "path": "src/data/lesson-glossary.js",
+          "mode": "100644",
+          "blob": "645ee2e5e58b10900ba2bb522781ded45f4d3ddf"
+        },
+        {
+          "path": "src/data/lesson-index.js",
+          "mode": "100644",
+          "blob": "1ba5f7aa158400d2235b387970a938c53f3ca8ab"
+        },
+        {
+          "path": "src/data/lessons-01-19.js",
+          "mode": "100644",
+          "blob": "c4cc95eb26f40d02ccf633faacbf2c460a304941"
+        },
+        {
+          "path": "src/data/lessons-20-38.js",
+          "mode": "100644",
+          "blob": "f7c6b7a25969cfa92010016b3df2fa364cc58960"
+        },
+        {
+          "path": "src/data/lessons-39-58.js",
+          "mode": "100644",
+          "blob": "f6b4ac805c3cc54017a7f55ec758b5ce450d1416"
+        },
+        {
+          "path": "src/data/roadmap-glossary.js",
+          "mode": "100644",
+          "blob": "b7c9f1ca4882340e01c6f62315691d398e498feb"
+        },
+        {
+          "path": "src/data/weekly-lessons.test.js",
+          "mode": "100644",
+          "blob": "0f230441b0e1a580fe448e2f7906956f46ec261f"
+        },
+        {
+          "path": "src/graph.css",
+          "mode": "100644",
+          "blob": "0fece924f7c2ac27bb06bf69e9a87795189451a3"
+        },
+        {
+          "path": "src/lesson-guide.css",
+          "mode": "100644",
+          "blob": "ccdcc6d853d2a0991fc83cfc79730333d981117e"
+        },
+        {
+          "path": "src/lesson-term.css",
+          "mode": "100644",
+          "blob": "fd3a2b4517af6b2f89310c86ceab8524c1e4f2f7"
+        },
+        {
+          "path": "src/main.jsx",
+          "mode": "100644",
+          "blob": "f2baba28342a2b0568c61aa67fb634cce71f18bf"
+        },
+        {
+          "path": "src/practice-labs.css",
+          "mode": "100644",
+          "blob": "0ebfcd9b2533c3f4424096a84341a4b331cddee4"
+        },
+        {
+          "path": "src/styles.css",
+          "mode": "100644",
+          "blob": "cfd509109e519c42bf5b8b2241d47c411722ba32"
+        },
+        {
+          "path": "src/tutor.css",
+          "mode": "100644",
+          "blob": "86abf61705f260d4d2b43b8961c8105f31eb69c4"
+        },
+        {
+          "path": "src/weekly-lesson.css",
+          "mode": "100644",
+          "blob": "efea1e25864741a58a952c2e34fb6d62ba9ab071"
+        },
+        {
+          "path": "vite.config.js",
+          "mode": "100644",
+          "blob": "5362053e408f6eee170e0315689ee28bdf4d4e5d"
+        }
+      ]
+    },
+    {
+      "name": "nmr-from-zero",
+      "repo": "https://github.com/passwordis42/nmr-from-zero",
+      "sha": "b10355f6f1387f17089d1e22229353589901ac75",
+      "dest": "sites/nmr-from-zero",
+      "files": [
+        {
+          "path": ".github/workflows/pages.yml",
+          "mode": "100644",
+          "blob": "91ab99b9de5e5381830511bd655138d8539b4fd7"
+        },
+        {
+          "path": ".gitignore",
+          "mode": "100644",
+          "blob": "07af1aec5d35a638e28b4523a564d77dad80d80a"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "blob": "084c28bcd4ceaae75e48c498be27fe33283ed5c2"
+        },
+        {
+          "path": "index.html",
+          "mode": "100644",
+          "blob": "f926e46dee62d87cf8f8097a111fcf1f32be1ce8"
+        },
+        {
+          "path": "package-lock.json",
+          "mode": "100644",
+          "blob": "9b8d5db870056c64b83d6e9160b3240089f432bc"
+        },
+        {
+          "path": "package.json",
+          "mode": "100644",
+          "blob": "623fa30d94ae2af758394d425fb31089bf70db1b"
+        },
+        {
+          "path": "public/favicon.svg",
+          "mode": "100644",
+          "blob": "c759d8fb5827478051fa10b7516eda2fc5682ab5"
+        },
+        {
+          "path": "src/App.tsx",
+          "mode": "100644",
+          "blob": "f0867a2923b710348dc072f6c1aaaeb184e320d8"
+        },
+        {
+          "path": "src/components/ActivityHost.tsx",
+          "mode": "100644",
+          "blob": "cc3360f9a0ef725676ebbdfdada31ffd75c8a23c"
+        },
+        {
+          "path": "src/components/BuildGuide.tsx",
+          "mode": "100644",
+          "blob": "eff2ebc1c72bc1857bd2a9aa41456bb53463872b"
+        },
+        {
+          "path": "src/components/ConceptVisual.tsx",
+          "mode": "100644",
+          "blob": "917818d3156e2de6a4da9bf05982c3f164cf9a2d"
+        },
+        {
+          "path": "src/components/GuidedActivity.tsx",
+          "mode": "100644",
+          "blob": "d04cf2955ee18f27d891150e81b970e1222d1671"
+        },
+        {
+          "path": "src/components/Hardware.tsx",
+          "mode": "100644",
+          "blob": "cf9d3b8d80cad463807a2c6f5d7ebba57ce6f54c"
+        },
+        {
+          "path": "src/components/Lab.tsx",
+          "mode": "100644",
+          "blob": "93afa7aaccf0b7c80bc3677bf1757de7889479c7"
+        },
+        {
+          "path": "src/components/LearningHelp.tsx",
+          "mode": "100644",
+          "blob": "ea77b76d9884a308ae4e6429619e3cff0ab26967"
+        },
+        {
+          "path": "src/components/ProjectAudit.tsx",
+          "mode": "100644",
+          "blob": "1a18603a50453af76127b24458c1286dc7ca0dec"
+        },
+        {
+          "path": "src/components/ReasoningActivity.tsx",
+          "mode": "100644",
+          "blob": "085ed7a51539b0269ca5881ce07753b069b98c6c"
+        },
+        {
+          "path": "src/components/SteppedLesson.tsx",
+          "mode": "100644",
+          "blob": "cfc9e59d8054b9d69d8bf42911854307b60f8d94"
+        },
+        {
+          "path": "src/components/build-guide.css",
+          "mode": "100644",
+          "blob": "1cd056c4461274d75b5620bfd86f1bd13ee790b3"
+        },
+        {
+          "path": "src/components/concept-visual.css",
+          "mode": "100644",
+          "blob": "75319c42ee4401bde27dced5da0af2b8ca84a982"
+        },
+        {
+          "path": "src/components/guided-activity.css",
+          "mode": "100644",
+          "blob": "db90d51472dce8119caafee6bef9213e17592e3a"
+        },
+        {
+          "path": "src/components/labs.css",
+          "mode": "100644",
+          "blob": "a6f9c1e4719dd581089d2bd0085552ab4e89d8ad"
+        },
+        {
+          "path": "src/components/learning-help.css",
+          "mode": "100644",
+          "blob": "c80c0cde3e7ba7ac788e4fc5d7b27061bd4d0eea"
+        },
+        {
+          "path": "src/components/reasoning-activity.css",
+          "mode": "100644",
+          "blob": "416db7f05c4ad68576caa0ca7e91ae8d2594e929"
+        },
+        {
+          "path": "src/components/stepped-lesson.css",
+          "mode": "100644",
+          "blob": "849fbcdc9ee460cbc11fb8698050921eba72e2a7"
+        },
+        {
+          "path": "src/content/buildGuide.ts",
+          "mode": "100644",
+          "blob": "df6c3a2296b5acbdda6b933262aec5260c664605"
+        },
+        {
+          "path": "src/content/concepts.ts",
+          "mode": "100644",
+          "blob": "2ab0747b83631b308658ac036cf522e2a520a56a"
+        },
+        {
+          "path": "src/content/course.ts",
+          "mode": "100644",
+          "blob": "a306c489ad3c923ea97c622a7b8f76ca2db5b468"
+        },
+        {
+          "path": "src/content/labGuides.ts",
+          "mode": "100644",
+          "blob": "b6165cb65b5b74b1c26a867d8f84945e95c8c002"
+        },
+        {
+          "path": "src/content/projectAudit.ts",
+          "mode": "100644",
+          "blob": "47bf52977243d60e90fb4ba7a730a1cade76f961"
+        },
+        {
+          "path": "src/content/resources.ts",
+          "mode": "100644",
+          "blob": "21d3e9477f73cf162e7faea8a6ffe4aca30cf51f"
+        },
+        {
+          "path": "src/help.ts",
+          "mode": "100644",
+          "blob": "16b16b94836d2418a9068d9ab02a24e52e9e5578"
+        },
+        {
+          "path": "src/learning.ts",
+          "mode": "100644",
+          "blob": "2528b713916c0a2d19f8728ea37d41e5c9a591cf"
+        },
+        {
+          "path": "src/main.tsx",
+          "mode": "100644",
+          "blob": "7395da7797fde464b38f40e5ef54713929278e95"
+        },
+        {
+          "path": "src/physics/models.ts",
+          "mode": "100644",
+          "blob": "105c03c0d297d316beea8d37281c2ef91b80d7d8"
+        },
+        {
+          "path": "src/physics/teaching.ts",
+          "mode": "100644",
+          "blob": "d3c03fd88b4acd4fb786442bd713b345b88b3dff"
+        },
+        {
+          "path": "src/progress.ts",
+          "mode": "100644",
+          "blob": "b87ab5637fa504c69bd66776f50a045ac16cb6ac"
+        },
+        {
+          "path": "src/styles.css",
+          "mode": "100644",
+          "blob": "79ce80a2ca9a88fc27eb60043b7ab4b645f03d94"
+        },
+        {
+          "path": "src/types.ts",
+          "mode": "100644",
+          "blob": "03379177fd36b6865366091d4d4ff9a5a0e0be9d"
+        },
+        {
+          "path": "tests/content.test.ts",
+          "mode": "100644",
+          "blob": "d5ab516db67b901abb1ff512e034906d3f0308ab"
+        },
+        {
+          "path": "tests/early-receive.test.tsx",
+          "mode": "100644",
+          "blob": "84fb20b8028d91053a2dbc5cd8abdc56c57600a7"
+        },
+        {
+          "path": "tests/lab-snapshot.test.tsx",
+          "mode": "100644",
+          "blob": "d2edc31ce4aee95e4ebc9c4ac98cdb2eca822ff7"
+        },
+        {
+          "path": "tests/learning-help.test.tsx",
+          "mode": "100644",
+          "blob": "dada1ff9e0154568c1fb51a849282587191fd8ef"
+        },
+        {
+          "path": "tests/learning.test.ts",
+          "mode": "100644",
+          "blob": "fd7f8b5d09bacbc62a93e927fba758c6d9f864d3"
+        },
+        {
+          "path": "tests/physics.test.ts",
+          "mode": "100644",
+          "blob": "24508751eb8f89f8544eceba8712703432bc7c89"
+        },
+        {
+          "path": "tests/teaching.test.ts",
+          "mode": "100644",
+          "blob": "7b7e06b290d8f66acd685b57a9f22db3ba988ac4"
+        },
+        {
+          "path": "tsconfig.json",
+          "mode": "100644",
+          "blob": "e866c1f6a4f5e3fea5204e1b35ed3ec01096f866"
+        },
+        {
+          "path": "vite.config.ts",
+          "mode": "100644",
+          "blob": "e449cbe8590ab1cc002dbcbdf49b1ab8f1f874c0"
+        }
+      ]
+    },
+    {
+      "name": "game-design-atlas",
+      "repo": "https://github.com/passwordis42/game-design-atlas",
+      "sha": "f0cefba298cd201b232b570fde5ebe874451c353",
+      "dest": "sites/game-design-atlas",
+      "files": [
+        {
+          "path": ".env.example",
+          "mode": "100644",
+          "blob": "73398e84645c6cb9e15da13c562dadf92dab3cd0"
+        },
+        {
+          "path": ".gitignore",
+          "mode": "100644",
+          "blob": "d37621493d696853955ececb87a2ffaf6b67253e"
+        },
+        {
+          "path": "AI-DEVELOPMENT.md",
+          "mode": "100644",
+          "blob": "dda0cdae352829e82fe2b184505c400bb80947a3"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "blob": "54d8e8cfc884873b657d189d7a55e4578d5557d8"
+        },
+        {
+          "path": "docs/.nojekyll",
+          "mode": "100644",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        },
+        {
+          "path": "docs/app.js",
+          "mode": "100644",
+          "blob": "fba955fdd6ce72bb1a14fbb5925f8993492400ae"
+        },
+        {
+          "path": "docs/atlas.css",
+          "mode": "100644",
+          "blob": "1797d8c82242b71762cd27765423444e33125d45"
+        },
+        {
+          "path": "docs/atlas.svg",
+          "mode": "100644",
+          "blob": "7bcc0b1f58141e22d41469a9da8fc03687c954a6"
+        },
+        {
+          "path": "docs/coach.js",
+          "mode": "100644",
+          "blob": "366c45f06ecf266a7f9193172c5461e1da76a166"
+        },
+        {
+          "path": "docs/data/checkpoints.js",
+          "mode": "100644",
+          "blob": "dadf30dc8b4fb7391333a40ca42436c4ed2f7215"
+        },
+        {
+          "path": "docs/data/curriculum.js",
+          "mode": "100644",
+          "blob": "7a480652ba25ea3dec715af687b626d041cee8ec"
+        },
+        {
+          "path": "docs/data/lessons-01-09.js",
+          "mode": "100644",
+          "blob": "4542bf043241413882af694e9c98637072b6ac29"
+        },
+        {
+          "path": "docs/data/lessons-10-18.js",
+          "mode": "100644",
+          "blob": "ea06abe1ddcc17203ee95755613c2af7ba3a30a7"
+        },
+        {
+          "path": "docs/data/lessons-19-28.js",
+          "mode": "100644",
+          "blob": "a4d08ef93dd30d73f5005db77fc2523e4a1326bd"
+        },
+        {
+          "path": "docs/data/lessons.js",
+          "mode": "100644",
+          "blob": "2349c0fdc774f044a0cd66d760fa40abc4923fd7"
+        },
+        {
+          "path": "docs/data/reasoning-cases.js",
+          "mode": "100644",
+          "blob": "5268f5f7a9513fafba359a8c14dcc21f924a2456"
+        },
+        {
+          "path": "docs/experiment-notebook.js",
+          "mode": "100644",
+          "blob": "3bb3528b0e0ab12500dd5955f0997044efd4281d"
+        },
+        {
+          "path": "docs/experiments.js",
+          "mode": "100644",
+          "blob": "2d15bb4b01e7f2738a54ee5934489d261d2c0402"
+        },
+        {
+          "path": "docs/followup.js",
+          "mode": "100644",
+          "blob": "a49443a9d437e2034a49676cbab9e33983b6781a"
+        },
+        {
+          "path": "docs/genre-labs-16-19.js",
+          "mode": "100644",
+          "blob": "47e539ddd4d11b770c029eeb1c23e425c292e57a"
+        },
+        {
+          "path": "docs/genre-labs-20-23.js",
+          "mode": "100644",
+          "blob": "9217dd4d879ee62f53e68a112c11eba0c0dc59c7"
+        },
+        {
+          "path": "docs/graph.js",
+          "mode": "100644",
+          "blob": "2c6c55b35e52f70b9abfbdc6154310192cf9d784"
+        },
+        {
+          "path": "docs/index.html",
+          "mode": "100644",
+          "blob": "592b85297f4e226fd610b0801a1ca2c4a453ea96"
+        },
+        {
+          "path": "docs/lab-briefs.js",
+          "mode": "100644",
+          "blob": "b28b721401a47be6deba8aa75e5d76d0b453e2b8"
+        },
+        {
+          "path": "docs/labs.js",
+          "mode": "100644",
+          "blob": "370f0a32ebb012c91415e2c0ca151fcf076fd8db"
+        },
+        {
+          "path": "docs/prototype-lab.js",
+          "mode": "100644",
+          "blob": "0a6dcf29c567009a8a79eb511f23f7a5eea06744"
+        },
+        {
+          "path": "docs/reasoning.js",
+          "mode": "100644",
+          "blob": "4cb72cb7bcf2f04d2c4cbd29c8f09ed70a0a5564"
+        },
+        {
+          "path": "docs/records.js",
+          "mode": "100644",
+          "blob": "5a8692993aa9ca6f971a4061193e51684676bd60"
+        },
+        {
+          "path": "docs/research-lab.js",
+          "mode": "100644",
+          "blob": "f4e53c9866bad96da1e6e9329e8b03100ab2881f"
+        },
+        {
+          "path": "docs/study-progress.js",
+          "mode": "100644",
+          "blob": "de4a0a9b911bfe2b043de1c8dcb61e06c5951a08"
+        },
+        {
+          "path": "docs/study.css",
+          "mode": "100644",
+          "blob": "6f6177a71ba407d3fa560fea30c053d655964c8a"
+        },
+        {
+          "path": "docs/study.js",
+          "mode": "100644",
+          "blob": "b2fce2ad08af67c96b52422f8b9e709976121b72"
+        },
+        {
+          "path": "package.json",
+          "mode": "100644",
+          "blob": "d4d92a2a3da5102f3a2c007b52d8d2893346a42d"
+        },
+        {
+          "path": "server/coach.mjs",
+          "mode": "100644",
+          "blob": "e55e5308faeeb5645e51ccfa9411e023fdc44f81"
+        },
+        {
+          "path": "server/coach.test.mjs",
+          "mode": "100644",
+          "blob": "a28b83ccfcdaa94f739699223714671a06e20930"
+        },
+        {
+          "path": "server/index.mjs",
+          "mode": "100644",
+          "blob": "d1dc92a858cd9c7b99221ec8b0ec9e885923633b"
+        },
+        {
+          "path": "tests/experiments.test.mjs",
+          "mode": "100644",
+          "blob": "8ea404fcbb1ba163c2250696812add5461a39908"
+        },
+        {
+          "path": "tests/genre-labs-16-19.test.mjs",
+          "mode": "100644",
+          "blob": "5a87df3b52109b9936aaf24c12dc05e42def3001"
+        },
+        {
+          "path": "tests/genre-labs-20-23.test.mjs",
+          "mode": "100644",
+          "blob": "6cb2909145832e321b97907fba8a3a2088a61e2a"
+        },
+        {
+          "path": "tests/progress-sync.test.mjs",
+          "mode": "100644",
+          "blob": "903f21097698bdfa52dd52c74415904d6cdcedd8"
+        },
+        {
+          "path": "tests/study.test.mjs",
+          "mode": "100644",
+          "blob": "53e8130356cdfb49ba4581980d82a989b5104619"
+        }
+      ]
+    }
+  ],
+  "additions": [
+    "sites/ai-learning-atlas/public/embed-skin.css",
+    "sites/ai-learning-atlas/public/embed-bridge.js",
+    "sites/ai-learning-atlas/src/credential-mode.js",
+    "sites/game-design-atlas/docs/credential-mode.js",
+    "sites/nmr-from-zero/public/embed-skin.css",
+    "sites/nmr-from-zero/public/embed-bridge.js",
+    "sites/game-design-atlas/docs/embed-skin.css",
+    "sites/game-design-atlas/docs/embed-bridge.js",
+    "sites/ai-learning-atlas/src/parent-config.js",
+    "sites/ai-learning-atlas/src/tutor-protocol.js",
+    "sites/game-design-atlas/docs/parent-config.js",
+    "sites/game-design-atlas/docs/coach-direct.js"
+  ]
+}
