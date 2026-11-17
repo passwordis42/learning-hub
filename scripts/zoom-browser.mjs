@@ -50,9 +50,9 @@ async function metrics(page) {
 }
 
 function chromeWindow() {
-  const ids = execFileSync('xdotool', ['search', '--name', '开架'], { encoding: 'utf8' })
+  const ids = execFileSync('xdotool', ['search', '--name', '学习入口'], { encoding: 'utf8' })
     .split('\n').map((item) => item.trim()).filter(Boolean);
-  if (!ids.length) throw new Error('未找到标题含「开架」的 Chrome 窗口');
+  if (!ids.length) throw new Error('未找到标题含「学习入口」的 Chrome 窗口');
   return ids[ids.length - 1];
 }
 
@@ -178,7 +178,7 @@ try {
 
   await layout('首页');
   const homeControls = await page.evaluate(() => {
-    const ids = ['nav-overview', 'open-settings', 'motion-toggle'];
+    const ids = ['btnList', 'btnAssist', 'btnMotion'];
     return ids.map((id) => {
       const el = document.getElementById(id);
       const rect = el.getBoundingClientRect();
@@ -194,9 +194,9 @@ try {
     });
   });
   check('首页导航和暂停按钮在 200% 视口内', homeControls.every((item) => item.inside), JSON.stringify(homeControls));
-  await page.locator('#nav-overview').focus();
+  await page.locator('#btnList').focus();
   const homeFocus = await page.evaluate(() => document.activeElement?.id);
-  check('首页导航可以获得焦点', homeFocus === 'nav-overview', homeFocus);
+  check('首页目录按钮可以获得焦点', homeFocus === 'btnList', homeFocus);
   await shot(page, 'zoom_home_200.png');
 
   await openReader(page, 'nmr', 'nmr-2-1', '振幅');
@@ -329,8 +329,8 @@ try {
     const frame = document.getElementById('lesson-frame');
     frame.dataset.fullHeight = frame.style.height;
     frame.style.height = '1px';
-    document.querySelector('.learning-sidebar').style.display = 'none';
-    document.querySelector('.lesson-article').style.display = 'none';
+    document.querySelector('#lesson-nav').style.display = 'none';
+    document.querySelector('article.lesson').style.display = 'none';
   });
   await page.evaluate(() => document.getElementById('settings-back').click());
   await page.waitForFunction(() => document.body.dataset.view === 'reader');
@@ -338,15 +338,17 @@ try {
   const early = await page.evaluate(() => window.scrollY);
   const earlyMax = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
   await page.evaluate(() => {
-    document.querySelector('.learning-sidebar').style.display = '';
-    document.querySelector('.lesson-article').style.display = '';
+    document.querySelector('#lesson-nav').style.display = '';
+    document.querySelector('article.lesson').style.display = '';
     const frame = document.getElementById('lesson-frame');
     frame.style.height = frame.dataset.fullHeight || '4200px';
   });
   await page.waitForFunction(() => Math.abs(window.scrollY - 480) <= 2, null, { timeout: 4000 });
   const late = await page.evaluate(() => ({ scrollY: window.scrollY, max: document.documentElement.scrollHeight - window.innerHeight }));
   check('延迟布局稳定后恢复到 480 而不是停留在夹住的位置', early < 480 && earlyMax + 1 < 480 && Math.abs(late.scrollY - 480) <= 2, `early=${early} earlyMax=${earlyMax} late=${JSON.stringify(late)} beforeMax=${beforeMax}`);
-  await page.mouse.wheel(0, 160);
+  await page.waitForTimeout(400);
+  await page.locator('#backLink').focus();
+  await page.keyboard.press('PageDown');
   await page.waitForTimeout(700);
   const manual = await page.evaluate(() => window.scrollY);
   check('布局稳定后不再抢回滚动', Math.abs(manual - 480) > 20, `manual=${manual}`);
