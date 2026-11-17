@@ -79,7 +79,10 @@ body[data-view=settings]{background:#d7e4dc}
 .settings-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
 .settings-actions button{padding:9px 12px}
 .settings-actions button:disabled{opacity:.6;cursor:default}
-.settings-danger{color:#8c342d;border-color:#8c342d;background:#f7f4ea}
+.settings-danger{color:#8c342d;background:#fffdf8;border:1px solid #8c342d;border-radius:4px;min-height:44px;padding:9px 14px;font:inherit}
+.settings-danger:hover{background:#f8ebe6}
+.lesson-standalone{margin:8px 0 0}
+.lesson-standalone a{font-size:14px;color:#42606a}
 .settings-result{background:#dce7d8;border-left:4px solid #2d6a69;padding:16px;margin:22px 0}
 .settings-result.error{background:#f3e1d4;border-color:#8c342d}
 .settings-result p{margin:0 0 8px}

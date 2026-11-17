@@ -194,3 +194,19 @@
   outline: 2px solid var(--tutor-accent);
   outline-offset: 2px;
 }
+
+html.is-hub-embed .atlas-tutor {
+  --tutor-accent: #2d6a69;
+  --tutor-ink: #183f4b;
+  --tutor-muted: #42606a;
+  --tutor-line: #c8d4c3;
+  --tutor-light: #f4f7f1;
+  background: #fffef4;
+  border-radius: 8px;
+}
+
+html.is-hub-embed .atlas-tutor :is(button, textarea, input, select, summary):focus-visible {
+  outline: 3px solid #fff9e9;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 7px #123e4c;
+}

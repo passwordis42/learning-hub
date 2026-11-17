@@ -37,6 +37,11 @@
       "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or DASHSCOPE_BASE_URL. Unset variables keep the original endpoints."
     },
     {
+      "path": "sites/ai-learning-atlas/src/tutor.css",
+      "originalBlob": "86abf61705f260d4d2b43b8961c8105f31eb69c4",
+      "reason": "In hub embed mode, the tutor card uses the v6 teal and paper colors. Standalone pages keep the original palette."
+    },
+    {
       "path": "sites/ai-learning-atlas/src/Tutor.jsx",
       "originalBlob": "f27895c446c26a2000c91c6c41deab70b8931b50",
       "reason": "In hub embed mode, use the same-origin /api/tutor path, including a HUB_BASE prefix. Standalone pages still ask for a service address."

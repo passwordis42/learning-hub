@@ -220,13 +220,9 @@
     $('lesson-breadcrumb').textContent=c.short+' / '+m.group;
     $('lesson-title').textContent=m.title;
     $('lesson-course-line').textContent=c.title;
-    $('lesson-introduction').textContent=lesson.description;
-    $('lesson-source-note').hidden=!m.note;
-    $('lesson-note').textContent=m.note||'';
     const href=standaloneHref(m);
     $('lesson-source').href=href;
     $('lesson-source').setAttribute('aria-label','在独立页面打开'+m.title+'，新标签页');
-    $('lesson-source-path').textContent=href;
     const frame=$('lesson-frame'), doc=$('lesson-document');
     if(m.kind==='document'){
       frame.hidden=true; frame.removeAttribute('src');
@@ -240,10 +236,7 @@
       frame.title=m.title;
       if(frame.getAttribute('src')!==next) frame.src=next;
     }
-    $('lesson-facility-label').textContent=M.districts[c.id];
-    $('lesson-facility').src='assets/facility-'+c.id+'.svg';
-    $('lesson-facility').alt=M.districts[c.id]+'示意，非教学数据图';
-    $('lesson-provenance').textContent='章节信息沿用 '+c.fullName;
+    $('lesson-provenance').textContent=c.fullName;
     $('lesson-repo').href=c.repo;
     if(lessonRendered!==c.id){
       $('lesson-nav').innerHTML=M.groups(c).map(g=>'<details class="lesson-group" data-lesson-group="'+esc(g)+'"'+(m.group===g?' open':'')+'><summary>'+esc(g)+'</summary><ul>'+c.modules.filter(row=>row.group===g).map(row=>'<li><button type="button" class="lesson-module-button" data-lesson-module="'+esc(row.id)+'" data-lesson-course="'+c.id+'" aria-controls="lesson-title" aria-pressed="false"><span>'+esc(row.title)+'</span><span class="lesson-check" aria-hidden="true"></span></button></li>').join('')+'</ul></details>').join('');
@@ -269,7 +262,7 @@
     syncScene();renderCourse();writeUrl();
     window.scrollTo({top:0,behavior:'instant'});
     $('lesson-title').focus({preventScroll:true});
-    announce('已打开'+c.title+'。正文来自已迁入的课程模块。');
+    announce('已打开'+c.title+'。');
   }
   function returnIslands(){
     Object.assign(state,M.backToIslands(state));

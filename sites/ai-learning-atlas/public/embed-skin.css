@@ -41,9 +41,15 @@ html.is-hub-embed #main {
   padding: 4px 0 28px !important;
 }
 html.is-hub-embed h1 {
-  font-family: IslandSerif, "Noto Serif SC", serif;
-  letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 html.is-hub-embed .primary-button,
 html.is-hub-embed .action.primary,
