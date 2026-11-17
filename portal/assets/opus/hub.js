@@ -36,7 +36,20 @@
   }
   var hv = homeView(); cam.x = camT.x = hv.x; cam.z = camT.z = hv.z; cam.dist = camT.dist = hv.dist + 14; // 入场推镜
 
-  function progressOf() { return {}; }
+  function progressOf(courseId) {
+    var course = COURSES.filter(function (item) { return item.id === courseId; })[0];
+    if (!course || !window.HUB_PROGRESS) return { done: [], map: {} };
+    var map = window.HUB_PROGRESS.present(courseId, course.chapters.map(function (chapter) { return chapter.id; }));
+    return { done: Object.keys(map), map: map };
+  }
+  function paintWelcome() {
+    [].forEach.call(document.querySelectorAll('.w-isle[data-course]'), function (button) {
+      var course = COURSES.filter(function (item) { return item.id === button.getAttribute('data-course'); })[0];
+      var meter = button.querySelector('.meter');
+      if (!course || !meter) return;
+      meter.textContent = '已完成 ' + progressOf(course.id).done.length + ' / ' + course.total;
+    });
+  }
 
   /* ---------- 海洋 ---------- */
   var ocean = Ocean.create(canvas, { pitch: PITCH, quality: quality, onFallback: toFallback });
@@ -105,9 +118,9 @@
     $('#wCount').textContent = real.length + ' 座课程岛';
     var rows = real.map(function (c) {
       var i = COURSES.indexOf(c);
-      return '<li><button class="w-isle" data-i="' + i + '" style="--accent:' + c.accent + '"><span class="gem">' + gem(c) + '<b' + (c.code.length > 3 ? ' style="font-size:.44rem"' : '') + '>' + c.code + '</b></span>' +
+      return '<li><button class="w-isle" data-i="' + i + '" data-course="' + c.id + '" style="--accent:' + c.accent + '"><span class="gem">' + gem(c) + '<b' + (c.code.length > 3 ? ' style="font-size:.44rem"' : '') + '>' + c.code + '</b></span>' +
         '<span class="txt"><strong>' + c.fullName + '</strong><small>' + c.facility + '</small></span>' +
-        '<span class="meter">' + c.total + ' 项</span>' +
+        '<span class="meter">已完成 0 / ' + c.total + '</span>' +
         '<svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></li>';
     });
     if (planned.length) {
@@ -134,6 +147,7 @@
     }
     $('#wMin').addEventListener('click', function () { collapsed = !collapsed; localStorage.setItem('lh-welcome', collapsed ? 'min' : 'open'); applyW(); });
     applyW();
+    paintWelcome();
   })();
 
   /* ---------- 文字目录（键盘 / 读屏 / 降级入口，含全站搜索） ---------- */
@@ -146,8 +160,8 @@
       var courseHit = !q || (c.fullName + c.facility + c.tagline).toLowerCase().indexOf(q) >= 0;
       if (q && !hits.length && !courseHit) return '';
       return '<details class="cat-course" style="--accent:' + c.accent + '"' + (q ? ' open' : '') + '>' +
-        '<summary class="course-row"><span class="badge" style="font-size:' + (c.code.length > 2 ? '.62rem' : '.85rem') + '">' + c.code + '</span><span><b>' + c.fullName + '</b><span>' + c.facility + ' · 共 ' + c.total + ' 项' + (p.done && p.done.length ? ' · 已读 ' + p.done.length : '') + '</span></span><i class="chev" aria-hidden="true"></i></summary>' +
-        '<ol class="cat-list">' + hits.map(function (o) { return '<li><a href="' + o.ch.href + '"><span>' + o.ch.t + '</span><small>' + o.ch.g + '</small></a></li>'; }).join('') +
+        '<summary class="course-row"><span class="badge" style="font-size:' + (c.code.length > 2 ? '.62rem' : '.85rem') + '">' + c.code + '</span><span><b>' + c.fullName + '</b><span>' + c.facility + ' · 共 ' + c.total + ' 项 · 已完成 ' + p.done.length + '</span></span><i class="chev" aria-hidden="true"></i></summary>' +
+        '<ol class="cat-list">' + hits.map(function (o) { return '<li' + (p.map[o.ch.id] ? ' class="done"' : '') + '><a href="' + o.ch.href + '"><span>' + o.ch.t + '</span><small>' + o.ch.g + '</small></a></li>'; }).join('') +
         (!q && c.total > c.chapters.length ? '<li class="more"><a href="' + c.href + '">查看全部 ' + c.total + ' 项 →</a></li>' : '') + '</ol>' +
         '<div class="cat-actions"><button class="mini" data-fly="' + i + '">在海上查看</button><a class="mini" href="' + c.href + '">进入课程</a></div></details>';
     }).join('') || '<p class="empty">没有找到“' + q + '”。换个关键词试试。</p>';
@@ -161,6 +175,7 @@
   });
   function openDrawer() {
     if (body.classList.contains('assist-open')) { requestCloseAssist(); return; }
+    renderCatalog($('#catSearch').value);
     body.classList.add('drawer-open');
     $('#btnList').setAttribute('aria-expanded', 'true');
     setTimeout(function () { $('#catSearch').focus(); }, 50);
@@ -246,14 +261,13 @@
     var actions = '';
     if (!c.planned) {
       var p = progressOf(c.id); var n = c.total || c.chapters.length || 1; var done = (p.done || []).length;
-      var pct = Math.round(done / n * 100);
-      var nextIdx = typeof p.last === 'number' ? p.last : 0;
-      html += '<div class="stats"><div class="stat"><b>' + n + '</b><span>目录条目</span></div><div class="stat"><b>' + c.unitsLabel + '</b><span>课程规模</span></div></div>' +
+      var nextIdx = 0;
+      html += '<div class="stats"><div class="stat"><b>' + n + '</b><span>目录条目</span></div><div class="stat"><b id="dockDone">' + done + '</b><span>已完成</span></div></div>' +
         '<div class="now-card"><span class="eyebrow">从这里进入</span><b>' + c.chapters[0].t + '</b><small>' + c.chapters[0].g + ' · 进度保存在各课自己的记录里</small></div>' +
-        '<div class="eyebrow" style="display:flex;justify-content:space-between">教学目录<span style="letter-spacing:.06em;text-transform:none">选岛后才出现本预览</span></div>' +
+        '<div class="eyebrow" style="display:flex;justify-content:space-between">教学目录<span style="letter-spacing:.06em;text-transform:none">已完成 ' + done + '</span></div>' +
         '<label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input id="dockSearch" type="search" placeholder="搜索目录" aria-label="搜索 ' + c.fullName + ' 目录"></label>' +
         '<ol class="route" id="dockRoute">' + c.chapters.map(function (ch, k) {
-          var cls = (p.done || []).indexOf(k) >= 0 ? 'done' : (nextIdx === k ? 'now' : '');
+          var cls = p.map[ch.id] ? 'done' : (nextIdx === k ? 'now' : '');
           return '<li class="' + cls + '" data-t="' + ch.t + ' ' + ch.g + '"><a href="' + ch.href + '">' + ch.t + '</a></li>';
         }).join('') + (n > c.chapters.length ? '<li class="more">… 其余 ' + (n - c.chapters.length) + ' 项在课程目录中</li>' : '') + '</ol>' +
         '<div class="links"><a href="' + c.origin + '" target="_blank" rel="noopener">课程原站 ↗</a><a href="https://github.com/passwordis42/learning-hub" target="_blank" rel="noopener">GitHub ↗</a></div>';
@@ -541,6 +555,16 @@
     var v = $('#mmView');
     if (v && pts.every(Boolean)) v.setAttribute('points', pts.map(function (q) { return (q.x * 1.3).toFixed(1) + ',' + (q.z * 1.3).toFixed(1); }).join(' '));
   }
+
+  function refreshProgress() {
+    paintWelcome();
+    if ($('#catSearch')) renderCatalog($('#catSearch').value);
+    if (sel >= 0 && COURSES[sel] && !COURSES[sel].planned) fillDock(COURSES[sel]);
+  }
+  window.LH_REFRESH_PROGRESS = refreshProgress;
+  addEventListener('storage', function (event) {
+    if (event.key === 'learning-atlas:weekly-study' || event.key === 'learning-atlas:day-one-complete' || event.key === 'nmr-from-zero.progress.v2' || event.key === 'game-design-atlas:learning:v1') refreshProgress();
+  });
 
   addEventListener('resize', function () { if (sel < 0) { var h = homeView(); camT.x = h.x; camT.z = h.z; camT.dist = h.dist; } else flyTo(COURSES[sel]); dirty = true; camMoved = true; });
   document.addEventListener('visibilitychange', function () { last = performance.now(); });

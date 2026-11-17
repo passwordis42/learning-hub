@@ -77,6 +77,7 @@ body.course { background: var(--bg); color: var(--text); overflow-x: hidden; }
 .lessons a:hover { background: var(--surface); }
 .lessons a::before { content: ""; position: absolute; left: .25rem; top: .85rem; width: .8rem; height: .8rem; border-radius: 50%; border: 2px solid var(--muted); background: var(--surface); opacity: .7; }
 .lessons .done a::before { background: var(--accent); border-color: var(--accent); opacity: 1; }
+.lessons .done a::after { content: "已完成"; margin-left: .35rem; font-size: .75rem; font-weight: 700; color: var(--accent, var(--lagoon)); }
 .lessons .done a { color: var(--muted); }
 .lessons .now a { color: var(--head); font-weight: 700; background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .lessons .now a::before { border-color: var(--coral); box-shadow: 0 0 0 4px rgba(242,119,90,.22); opacity: 1; }

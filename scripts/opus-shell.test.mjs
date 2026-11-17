@@ -29,7 +29,15 @@ test('opus redesign keeps the original ocean and the real course shell', async (
   assert.match(ocean, /原创编写的全屏 WebGL1/);
   assert.match(ocean, /experimental-webgl/);
   assert.doesNotMatch(ocean, /THREE|WebGL2/);
-  assert.doesNotMatch(hub, /asSave|lh-progress/);
+  assert.doesNotMatch(hub, /asSave|lh-progress|function progressOf\(\) \{ return \{\}; \}/);
+  assert.match(index, /course-progress\.js/);
+  assert.match(hub, /HUB_PROGRESS/);
+  assert.match(reader, /HUB_PROGRESS/);
+  const progress = await readFile(path.join(root, 'portal/assets/opus/course-progress.js'), 'utf8');
+  assert.match(progress, /nmr-from-zero\.progress\.v2/);
+  assert.match(progress, /learning-atlas:weekly-study/);
+  assert.match(progress, /game-design-atlas:learning:v1/);
+  assert.doesNotMatch(progress, /localStorage\.setItem|progress\.v1|weekly-resume|day-one-experiment/);
   assert.match(hub, /document\.hidden \|\| body\.classList\.contains\('in-course'\)/);
   assert.match(bind, /ATLAS_CATALOG/);
   assert.match(reader, /id="lesson-frame"/);

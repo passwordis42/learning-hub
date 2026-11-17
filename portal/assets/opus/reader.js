@@ -206,9 +206,16 @@
     game: [['第 1 周', 'game/#plan/01'], ['设计助手', 'game/#coach']]
   };
 
-  function lessonLink(ch, current) {
+  function doneMap(course) {
+    if (!window.HUB_PROGRESS) return {};
+    return window.HUB_PROGRESS.present(course.id, (course.chapters || []).map(function (chapter) { return chapter.id; }));
+  }
+  function lessonLink(ch, current, done) {
+    var classes = [];
+    if (current && ch.id === current.id) classes.push('now');
+    if (done && done[ch.id]) classes.push('done');
     var currentAttr = current && ch.id === current.id ? ' aria-current="page"' : '';
-    var cls = current && ch.id === current.id ? ' class="now"' : '';
+    var cls = classes.length ? ' class="' + classes.join(' ') + '"' : '';
     return '<li' + cls + ' data-t="' + esc(ch.t + ' ' + ch.g) + '"><a href="' + esc(ch.href) + '" data-lesson-module="' + esc(ch.id) + '"' + currentAttr + '>' + esc(ch.t) + '</a></li>';
   }
   function switcher(course) {
@@ -248,6 +255,8 @@
     if (tocBtn) tocBtn.hidden = true;
     document.body.classList.remove('toc-open');
     var tools = TOOLS[course.id] || [];
+    var done = doneMap(course);
+    var doneCount = Object.keys(done).length;
     main.innerHTML =
       '<section class="harbor" style="--accent:' + esc(course.accent) + '" aria-label="' + esc(course.facility) + '海景">' +
         '<canvas aria-hidden="true"></canvas><div class="fallback"></div>' +
@@ -257,7 +266,7 @@
       '<div class="chart"><div class="chart-sheet">' +
         '<div class="chart-head"><div class="voyage">' +
           '<div><b>' + course.chapters.length + '</b><span>目录条目</span></div>' +
-          '<div><b>课内</b><span>进度保存在各课自己的记录里</span></div>' +
+          '<div><b id="dirDone">' + doneCount + '</b><span>已完成</span></div>' +
         '</div><div class="chart-actions">' +
           (course.chapters[0] ? '<a class="btn-primary" href="' + esc(course.chapters[0].href) + '">从第一节开始</a>' : '') +
           '<a class="btn-ghost" href="' + esc(course.origin) + '">在独立页面打开</a>' +
@@ -268,7 +277,7 @@
         '<div class="dir-search"><label class="search"><input id="dirSearch" type="search" placeholder="搜索本课程目录" aria-label="搜索本课程目录"></label></div>' +
         '<div class="stages">' + groups(course).map(function (group) {
           return '<section class="stage"><h3>' + esc(group.name) + '<small>' + group.items.length + ' 项</small></h3><ol class="lessons">' +
-            group.items.map(function (item) { return lessonLink(item.ch, null); }).join('') + '</ol></section>';
+            group.items.map(function (item) { return lessonLink(item.ch, null, done); }).join('') + '</ol></section>';
         }).join('') + '</div>' +
         '<p class="data-row">这里只排列正式目录。正文、公式、实验、小测和进度仍在原来的课程页面里。</p>' +
       '</div></div>';
@@ -298,6 +307,7 @@
     var tocBtn = document.getElementById('btnToc');
     if (tocBtn) { tocBtn.hidden = false; tocBtn.setAttribute('aria-expanded', 'false'); }
     document.body.classList.remove('toc-open');
+    var done = doneMap(course);
     var index = course.chapters.indexOf(current);
     var prev = course.chapters[index - 1];
     var next = course.chapters[index + 1];
@@ -305,11 +315,11 @@
     main.innerHTML =
       '<div class="reader" style="--accent:' + esc(course.accent) + '">' +
         '<aside class="toc learning-sidebar" id="lesson-nav" aria-label="课程目录">' +
-          '<div class="toc-head"><span class="badge">' + esc(course.code) + '</span><span><b>' + esc(course.fullName) + '</b><small>' + course.chapters.length + ' 项</small></span></div>' +
+          '<div class="toc-head"><span class="badge">' + esc(course.code) + '</span><span><b>' + esc(course.fullName) + '</b><small>已完成 ' + Object.keys(done).length + ' / ' + course.chapters.length + '</small></span></div>' +
           '<label class="search"><input id="tocSearch" type="search" placeholder="搜索课程与概念" aria-label="搜索课程与概念"></label>' +
           groups(course).map(function (group) {
             return '<div class="toc-group"><h4>' + esc(group.name) + '</h4><ol class="lessons">' +
-              group.items.map(function (item) { return lessonLink(item.ch, current); }).join('') + '</ol></div>';
+              group.items.map(function (item) { return lessonLink(item.ch, current, done); }).join('') + '</ol></div>';
           }).join('') +
         '</aside><div class="toc-scrim" id="tocScrim"></div>' +
         '<article class="lesson lesson-article">' +
@@ -377,6 +387,7 @@
       if (!document.body.classList.contains('assist-open')) document.body.dataset.view = 'hub';
       var id = location.hash.replace('#', '');
       if (id && window.LH_SELECT) window.LH_SELECT(id);
+      if (window.LH_REFRESH_PROGRESS) window.LH_REFRESH_PROGRESS();
       window.dispatchEvent(new Event('resize'));
     }
   }

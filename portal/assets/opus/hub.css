@@ -348,6 +348,8 @@ button.course-row { border: 0; background: none; width: 100%; text-align: left; 
 .cat-list a small { color: var(--ink-3); font-size: .72rem; }
 .cat-list a:hover { background: rgba(255,255,255,.75); }
 .cat-list .more a { color: var(--coral); font-weight: 700; }
+.cat-list li.done > a > span::after,
+.route li.done > a::after { content: "已完成"; margin-left: .4rem; font-size: .72rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--lagoon); }
 .cat-actions { display: flex; gap: .5rem; padding: .2rem 1rem 1rem 4.6rem; }
 .empty { color: var(--ink-3); padding: 1rem; position: relative; z-index: 1; }
 
