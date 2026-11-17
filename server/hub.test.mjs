@@ -232,7 +232,9 @@ test('static prefix, redirects, 404, traversal, and local assistant config', asy
     });
     const statusTestBody = await statusTest.json();
     assert.equal(statusTest.status, 200);
-    assert.equal(statusTestBody.ai.message, '服务可达，模型调用尚未验证。');
+    assert.equal(statusTestBody.ai.code, 'configured');
+    assert.match(statusTestBody.ai.message, /没有向上游发送请求/);
+    assert.equal(statusTestBody.ai.message.startsWith('服务可达'), false);
     assert.equal(statusTestBody.game.code, 'unconfigured');
     assert.equal(JSON.stringify(statusTestBody).includes(secret), false);
     const blockedModel = await fetch(`${rootUrl}/api/assistant-config/test`, {

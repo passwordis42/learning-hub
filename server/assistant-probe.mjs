@@ -5,7 +5,7 @@ import { pinnedFetch } from './safe-upstream.mjs';
 
 const messages = {
   ok: '模型调用成功。',
-  reachable: '服务可达，模型调用尚未验证。',
+  configured: '只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。',
   unconfiguredAi: '尚未配置此厂商的密钥和模型。保存后可再测试；这不影响课程浏览。',
   unconfiguredGame: '尚未配置此厂商的密钥和模型。保存后可再测试；课程与学习进度不受影响。',
   auth: '认证失败。请检查已保存的密钥和访问权限，保存后重试。',
@@ -46,13 +46,14 @@ function fromHint(config, hint, status) {
   return 'network';
 }
 
-export function statusReport(config, vendorId) {
+export function statusReport(config, vendorId, fetcher = null) {
+  void fetcher;
   if (!vendorIds.includes(vendorId)) throw Object.assign(new Error('请选择一个厂商。'), { status: 400 });
   return {
     scope: 'status',
     vendor: vendorId,
-    ai: { course: 'AI 学伴', code: vendorReady(config, vendorId, 'ai') ? 'reachable' : 'unconfigured', message: vendorReady(config, vendorId, 'ai') ? messages.reachable : messages.unconfiguredAi },
-    game: { course: '游戏助手', code: vendorReady(config, vendorId, 'game') ? 'reachable' : 'unconfigured', message: vendorReady(config, vendorId, 'game') ? messages.reachable : messages.unconfiguredGame },
+    ai: { course: 'AI 学伴', code: vendorReady(config, vendorId, 'ai') ? 'configured' : 'unconfigured', message: vendorReady(config, vendorId, 'ai') ? messages.configured : messages.unconfiguredAi },
+    game: { course: '游戏助手', code: vendorReady(config, vendorId, 'game') ? 'configured' : 'unconfigured', message: vendorReady(config, vendorId, 'game') ? messages.configured : messages.unconfiguredGame },
   };
 }
 

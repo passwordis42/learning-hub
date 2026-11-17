@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { credentialMode } from './credential-mode.js'
 import './tutor.css'
 
 const providers = [
@@ -96,7 +97,7 @@ export default function Tutor({ context = '' }) {
         headers,
         signal: AbortSignal.timeout(50_000),
         cache: 'no-store',
-        credentials: 'omit',
+        credentials: credentialMode(endpoint, location.origin),
         redirect: 'error',
       })
       const data = await result.json().catch(() => null)

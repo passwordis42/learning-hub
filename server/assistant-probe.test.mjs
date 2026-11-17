@@ -19,10 +19,19 @@ test('status check does not call a model and a mocked probe reports each course'
       vendors: { openai: { apiKey: secret, model: 'shared-test-model' } },
     });
     const config = await loadConfig();
-    const status = statusReport(config, 'openai');
+    const upstream = [];
+    const fetcher = async (url) => {
+      upstream.push(String(url));
+      throw new Error('status check must not contact upstream');
+    };
+    const status = statusReport(config, 'openai', fetcher);
     assert.equal(calls, 0);
-    assert.equal(status.ai.message, '服务可达，模型调用尚未验证。');
-    assert.equal(status.game.message, '服务可达，模型调用尚未验证。');
+    assert.deepEqual(upstream, []);
+    assert.equal(status.ai.code, 'configured');
+    assert.equal(status.game.code, 'configured');
+    assert.match(status.ai.message, /没有向上游发送请求/);
+    assert.equal(status.ai.message.startsWith('服务可达'), false);
+    assert.match(status.game.message, /没有向上游发送请求/);
     assert.equal(JSON.stringify(status).includes(secret), false);
     const probed = await probeVendor(config, 'openai', async (url) => {
       calls += 1;

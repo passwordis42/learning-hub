@@ -1,3 +1,5 @@
+import { credentialMode } from './credential-mode.js';
+
 const localNames = ['127.0.0.1', 'localhost', '[::1]'];
 const configuredLocal = () => localNames.includes(location.hostname) ? location.origin : 'http://127.0.0.1:4173';
 const setup = 'https://github.com/passwordis42/game-design-atlas#本地启动与-ai-服务';
@@ -44,7 +46,7 @@ export function mountFollowup(root, submission) {
     form.hidden = true;
     status.textContent = '正在检查本地助手…';
     try {
-      const result = await fetch(configuredLocal() + '/api/status', { credentials: 'omit', signal: AbortSignal.timeout(2500) });
+      const result = await fetch(configuredLocal() + '/api/status', { credentials: credentialMode(configuredLocal() + '/api/status', location.origin), signal: AbortSignal.timeout(2500) });
       if (!result.ok) throw new Error();
       const body = await result.json();
       const models = body.providers.filter((item) => item.configured);
@@ -70,7 +72,7 @@ export function mountFollowup(root, submission) {
       const result = await fetch(configuredLocal() + '/api/assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'omit',
+        credentials: credentialMode(configuredLocal() + '/api/assist', location.origin),
         signal: AbortSignal.timeout(45000),
         body: JSON.stringify({ ...submission, provider: provider.value, mode: 'coach' })
       });

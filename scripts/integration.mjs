@@ -296,8 +296,8 @@ async function features(browser, origin, base, viewport, label) {
     if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key was read back into the form');
     if ((await page.locator('body').innerText()).includes('sk-browser-test-not-a-real-key')) throw new Error('key leaked into the page');
     await page.locator('#settings-test').click();
-    await page.locator('#settings-result').getByText('AI 学伴：服务可达，模型调用尚未验证。').waitFor();
-    await page.locator('#settings-result').getByText('游戏助手：服务可达，模型调用尚未验证。').waitFor();
+    await page.locator('#settings-result').getByText('AI 学伴：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
+    await page.locator('#settings-result').getByText('游戏助手：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
     if ((await page.locator('#settings-result').innerText()).includes('模型调用成功')) throw new Error('status test claimed a model call');
     await page.route(/\/api\/assistant-config$/, (route) => route.abort());
     await page.locator('#settings-model').fill('another-model');

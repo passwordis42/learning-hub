@@ -1,3 +1,4 @@
+import { credentialMode } from './credential-mode.js';
 import { weeks } from './data/curriculum.js';
 import { weekLabel } from './graph.js';
 import { checkpointReady, completeRules, downloadFile, ruledLines } from './records.js?v=guided-3';
@@ -120,7 +121,7 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
     if (manual) { connectionMessage = '正在查找本地助手…'; render(); }
     const endpoint = localHost ? location.origin : localUrl;
     try {
-      const response = await fetch(`${endpoint}/api/status`, { signal: AbortSignal.timeout(2500), credentials: 'omit' });
+      const response = await fetch(`${endpoint}/api/status`, { signal: AbortSignal.timeout(2500), credentials: credentialMode(`${endpoint}/api/status`, location.origin) });
       if (!response.ok) throw new Error();
       const data = await response.json();
       if (!Array.isArray(data?.providers)) throw new Error();
@@ -147,7 +148,7 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
     render();
     try {
       const response = await fetch(`${apiRoot}/api/assist`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'omit', signal: AbortSignal.timeout(45000),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: credentialMode(`${apiRoot}/api/assist`, location.origin), signal: AbortSignal.timeout(45000),
         body: JSON.stringify({ provider: selectedProvider, mode, week: week.id, title: week.title, draft, rationale, evidence, approvedRules })
       });
       const data = await response.json();

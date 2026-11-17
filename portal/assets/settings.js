@@ -164,12 +164,13 @@
       if (!response.ok) {
         result(data.error || '配置没有保存。', true);
         setBusy(false);
+        if (data.field === 'accessToken') $('settings-token').focus();
         return;
       }
       saved = data;
       paint();
       $('settings-status').textContent = '配置已保存';
-      result('尚未测试。服务可达不代表模型调用成功。', false);
+      result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
       $('settings-key').value = '';
       $('settings-token').value = '';
     } catch {
@@ -195,7 +196,7 @@
         setBusy(false);
         return;
       }
-      const failed = ['ai', 'game'].some((side) => data[side] && !['ok', 'reachable', 'unconfigured'].includes(data[side].code));
+      const failed = ['ai', 'game'].some((side) => data[side] && !['ok', 'configured', 'unconfigured'].includes(data[side].code));
       result(describe(data), failed);
       setBusy(false);
     } catch {
@@ -208,7 +209,7 @@
     active = id;
     paint();
     $('settings-result').classList.remove('error');
-    result('尚未测试。服务可达不代表模型调用成功。', false);
+    result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
     if (focusButton) document.querySelector(`[data-settings-vendor="${id}"]`)?.focus();
   }
 
@@ -337,7 +338,7 @@
     if (!response.ok) throw new Error('status');
     saved = await response.json();
     paint();
-    result('尚未测试。服务可达不代表模型调用成功。', false);
+    result('尚未测试。保存成功只表示配置已写入，没有连接上游。', false);
   }).catch(() => {
     paint();
     unreachable(false);

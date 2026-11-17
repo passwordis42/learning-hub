@@ -40,6 +40,13 @@ test('custom upstreams reject non-local and ambiguous addresses', async () => {
 test('saved keys stay on disk and out of AI until that protocol has its own model', async () => {
   const directory = await useTempConfig();
   try {
+    await assert.rejects(() => saveConfig({ save: true, accessToken: 'too-short' }), (error) => {
+      assert.equal(error.status, 400);
+      assert.equal(error.field, 'accessToken');
+      assert.match(error.message, /32/);
+      return true;
+    });
+    assert.equal((await loadConfig()).accessToken, '');
     await assert.rejects(() => saveConfig({ vendors: { openai: { apiKey: secret, model: 'shared-model' } } }), /save: true/);
     assert.equal(await loadConfig().then((config) => config.vendors.openai.apiKey), '');
     const saved = await saveConfig({

@@ -239,8 +239,8 @@ try {
       if ((await page.locator('body').innerText()).includes('sk-ui-qa-not-a-real-key')) throw new Error('key visible');
       await shot(page, 'settings_save_success');
       await page.locator('#settings-test').click();
-      await page.locator('#settings-result').getByText('AI 学伴：服务可达，模型调用尚未验证。').waitFor();
-      await page.locator('#settings-result').getByText('游戏助手：服务可达，模型调用尚未验证。').waitFor();
+      await page.locator('#settings-result').getByText('AI 学伴：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
+      await page.locator('#settings-result').getByText('游戏助手：只核对已保存的密钥和模型。没有向上游发送请求，不能当作服务可达。').waitFor();
       await page.locator('#settings-result').scrollIntoViewIfNeeded();
       await shot(page, 'settings_status_ai_game');
 

@@ -169,7 +169,9 @@ export function normalizeConfig(input, previous = emptyConfig()) {
   next.revision = previous.revision + 1;
   const token = text(input.accessToken, 200);
   next.accessToken = token || previous.accessToken;
-  if (next.accessToken && next.accessToken.length < 32) throw new Error('访问口令至少需要 32 个字符。');
+  if (next.accessToken && next.accessToken.length < 32) {
+    throw Object.assign(new Error('访问口令至少需要 32 个字符。'), { status: 400, field: 'accessToken' });
+  }
   for (const id of Object.keys(vendors)) {
     next.vendors[id] = normalizeVendor(id, input.vendors?.[id] || {}, previous.vendors[id]);
   }

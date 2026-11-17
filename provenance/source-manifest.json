@@ -77,9 +77,19 @@
       "reason": "In hub embed mode, the tutor card uses the v6 teal and paper colors. Standalone pages keep the original palette."
     },
     {
+      "path": "sites/game-design-atlas/docs/coach.js",
+      "originalBlob": "366c45f06ecf266a7f9193172c5461e1da76a166",
+      "reason": "Same-origin assistant calls include the hub session. Requests to any other origin omit credentials."
+    },
+    {
+      "path": "sites/game-design-atlas/docs/followup.js",
+      "originalBlob": "a49443a9d437e2034a49676cbab9e33983b6781a",
+      "reason": "Same-origin follow-up calls include the hub session. Requests to any other origin omit credentials."
+    },
+    {
       "path": "sites/ai-learning-atlas/src/Tutor.jsx",
       "originalBlob": "f27895c446c26a2000c91c6c41deab70b8931b50",
-      "reason": "In hub embed mode, use the same-origin /api/tutor path, including a HUB_BASE prefix. Standalone pages still ask for a service address."
+      "reason": "Hub embed uses the same-origin /api/tutor path and sends the session only to that origin. Standalone pages still ask for a service address and omit credentials for any other origin."
     },
     {
       "path": "sites/game-design-atlas/server/coach.mjs",
@@ -766,6 +776,8 @@
   "additions": [
     "sites/ai-learning-atlas/public/embed-skin.css",
     "sites/ai-learning-atlas/public/embed-bridge.js",
+    "sites/ai-learning-atlas/src/credential-mode.js",
+    "sites/game-design-atlas/docs/credential-mode.js",
     "sites/nmr-from-zero/public/embed-skin.css",
     "sites/nmr-from-zero/public/embed-bridge.js",
     "sites/game-design-atlas/docs/embed-skin.css",
