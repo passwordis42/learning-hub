@@ -25,3 +25,41 @@ test('memory config keeps a key only for the same origins and never stores it', 
   assistantMemory.clearVendor('openai');
   assert.equal(assistantMemory.view().vendors.find((item) => item.id === 'openai').apiKeyConfigured, false);
 });
+
+test('blank qwen does not assume Beijing or inject the preset into other vendors', () => {
+  assistantMemory.reset();
+  const fresh = assistantMemory.view().vendors.find((item) => item.id === 'qwen');
+  assert.equal(fresh.region, '');
+  assert.equal(fresh.enteredModel, '');
+  assert.equal(fresh.protocols.ai.url, '');
+  const blocked = assistantMemory.prepare('ai', 'qwen');
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.code, 'region');
+  assistantMemory.saveVendor('openai', { model: 'kept-openai-model', apiKey: 'sk-memory-not-real' });
+  assistantMemory.saveVendor('qwen', { region: 'tokyo', model: 'kept-qwen-model', apiKey: 'sk-memory-not-real' });
+  assert.equal(assistantMemory.prepare('game', 'qwen').code, 'workspace');
+  assert.equal(assistantMemory.view().vendors.find((item) => item.id === 'openai').enteredModel, 'kept-openai-model');
+  assistantMemory.saveVendor('qwen', {
+    region: 'virginia',
+    model: 'kept-qwen-model',
+    apiKey: 'sk-memory-not-real',
+    confirmKeyBinding: assistantMemory.keyRebind,
+  });
+  const ready = assistantMemory.prepare('ai', 'qwen');
+  assert.equal(ready.ok, true);
+  assert.equal(ready.config.url, 'https://dashscope-us.aliyuncs.com/compatible-mode/v1/chat/completions');
+  assert.equal(ready.config.model, 'kept-qwen-model');
+  assert.equal(JSON.stringify(assistantMemory.view()).includes('sk-memory-not-real'), false);
+  assert.equal(assistantMemory.peekKey('qwen'), 'sk-memory-not-real');
+  assistantMemory.saveVendor('qwen', {
+    region: 'beijing',
+    workspaceId: 'wsdemo1',
+    apiKey: 'sk-memory-not-real',
+    confirmKeyBinding: assistantMemory.keyRebind,
+  });
+  assert.equal(
+    assistantMemory.prepare('game', 'qwen').config.url,
+    'https://wsdemo1.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions',
+  );
+  assert.notEqual(assistantMemory.view().vendors.find((item) => item.id === 'qwen').enteredModel, assistantMemory.presetModel);
+});

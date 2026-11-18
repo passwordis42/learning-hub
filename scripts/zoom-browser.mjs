@@ -284,11 +284,12 @@ try {
   await page.waitForFunction(() => document.body.dataset.view === 'settings');
   const settingsFocus = await page.evaluate(() => document.activeElement?.id);
   const settingsCopy = await page.locator('#settings-result').innerText();
-  await page.locator('#settings-model').fill('zoom-check-model');
-  const modelValue = await page.locator('#settings-model').inputValue();
+  const presetVisible = await page.locator('#fallback-pending').isVisible();
+  await page.locator('#settings-key').fill('zoom-check');
+  const keyType = await page.locator('#settings-key').getAttribute('type');
   check('设置页打开后焦点在返回课程', settingsFocus === 'settings-back', settingsFocus);
-  check('静态站点设置页只把密钥留在页面内存', settingsCopy.includes('页面内存') && settingsCopy.includes('没有连接供应商') && !settingsCopy.includes('配置已保存'), settingsCopy);
-  check('设置页模型输入可以填写', modelValue === 'zoom-check-model', modelValue);
+  check('静态站点设置页只把密钥留在页面内存', settingsCopy.includes('页面内存') && settingsCopy.includes('尚未连接') && !settingsCopy.includes('配置已保存'), settingsCopy);
+  check('空白设置不把预设显示成已连接', !presetVisible && keyType === 'password');
   await layout('助手设置');
   await shot(page, 'zoom_settings_200.png');
   await page.locator('#settings-back').click();
