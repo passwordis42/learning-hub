@@ -42,6 +42,10 @@ body.in-course.assist-open #scrim {
   #courseShell #open-settings { width: 2.55rem; padding: 0; font-size: 0; justify-content: center; gap: 0; }
   #courseShell #open-settings::after { content: "设"; font-size: .85rem; font-weight: 700; }
 }
+/* 本版本不向访客开放网络配置页。隐藏不是密钥保密，也不是防刷。 */
+#btnAssist,
+#open-settings,
+#assist { display: none !important; }
 #courseShell { position: relative; z-index: 5; min-height: 100%; background: var(--bg, #f6f1e6); }
 #courseShell[hidden] { display: none !important; }
 .harbor.harbor-fallback .fallback,

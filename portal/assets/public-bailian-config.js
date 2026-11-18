@@ -1,0 +1,1 @@
+globalThis.LEARNING_HUB_PUBLIC_BAILIAN = null;

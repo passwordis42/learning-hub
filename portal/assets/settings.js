@@ -17,6 +17,9 @@
   let inflight = null;
   let advancedHeld = false;
   let routeSignature = '';
+  let publication = null;
+  let publicHeld = null;
+  let source = 'manual';
 
   function record() {
     return saved?.vendors?.find((item) => item.id === active) || null;
@@ -213,12 +216,41 @@
     $('settings-game-fields').hidden = $('settings-game-mode').value !== 'custom';
     routeSignature = currentRouteSignature();
     const configured = Boolean(item?.apiKeyConfigured);
-    $('settings-key-status').textContent = configured && !typedKey()
-      ? '已留在这次打开的页面内存里。刷新或关闭后消失。输入框保持空白，不回显密钥。'
-      : '尚未填写密钥';
-    $('settings-status').textContent = qwen
-      ? '密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站。'
-      : '密钥只留在这次打开的页面内存。其他厂商不预填千问模型。';
+    const publicActive = qwen && source === 'public' && configured && !typedKey();
+    const publicCleared = qwen && source === 'cleared' && !configured && sitePublishesKey();
+    $('settings-lede').textContent = publicActive
+      ? '站点已放入公开的百炼默认配置。它还没有连接。AI 学伴和游戏助手共用这份内存配置；核磁仍使用复制提问。'
+      : '填写密钥并连接，成功获取列表后选择模型。AI 学伴和游戏助手共用配置；核磁仍使用复制提问。';
+    $('settings-key').placeholder = publicActive
+      ? '留空沿用站点公开默认密钥'
+      : '在此页填写，刷新或关闭后需重填';
+    $('settings-key-hint').textContent = publicActive
+      ? '留空表示继续使用站点公开默认密钥。另填的密钥只留在这次页面内存，不写入浏览器存储。不会向多个地区传递密钥。'
+      : '你另填的密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站服务器。不会向多个地区传递密钥。';
+    $('settings-key-status').textContent = publicActive
+      ? '正在使用站点公开的默认密钥。输入框不回显。另填一把密钥会代替它，只在这次打开的页面里有效。'
+      : publicCleared
+        ? '这次页面里的百炼配置已清掉。刷新会重新载入站点公开的默认密钥。'
+        : configured && !typedKey()
+          ? '已留在这次打开的页面内存里。刷新或关闭后消失。输入框保持空白，不回显密钥。'
+          : '尚未填写密钥';
+    $('settings-status').textContent = publicActive
+      ? '正在使用站点发布时写入的公开百炼默认密钥。它在页面源码里，任何人都能读到，不是保密。刷新会重新载入这份默认值。你在本页另填的密钥只留在这次内存，不写入浏览器存储。'
+      : publicCleared
+        ? '这次页面里的百炼配置已清掉。刷新会重新载入站点公开的默认密钥。你另填的密钥不会写入浏览器存储。'
+        : qwen
+          ? '你另填的密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站。'
+          : '密钥只留在这次打开的页面内存。其他厂商不预填千问模型。';
+    if (savedModel && publicActive) {
+      savedNote.hidden = false;
+      savedNote.textContent = `站点默认模型：${savedModel}。标识校验通过，预设（未验证权限），不是已连接。`;
+    }
+    $('settings-continue').textContent = publicHeld
+      ? (phase === 'workspace' ? '使用这个工作空间' : '使用这个地区')
+      : '继续连接';
+    $('connect-hint').textContent = publicActive
+      ? '默认密钥已在这次页面内存。点连接才会请求模型列表。打开页面时不会自动连接，也不会调用模型。'
+      : '请先填写密钥，再点连接。成功取得列表后才出现可选模型。无法根据密钥自动判断地区：曾明确选择过的地区会沿用，否则请补选。不会默认北京，也不会先出现「识别中」。';
     $('settings-token-status').textContent = '纯静态页面不使用访问口令，也不会把口令发给本站。';
   }
 
@@ -466,15 +498,55 @@
     startFetch(plan);
   }
 
+  function sitePublishesKey() {
+    return Boolean(publication && publication.state !== 'absent' && publication.state !== 'invalid');
+  }
+
+  function applyPublicSelection() {
+    const region = regionValue();
+    const workspace = workspaceValue();
+    const url = assistant.chatUrl({ region, workspaceId: workspace, customUrl: '' });
+    if (!url) {
+      phase = 'workspace';
+      $('workspace-error').hidden = false;
+      $('workspace-error').textContent = '这个地区还要工作空间才能生成地址。请只填写工作空间，不会改试其他地区。';
+      setResult('error', '这个地区还要工作空间才能生成地址。请只填写工作空间，不会改试其他地区。');
+      render();
+      $('settings-workspace').focus();
+      return;
+    }
+    try {
+      assistant.saveVendor('qwen', {
+        apiKey: publicHeld.key,
+        region,
+        workspaceId: workspace,
+        model: publicHeld.model,
+      });
+      publicHeld = null;
+      source = 'public';
+      phase = 'idle';
+      dirty = false;
+      paint();
+      const model = record()?.enteredModel || '';
+      setResult('ok', `已按你选择的地区把站点公开密钥放进这次页面内存。模型 ${model} 是预设（未验证权限）。尚未连接，没有读取列表，也没有调用模型。`);
+    } catch (error) {
+      setResult('error', error.message || '公开配置没有放进页面内存。');
+    }
+  }
+
   function continueConnect() {
     if (!regionValue()) {
       $('region-error').hidden = false;
-      $('region-error').textContent = '请补选密钥所在地区后再继续连接。';
+      $('region-error').textContent = '请补选密钥所在地区后再继续。';
       $('settings-region').focus();
-      setResult('error', '请补选密钥所在地区后再继续连接。');
+      setResult('error', '请补选密钥所在地区后再继续。');
       return;
     }
     $('region-error').hidden = true;
+    if (publicHeld) {
+      applyPublicSelection();
+      return;
+    }
     connectFromForm();
   }
 
@@ -497,9 +569,13 @@
       return;
     }
     try {
+      const typed = Boolean(typedKey());
+      const rebound = rebindConfirm;
       assistant.saveVendor(active, draft(model));
       const usedPreset = active === 'qwen' && phase === 'fallback' && model === assistant.presetModel && !$('settings-model').value.trim();
       dirty = false;
+      if (rebound) source = 'cleared';
+      else if (typed) source = 'personal';
       const keptPhase = phase;
       paint();
       phase = keptPhase;
@@ -508,7 +584,12 @@
       const presetNote = usedPreset
         ? `已把预设 ${assistant.presetModel} 留在这次页面内存。它是预设（未验证权限），不是已连接，也没有验证密钥权限。`
         : '没有连接供应商，不能当作已经连通。';
-      setResult('ok', `只保存在这次打开的页面内存里。${presetNote} 刷新或关闭后需要重填。`);
+      const refreshNote = rebound
+        ? '已按新地址留下配置，原来的密钥没有带到新地址。'
+        : source === 'public' && !typed
+          ? '刷新会重新载入站点公开的默认密钥。'
+          : '你另填的密钥只留在这次页面内存，刷新或关闭后消失，不写入浏览器存储。';
+      setResult('ok', `只保存在这次打开的页面内存里。${presetNote} ${refreshNote}`);
       render();
     } catch (error) {
       if (error.code === 'upstream-key-rebinding') {
@@ -531,7 +612,14 @@
     active = id;
     dirty = false;
     paint();
-    setResult('idle', id === 'qwen'
+    if (id === 'qwen' && publicHeld) {
+      phase = publicHeld.state === 'needs-workspace' ? 'workspace' : 'region';
+      if (publicHeld.region) $('settings-region').value = publicHeld.region;
+      render();
+    }
+    setResult('idle', id === 'qwen' && publicHeld
+      ? '站点公开密钥还没有放进页面内存。请先补全地区或工作空间。不会向多个地区试探，也不会现在连接。'
+      : id === 'qwen'
       ? '尚未连接。填写密钥并连接，成功获取列表后选择模型。'
       : '已切换厂商，上次连接与列表已取消。不会写入千问模型。请填写该厂商的模型名称和密钥。');
     setPermission('', '', false);
@@ -609,8 +697,13 @@
     assistant.clearVendor(active);
     phase = 'idle';
     models = [];
+    publicHeld = null;
+    const clearedPublic = active === 'qwen' && sitePublishesKey();
+    source = clearedPublic ? 'cleared' : 'manual';
     activate(active, true);
-    setResult('ok', '此厂商配置已清除。它只从这次页面内存消失，没有读取或迁移旧的后端密钥。课程和学习进度不受影响。');
+    setResult('ok', clearedPublic
+      ? '这次页面里的百炼配置已清除，助手暂不可用。刷新会重新载入站点公开的默认密钥；这次清除不会把它从发布页面里删掉。你另填的密钥不会写入浏览器存储。课程和学习进度不受影响。'
+      : '此厂商配置已清除。它只从这次页面内存消失，没有读取或迁移旧的后端密钥。课程和学习进度不受影响。');
   });
   $('settings-rebind-cancel').addEventListener('click', () => {
     rebindConfirm = false;
@@ -644,6 +737,36 @@
     reload() { paint(); },
   };
 
-  paint();
-  setResult('idle', '尚未连接。填写密钥并连接，成功获取列表后选择模型。密钥只留在这次打开的页面内存里，没有连接供应商。');
+  function bootPublic() {
+    publication = assistant.publicBailian();
+    paint();
+    if (!publication || publication.state === 'absent' || publication.state === 'invalid') {
+      setResult('idle', '尚未连接。填写密钥并连接，成功获取列表后选择模型。密钥只留在这次打开的页面内存里，没有连接供应商。');
+      return;
+    }
+    active = 'qwen';
+    if (publication.state === 'ready') {
+      assistant.saveVendor('qwen', {
+        apiKey: publication.key,
+        region: publication.region,
+        workspaceId: publication.workspaceId,
+        model: publication.model,
+      });
+      source = 'public';
+      phase = 'idle';
+      paint();
+      setResult('ok', `已把站点公开的默认配置放进这次页面内存，AI 学伴和游戏助手会使用它。模型 ${publication.model} 通过了标识校验，状态是预设（未验证权限）。尚未连接，没有读取模型列表，也没有调用模型。`);
+      return;
+    }
+    publicHeld = publication;
+    phase = publication.state === 'needs-workspace' ? 'workspace' : 'region';
+    paint();
+    if (publication.region) $('settings-region').value = publication.region;
+    render();
+    setResult('ready', publication.state === 'needs-workspace'
+      ? '站点公开配置写了地区，但还要工作空间才能生成地址。请只填写工作空间。不会改试其他地区，也不会现在连接。'
+      : '站点带了公开密钥，但没有写明地区。请只选择一个地区。不会默认北京，也不会向多个地区试探。选好后点「使用这个地区」，才会放进页面内存；这不会连接，也不会读取列表。');
+  }
+
+  bootPublic();
 })();

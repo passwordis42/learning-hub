@@ -195,22 +195,8 @@
     var top = body._assistScroll || 0;
     if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top: top, behavior: 'instant' });
   }
-  function openAssist(opener) {
-    closeDrawer();
-    body._assistScroll = window.scrollY;
-    body.classList.add('assist-open');
-    body.dataset.view = 'settings';
-    $('#btnAssist').setAttribute('aria-expanded', 'true');
-    var courseBtn = document.getElementById('open-settings');
-    if (courseBtn) courseBtn.setAttribute('aria-expanded', 'true');
-    if (assistPin) removeEventListener('scroll', assistPin);
-    assistPin = pinAssistScroll;
-    addEventListener('scroll', assistPin);
-    pinAssistScroll();
-    requestAnimationFrame(pinAssistScroll);
-    assistOpener = opener && opener.focus ? opener : (courseBtn || $('#btnAssist'));
-    var back = document.getElementById('settings-back');
-    if (back) back.focus({ preventScroll: true });
+  function openAssist() {
+    /* 访客不能打开网络配置页。预设在页面加载时写入内存，不从这里进入。 */
   }
   function closeAssist() {
     if (!body.classList.contains('assist-open')) return;
@@ -595,7 +581,7 @@
     var idx = COURSES.findIndex(function (c) { return c.id === m; });
     if (idx >= 0) setTimeout(function () { select(idx); }, 600);
     if (/demo=catalog/.test(location.search)) setTimeout(openDrawer, 400);
-    if (/demo=assist/.test(location.search)) setTimeout(openAssist, 400);
+    /* demo=assist 不再打开配置页。 */
     if (/demo=nogl/.test(location.search)) toFallback();
     var hm = location.search.match(/demo=hover(\d)/); if (hm) setTimeout(function () { setHover(+hm[1]); }, 400);
   });

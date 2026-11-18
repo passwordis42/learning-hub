@@ -52,7 +52,7 @@ export function mountFollowup(root, submission) {
       form.hidden = !models.length;
       status.textContent = models.length ? '选好服务商，再确认发送。' : '入口页面还没有填写可用的密钥和模型。没有连接供应商。';
     } catch {
-      status.textContent = '请从统一入口打开本课并在助手设置里填写。本页不会连接本地 4173。';
+      status.textContent = '助手暂不可用。请从统一入口打开本课。本页不会连接本地 4173，也不会打开配置页。';
     } finally {
       connect.disabled = false;
     }

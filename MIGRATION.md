@@ -89,7 +89,9 @@ npm run serve
 
 `install:sites` 只在有 `package-lock.json` 的 AI 与 NMR 目录执行 `npm ci`。游戏课上游没有依赖和 lockfile，测试直接用 Node 内置测试运行器。三套依赖不合并、不升级。
 
-`npm test` 包含快照哈希、存储键审计、入口路由、助手配置、百炼列表地址和上游地址测试，以及三个目录原来的测试。`test:integration` 会按 `/` 和 `/learning-hub/` 分别构建，再用本机 Chrome 检查桌面、390 宽和 360 宽。它会操作核磁测验与实验、游戏周次实验、统一入口里的 AI 学伴，以及助手设置的保存、未保存确认和按厂商清除。保存只写入页面内存，不调用外部模型。
+GitHub Pages 构建可以写入一份公开的百炼默认配置。仓库 secret 名是 `LEARNING_HUB_PUBLIC_BAILIAN_KEY`，只在 Actions 构建时读入，不提交到 git，构建日志不打印它。可选变量是 `LEARNING_HUB_PUBLIC_BAILIAN_REGION`、`LEARNING_HUB_PUBLIC_BAILIAN_MODEL`、`LEARNING_HUB_PUBLIC_BAILIAN_WORKSPACE`。地区留空时使用已确认的北京，对话地址是 `https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions`，不会向其他地区试密钥。模型留空时使用 `qwen3.7-flash`，并标明未经验证、尚未连接。没有这个 secret 时助手暂不可用，不打开配置页。访客看不到网络配置入口。产物里的密钥是公开的，隐藏页面不是保密，也不是防刷。
+
+`npm test` 包含快照哈希、存储键审计、入口路由、助手配置、百炼列表地址、公开默认配置和上游地址测试，以及三个目录原来的测试。`test:integration` 会按 `/` 和 `/learning-hub/` 分别构建，再用本机 Chrome 检查桌面、390 宽和 360 宽。它会操作核磁测验与实验、游戏周次实验、统一入口里的 AI 学伴，以及助手设置的保存、未保存确认和按厂商清除。保存只写入页面内存，不调用外部模型。
 
 本地预览：
 

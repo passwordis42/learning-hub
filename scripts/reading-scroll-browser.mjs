@@ -230,18 +230,9 @@ async function settingsRound(page, label) {
     parked = await state(page);
   }
   await page.evaluate(() => document.getElementById('open-settings').click());
-  await page.waitForFunction(() => document.body.dataset.view === 'settings');
-  const shell = await page.locator('#assist').boundingBox();
-  await page.mouse.move(shell.x + 20, shell.y + shell.height - 20);
-  await page.mouse.wheel(0, 400);
-  await page.keyboard.press('PageDown');
-  await page.waitForTimeout(150);
-  const locked = await state(page);
-  check(`${label} 设置打开锁住文档滚动`, Math.abs(locked.y - parked.y) <= 2, `parked=${parked.y} locked=${locked.y} overflow=${locked.overflow}`);
-  await page.evaluate(() => document.getElementById('settings-back').click());
-  await page.waitForFunction((top) => document.body.dataset.view === 'reader' && Math.abs(window.scrollY - top) <= 2, parked.y);
-  const restored = await state(page);
-  check(`${label} 设置关闭复原滚动`, Math.abs(restored.y - parked.y) <= 2, `restored=${restored.y}`);
+  const closed = await page.evaluate(() => !document.body.classList.contains('assist-open') && document.body.dataset.view !== 'settings');
+  const stayed = await state(page);
+  check(`${label} 配置页不会打开`, closed && Math.abs(stayed.y - parked.y) <= 2, `view closed=${closed} parked=${parked.y} now=${stayed.y}`);
   await page.locator('.reading-size-note').click();
   await page.keyboard.press('PageDown');
   await page.waitForTimeout(800);

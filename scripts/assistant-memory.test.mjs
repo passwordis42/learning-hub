@@ -34,10 +34,15 @@ test('blank qwen does not assume Beijing or inject the preset into other vendors
   assert.equal(fresh.protocols.ai.url, '');
   const blocked = assistantMemory.prepare('ai', 'qwen');
   assert.equal(blocked.ok, false);
-  assert.equal(blocked.code, 'region');
+  assert.equal(blocked.code, 'unconfigured');
+  assert.match(blocked.error, /助手暂不可用/);
+  assert.doesNotMatch(blocked.error, /地区|设置/);
   assistantMemory.saveVendor('openai', { model: 'kept-openai-model', apiKey: 'sk-memory-not-real' });
   assistantMemory.saveVendor('qwen', { region: 'tokyo', model: 'kept-qwen-model', apiKey: 'sk-memory-not-real' });
-  assert.equal(assistantMemory.prepare('game', 'qwen').code, 'workspace');
+  const tokyo = assistantMemory.prepare('game', 'qwen');
+  assert.equal(tokyo.code, 'unconfigured');
+  assert.match(tokyo.error, /助手暂不可用/);
+  assert.doesNotMatch(tokyo.error, /填写|设置/);
   assert.equal(assistantMemory.view().vendors.find((item) => item.id === 'openai').enteredModel, 'kept-openai-model');
   assistantMemory.saveVendor('qwen', {
     region: 'virginia',
@@ -62,4 +67,20 @@ test('blank qwen does not assume Beijing or inject the preset into other vendors
     'https://wsdemo1.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions',
   );
   assert.notEqual(assistantMemory.view().vendors.find((item) => item.id === 'qwen').enteredModel, assistantMemory.presetModel);
+});
+
+test('beijing preset prepares qwen for the tutor and the game coach', () => {
+  assistantMemory.reset();
+  assistantMemory.saveVendor('qwen', {
+    apiKey: 'sk-public-mock-not-real',
+    region: 'beijing',
+    model: 'qwen3.7-flash',
+  });
+  const ai = assistantMemory.prepare('ai', 'qwen');
+  const game = assistantMemory.prepare('game', 'qwen');
+  assert.equal(ai.ok, true);
+  assert.equal(game.ok, true);
+  assert.equal(ai.config.model, 'qwen3.7-flash');
+  assert.equal(ai.config.url, 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions');
+  assert.equal(game.config.url, ai.config.url);
 });
