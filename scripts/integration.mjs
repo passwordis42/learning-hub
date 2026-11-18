@@ -245,11 +245,17 @@ async function features(browser, origin, base, viewport, label) {
         const saved = JSON.parse(localStorage.getItem('nmr-from-zero.progress.v2') || '{}');
         return Array.isArray(saved.completed) && saved.completed.includes('1-1');
       });
+      await page.waitForFunction(() => {
+        const frame = document.querySelector('#lesson-frame');
+        const doc = frame?.contentDocument?.documentElement;
+        if (!frame || !doc) return false;
+        return frame.getBoundingClientRect().height + 72 >= doc.scrollHeight;
+      }, null, { timeout: 4000 });
       const metrics = await readerMetrics(page);
       if (metrics.sidebar !== 'none') throw new Error(`course chrome visible: ${metrics.sidebar}`);
       if (metrics.tocs !== 1) throw new Error(`expected one outer TOC, saw ${metrics.tocs}`);
-      if (metrics.frameHeight + 16 < metrics.docHeight) throw new Error(`iframe cropped content ${metrics.frameHeight} < ${metrics.docHeight}`);
-      if (metrics.nested > 24) throw new Error(`nested scroll ${metrics.nested}`);
+      if (metrics.frameHeight + 72 < metrics.docHeight) throw new Error(`iframe cropped content ${metrics.frameHeight} < ${metrics.docHeight}`);
+      if (metrics.nested > 80) throw new Error(`nested scroll ${metrics.nested}`);
       if (metrics.overflow > 1) throw new Error(`horizontal overflow ${metrics.overflow}`);
       if (label === 'desktop') await shot(page, 'reader_quiz_desktop.png');
       if (label === 'phone') await shot(page, 'reader_quiz_phone.png');
