@@ -181,34 +181,111 @@ summary::-webkit-details-marker { display: none; }
 .lesson-checklist .action { width: 100%; margin-top: 10px; }
 .lesson-resources a { display: flex; margin-top: 9px; font-size: 13px; }
 
-html.is-hub-embed {
+.atlas-start-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  border-left: 4px solid var(--accent);
+}
+.atlas-start-copy {
+  display: grid;
+  gap: 9px;
+  flex: 1 1 480px;
+  min-width: 0;
+}
+.atlas-start-copy > .label-chip { justify-self: start; }
+.atlas-start-copy > strong { font-size: 16px; line-height: 1.45; color: var(--ink); }
+.atlas-start-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+.atlas-start-steps li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.atlas-start-steps b { color: var(--accent-deep); font-size: 13px; }
+.atlas-start-steps span { color: var(--muted); }
+.atlas-start-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+@media (max-width: 900px) {
+  .atlas-start-steps { grid-template-columns: minmax(0, 1fr); }
+  .atlas-start-actions { width: 100%; flex-direction: row; flex-wrap: wrap; }
+}
+
+html.is-hub-embed:not([data-theme="night"]) {
   --accent: #2d6a69;
   --accent-deep: #183f4b;
   --violet: #e7f0ea;
   --ink: #183f4b;
   --muted: #42606a;
 }
-html.is-hub-embed .code-frame { background: #fffef4; border-color: #c8d4c3; }
-html.is-hub-embed .code-frame > div { border-bottom-color: #d5e0d6; }
-html.is-hub-embed .code-frame pre,
-html.is-hub-embed .prompt-text { color: #183f4b; }
-html.is-hub-embed .small-action { color: #183f4b; border-color: #7a9d8c; background: #f7f4ea; }
-html.is-hub-embed .small-action:hover { background: #e7f0ea; }
-html.is-hub-embed .review-box { border-color: #c8d4c3; background: #f4f7f1; }
-html.is-hub-embed .primary-nav a[aria-current] { background: #e7f0ea; color: #183f4b; }
-html.is-hub-embed .subnav button[aria-current] { background: #e7f0ea; color: #183f4b; }
-html.is-hub-embed .top-action { color: #183f4b; border-color: #7a9d8c; }
-html.is-hub-embed .secondary { color: #183f4b; border-color: #7a9d8c; }
-html.is-hub-embed .prerequisites button { background: #f4f7f1; color: #183f4b; border-color: #c8d4c3; }
-html.is-hub-embed .project-box { background: #f4f7f1; color: #183f4b; }
-html.is-hub-embed .inline-note { border-left-color: #2d6a69; background: #e7f0ea; }
-html.is-hub-embed .reflection input,
-html.is-hub-embed .reflection textarea { border-color: #c8d4c3; }
-html.is-hub-embed .sidebar-progress progress { background: #e7f0ea; }
-html.is-hub-embed .concept-grid article { background: #f4f7f1; border-color: #c8d4c3; }
-html.is-hub-embed .stage-row[open] > summary { background: #f4f7f1; }
-html.is-hub-embed .stage-expanded .stage-start-here { border-left-color: #2d6a69; background: #f4f7f1; }
-html.is-hub-embed :is(button, a, input, textarea, select, summary):focus-visible { outline-color: #123e4c; }
+html.is-hub-embed:not([data-theme="night"]) .code-frame { background: #fffef4; border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .code-frame > div { border-bottom-color: #d5e0d6; }
+html.is-hub-embed:not([data-theme="night"]) .code-frame pre,
+html.is-hub-embed:not([data-theme="night"]) .prompt-text { color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .small-action { color: #183f4b; border-color: #7a9d8c; background: #f7f4ea; }
+html.is-hub-embed:not([data-theme="night"]) .small-action:hover { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .review-box { border-color: #c8d4c3; background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .primary-nav a[aria-current] { background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .subnav button[aria-current] { background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .top-action { color: #183f4b; border-color: #7a9d8c; }
+html.is-hub-embed:not([data-theme="night"]) .secondary { color: #183f4b; border-color: #7a9d8c; }
+html.is-hub-embed:not([data-theme="night"]) .prerequisites button { background: #f4f7f1; color: #183f4b; border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .project-box { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .inline-note { border-left-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .reflection input,
+html.is-hub-embed:not([data-theme="night"]) .reflection textarea { border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .sidebar-progress progress { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .concept-grid article { background: #f4f7f1; border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .stage-row[open] > summary { background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .stage-expanded .stage-start-here { border-left-color: #2d6a69; background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) :is(button, a, input, textarea, select, summary):focus-visible { outline-color: #123e4c; }
+
+html.is-hub-embed[data-theme="night"] {
+  --paper: #121c27;
+  --surface: #172330;
+  --ink: #e8eef4;
+  --muted: #9eb0c2;
+  --line: rgba(210, 224, 240, 0.14);
+  --accent: #56b3a8;
+  --accent-deep: #86d3c9;
+  --violet: rgba(86, 179, 168, 0.16);
+  --gold: #f0c27b;
+  --gold-bg: rgba(240, 194, 123, 0.16);
+}
+html.is-hub-embed[data-theme="night"] .hero p,
+html.is-hub-embed[data-theme="night"] .project-box p { color: var(--muted); }
+html.is-hub-embed[data-theme="night"] .stage-row,
+html.is-hub-embed[data-theme="night"] .code-frame,
+html.is-hub-embed[data-theme="night"] .review-box,
+html.is-hub-embed[data-theme="night"] .project-box,
+html.is-hub-embed[data-theme="night"] .concept-grid article,
+html.is-hub-embed[data-theme="night"] .stage-expanded .stage-start-here {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+}
+html.is-hub-embed[data-theme="night"] .stage-row[open] > summary { background: rgba(86, 179, 168, 0.1); }
+html.is-hub-embed[data-theme="night"] .code-frame pre,
+html.is-hub-embed[data-theme="night"] .prompt-text { color: var(--ink); }
+html.is-hub-embed[data-theme="night"] .primary { color: #0c1821; font-weight: 780; }
 .tutor-gate { max-width: 750px; }
 .tutor-gate .action { margin-top: 12px; }
 

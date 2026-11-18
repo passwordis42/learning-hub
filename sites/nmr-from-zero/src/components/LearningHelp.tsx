@@ -41,8 +41,9 @@ export default function LearningHelpProvider({children,page}:{children:ReactNode
   const [selection,setSelection]=useState<{text:string;x:number;y:number;context:AskContext}|null>(null);
   const [small,setSmall]=useState(()=>matchMedia('(max-width:700px)').matches);
   const [position,setPosition]=useState({left:20,top:90});
+  const embedded=typeof document!=='undefined'&&document.documentElement.classList.contains('is-hub-embed');
   const anchor=useRef<HTMLElement|null>(null), dialog=useRef<HTMLDivElement>(null), drafts=useRef(new Map<string,{question:string;background:string}>());
-  const headingId=useId(), dialogId=useId(); const modal=!!question||(!!concept&&small);
+  const headingId=useId(), dialogId=useId(); const modal=!!question||(!!concept&&small&&!embedded);
   const close=(restoreFocus=true)=>{setConcept(null);setQuestion(null);setSelection(null);const target=anchor.current;if(restoreFocus)requestAnimationFrame(()=>{if(target?.isConnected)target.focus({preventScroll:true});});};
   const openConcept=(id:string,target:HTMLElement,context?:AskContext)=>{
     if(!conceptById.has(id))return;
@@ -68,16 +69,16 @@ export default function LearningHelpProvider({children,page}:{children:ReactNode
     };
     const outside=(event:PointerEvent)=>{if(!modal&&!dialog.current?.contains(event.target as Node)&&!anchor.current?.contains(event.target as Node))close(false);};
     document.addEventListener('keydown',key);document.addEventListener('pointerdown',outside);
-    const oldOverflow=document.body.style.overflow;if(modal)document.body.style.overflow='hidden';
+    const oldOverflow=document.body.style.overflow;if(modal&&!embedded)document.body.style.overflow='hidden';
     dialog.current?.querySelector<HTMLElement>('[data-initial-focus]')?.focus({preventScroll:true});
     return()=>{document.removeEventListener('keydown',key);document.removeEventListener('pointerdown',outside);document.body.style.overflow=oldOverflow;};
-  },[!!concept,!!question,modal]);
+  },[!!concept,!!question,modal,embedded]);
   useLayoutEffect(()=>{if(concept){dialog.current?.querySelector<HTMLElement>('[data-initial-focus]')?.focus({preventScroll:true});const body=dialog.current?.querySelector<HTMLElement>('.help-body');if(body)body.scrollTop=0;}},[concept?.id]);
   useLayoutEffect(()=>{
-    if(!concept||small)return;
-    const update=()=>{const rect=anchor.current?.getBoundingClientRect();if(!rect)return;const width=Math.min(460,window.innerWidth-32),height=Math.min(dialog.current?.offsetHeight??520,window.innerHeight-32);setPosition({left:Math.min(window.innerWidth-width-16,Math.max(16,rect.left)),top:Math.max(16,rect.bottom+12+height<window.innerHeight?rect.bottom+12:rect.top-height-12)});};
+    if((!concept||(small&&!embedded))&&!(question&&embedded))return;
+    const update=()=>{const rect=anchor.current?.getBoundingClientRect();if(!rect)return;const width=concept?Math.min(460,window.innerWidth-32):Math.min(540,window.innerWidth-24),height=Math.min(dialog.current?.offsetHeight??520,embedded?540:window.innerHeight-32);const left=concept?Math.min(window.innerWidth-width-16,Math.max(16,rect.left)):Math.min(window.innerWidth-width-12,Math.max(12,rect.right-width));setPosition({left,top:Math.max(16,rect.bottom+12+height<window.innerHeight?rect.bottom+12:Math.max(16,rect.top-height-12))});};
     update();window.addEventListener('resize',update);window.addEventListener('scroll',update,true);return()=>{window.removeEventListener('resize',update);window.removeEventListener('scroll',update,true);};
-  },[concept?.id,small]);
+  },[concept?.id,!!question,small,embedded]);
   useEffect(()=>{
     const detect=()=>{
       if(question||concept)return;
@@ -93,7 +94,7 @@ export default function LearningHelpProvider({children,page}:{children:ReactNode
     <div className="learning-app" inert={modal?true:undefined}>{children}</div>
     {selection&&<button className="selection-ask" style={{left:selection.x,top:selection.y}} onPointerDown={e=>e.preventDefault()} onClick={e=>ask(selection.context,e.currentTarget)}><MessageCircle size={15}/>带着选中内容问 AI</button>}
     {modal&&<div className="help-backdrop" onPointerDown={()=>close()}/>}
-    {value&&concept&&<div ref={dialog} id={dialogId} className={`help-dialog concept-popover ${small?'mobile-sheet':''}`} role="dialog" aria-modal={modal||undefined} aria-labelledby={headingId} style={!small?position:undefined}>
+    {value&&concept&&<div ref={dialog} id={dialogId} className={`help-dialog concept-popover ${small&&!embedded?'mobile-sheet':''}`} role="dialog" aria-modal={modal||undefined} aria-labelledby={headingId} style={!small||embedded?position:undefined}>
       <header className="help-header"><span><HelpCircle size={16}/>随文解释</span><button data-initial-focus aria-label="关闭解释" onClick={()=>close()}><X size={19}/></button></header>
       <div className="help-body"><div className="concept-heading">{concept.history.length>0&&<button className="text-button" onClick={()=>setConcept(c=>c?{...c,id:c.history.at(-1)!,history:c.history.slice(0,-1)}:null)}><ArrowLeft size={14}/>返回上一词</button>}<h2 id={headingId}>{value.term}</h2><small>{value.english}</small></div>
         <p className="concept-plain"><TermText context={concept.context} text={value.plain}/></p>
@@ -107,7 +108,7 @@ export default function LearningHelpProvider({children,page}:{children:ReactNode
         <div className="source-links">{value.sourceIds.map(id=>sources.find(s=>s.id===id)).filter(s=>!!s).map(s=><a key={s.id} href={s.url} target="_blank" rel="noreferrer">{s.title}<ArrowUpRight size={12}/></a>)}</div>
       </div><footer className="help-footer"><button className="secondary-button" onClick={e=>ask({...concept.context,title:`${value.term} · ${concept.context.title}`,conceptId:value.id,quote:`${concept.context.quote}\n\n本地解释：${stripTerms(value.plain)}\n学术说明：${stripTerms(value.academic)}`,sources:[...new Set([...concept.context.sources,...value.sourceIds])]},e.currentTarget)}><MessageCircle size={16}/>带着这个词问 AI</button></footer>
     </div>}
-    {question&&<div ref={dialog} id={dialogId} className="help-dialog ask-drawer" role="dialog" aria-modal="true" aria-labelledby={headingId}><header className="help-header"><span><MessageCircle size={17}/>带着这段问 AI</span><button data-initial-focus aria-label="关闭提问" onClick={()=>close()}><X size={19}/></button></header><AskPanel key={`${question.location}-${question.conceptId??''}-${question.snapshot?.id??''}-${question.quote}`} context={question} headingId={headingId} drafts={drafts.current} onReturn={()=>close()}/></div>}
+    {question&&<div ref={dialog} id={dialogId} className="help-dialog ask-drawer" role="dialog" aria-modal="true" aria-labelledby={headingId} style={embedded?{left:position.left,top:position.top,bottom:'auto',right:'auto',maxHeight:'560px',height:'auto'}:undefined}><header className="help-header"><span><MessageCircle size={17}/>带着这段问 AI</span><button data-initial-focus aria-label="关闭提问" onClick={()=>close()}><X size={19}/></button></header><AskPanel key={`${question.location}-${question.conceptId??''}-${question.snapshot?.id??''}-${question.quote}`} context={question} headingId={headingId} drafts={drafts.current} onReturn={()=>close()}/></div>}
   </HelpContext.Provider>;
 }
 

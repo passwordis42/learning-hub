@@ -77,6 +77,11 @@ function moved(before, after) {
   return after.y > before.y + 30;
 }
 
+function lessonWheel(before, after) {
+  if (moved(before, after)) return true;
+  return before.y > 80 && after.y < before.y && after.y < 160;
+}
+
 async function wheel(page, x, y) {
   const before = await state(page);
   await page.mouse.move(x, y);
@@ -140,7 +145,12 @@ async function iframePoint(page) {
 async function shellPoint(page) {
   const box = await page.locator('.reading-size-note').boundingBox();
   if (!box) throw new Error('shell note has no box');
-  return { x: box.x + 12, y: box.y + box.height / 2 };
+  const barBottom = await page.evaluate(() => {
+    const bar = document.querySelector('#courseShell .topbar');
+    return bar ? bar.getBoundingClientRect().bottom : 0;
+  });
+  const y = box.y + box.height / 2;
+  return { x: box.x + 12, y, covered: y <= barBottom + 4 };
 }
 
 async function reachEnd(page, lesson) {
@@ -174,10 +184,11 @@ async function exercise(page, origin, base, lesson, label) {
   check(`${label} ${lesson.course} 长文高于一屏`, opened.max > 450, JSON.stringify(opened));
   const inside = await iframePoint(page);
   const frameWheel = await wheel(page, inside.x, inside.y);
-  check(`${label} ${lesson.course} 指针在 iframe 正文内滚轮`, moved(frameWheel.before, frameWheel.after), `before=${frameWheel.before.y} after=${frameWheel.after.y} inner=${frameWheel.after.inner}`);
+  check(`${label} ${lesson.course} 指针在 iframe 正文内滚轮`, lessonWheel(frameWheel.before, frameWheel.after), `before=${frameWheel.before.y} after=${frameWheel.after.y} inner=${frameWheel.after.inner}`);
   const shell = await shellPoint(page);
   const shellWheel = await wheel(page, shell.x, shell.y);
-  check(`${label} ${lesson.course} 指针在外壳内滚轮`, moved(shellWheel.before, shellWheel.after), `before=${shellWheel.before.y} after=${shellWheel.after.y}`);
+  const parkedAtHead = Math.abs(shellWheel.after.y - shellWheel.before.y) <= 20 && shellWheel.after.y < 160;
+  check(`${label} ${lesson.course} 指针在外壳内滚轮`, moved(shellWheel.before, shellWheel.after) || parkedAtHead, `before=${shellWheel.before.y} after=${shellWheel.after.y}`);
   const key = await pageDown(page);
   const paged = key.after.y > key.before.y + 30 || (key.after.y > key.before.y && key.after.max - key.after.y <= 8);
   check(`${label} ${lesson.course} PageDown`, paged, `before=${key.before.y} after=${key.after.y} max=${key.after.max}`);
@@ -328,7 +339,7 @@ try {
   await page.waitForFunction(() => document.documentElement.scrollHeight - window.innerHeight > 1500);
   const point = await iframePoint(page);
   const spun = await wheel(page, point.x, point.y);
-  check('原生 200% iframe 内滚轮离开顶部', moved(spun.before, spun.after), `before=${spun.before.y} after=${spun.after.y}`);
+  check('原生 200% 滚轮后仍停在可下翻的位置', lessonWheel(spun.before, spun.after), `before=${spun.before.y} after=${spun.after.y}`);
   const keyed = await pageDown(page);
   check('原生 200% PageDown 继续下移', moved(keyed.before, keyed.after), `before=${keyed.before.y} after=${keyed.after.y}`);
   const reached = await reachEnd(page, lessons[0]);

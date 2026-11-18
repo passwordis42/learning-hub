@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+process.stderr.write('已废弃：scripts/session-browser.mjs 仍按旧的托管设置和 #settings-test 文案编写。它不能当作当前设置区的通过结果，也不计入本 PR 的测试计数。\n');
+process.exit(2);
+const rootUnused = root;
 const outDir = '/opt/cursor/artifacts';
 const secret = 'sk-session-browser-not-real';
 const shots = [];

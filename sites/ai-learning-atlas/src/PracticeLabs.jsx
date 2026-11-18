@@ -38,6 +38,10 @@ function GridLab() {
   const [car, setCar] = useState(start);
   return (
     <div className="lesson-lab">
+      <div className="lesson-lab-why">
+        <strong>为什么做这个模拟实验？</strong>
+        <span>强化学习里的智能体并不懂“迷宫”，只懂分数反馈：每走一步扣 1 分促使它找近路，撞墙扣 4 分让它避开障碍，终点加 7 分给出目标。亲手走两趟，体会奖励函数怎样决定最优路线。</span>
+      </div>
       <p>用另一张地图试走。普通移动扣 1 分，到达得 7 分，碰撞扣 4 分。到达、碰撞或步数用完时，这趟结束。</p>
       <table className="lesson-lab-grid">
         <caption>三行三列的小车地图</caption>
@@ -82,6 +86,10 @@ function AllocationLab() {
   }
   return (
     <div className="lesson-lab">
+      <div className="lesson-lab-why">
+        <strong>为什么做这个模拟实验？</strong>
+        <span>真实世界里各站点原本借车量就不同（5 到 15 辆）。哪怕新策略真实效果固定是 +2 辆，只抽一次小样本分组时，原本更忙的站点分到哪组就会把组均值拉高。亲手换几组分法，直观看到“样本少时单次均值差为何会偏离真实效果”。</span>
+      </div>
       <p>这组模拟站点使用另一组数字。每座站改用新策略后固定多借出 2 辆。可以自己摆出一组分配，也可以让系统从六种分法中等概率抽取。</p>
       <fieldset className="lesson-lab-choices">
         <legend>新策略组选择两个站点</legend>
@@ -108,7 +116,7 @@ function AllocationLab() {
 export default function PracticeLabs({ week }) {
   if (week !== 39 && week !== 55) return null;
   return (
-    <details className="review-box lesson-lab-wrap">
+    <details className="review-box lesson-lab-wrap" open>
       <summary>{week === 39 ? '再试一张地图' : '试着改变分组'}</summary>
       {week === 39 ? <GridLab /> : <AllocationLab />}
     </details>

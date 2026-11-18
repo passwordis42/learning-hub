@@ -716,169 +716,169 @@ window.ATLAS_CATALOG = {
     {
       "id": "game-w01",
       "title": "第 01 周 · 游戏设计基础",
-      "group": "阶段 1",
+      "group": "阶段 1 · 拆解与假设",
       "local": "game/#plan/01"
     },
     {
       "id": "game-w02",
       "title": "第 02 周 · 玩家心理与定位",
-      "group": "阶段 1",
+      "group": "阶段 1 · 拆解与假设",
       "local": "game/#plan/02"
     },
     {
       "id": "game-w03",
       "title": "第 03 周 · 纸面规则原型",
-      "group": "阶段 1",
+      "group": "阶段 1 · 拆解与假设",
       "local": "game/#plan/03"
     },
     {
       "id": "game-w04",
       "title": "第 04 周 · 证据与设计提案",
-      "group": "阶段 1",
+      "group": "阶段 1 · 拆解与假设",
       "local": "game/#plan/04"
     },
     {
       "id": "game-w05",
       "title": "第 05 周 · 最小 PC 原型",
-      "group": "阶段 2",
+      "group": "阶段 2 · 机制与数值",
       "local": "game/#plan/05"
     },
     {
       "id": "game-w06",
       "title": "第 06 周 · 操作手感与反馈",
-      "group": "阶段 2",
+      "group": "阶段 2 · 机制与数值",
       "local": "game/#plan/06"
     },
     {
       "id": "game-w07",
       "title": "第 07 周 · 系统、数值与经济",
-      "group": "阶段 2",
+      "group": "阶段 2 · 机制与数值",
       "local": "game/#plan/07"
     },
     {
       "id": "game-w08",
       "title": "第 08 周 · 单机制复测",
-      "group": "阶段 2",
+      "group": "阶段 2 · 机制与数值",
       "local": "game/#plan/08"
     },
     {
       "id": "game-w09",
       "title": "第 09 周 · 关卡灰盒",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/09"
     },
     {
       "id": "game-w10",
       "title": "第 10 周 · 教学、节奏与难度",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/10"
     },
     {
       "id": "game-w11",
       "title": "第 11 周 · 界面、引导与无障碍",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/11"
     },
     {
       "id": "game-w12",
       "title": "第 12 周 · 叙事与任务",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/12"
     },
     {
       "id": "game-w13",
       "title": "第 13 周 · 美术、动画与声音",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/13"
     },
     {
       "id": "game-w14",
       "title": "第 14 周 · 首轮关卡试玩",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/14"
     },
     {
       "id": "game-w15",
       "title": "第 15 周 · 关卡迭代与复测",
-      "group": "阶段 3",
+      "group": "阶段 3 · 关卡与体验",
       "local": "game/#plan/15"
     },
     {
       "id": "game-w16",
       "title": "第 16 周 · 动作与平台跳跃",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/16"
     },
     {
       "id": "game-w17",
       "title": "第 17 周 · 射击",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/17"
     },
     {
       "id": "game-w18",
       "title": "第 18 周 · 解谜与冒险",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/18"
     },
     {
       "id": "game-w19",
       "title": "第 19 周 · RPG 与叙事",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/19"
     },
     {
       "id": "game-w20",
       "title": "第 20 周 · 策略、经营与模拟",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/20"
     },
     {
       "id": "game-w21",
       "title": "第 21 周 · 沙盒与生存",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/21"
     },
     {
       "id": "game-w22",
       "title": "第 22 周 · Roguelike 与程序生成",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/22"
     },
     {
       "id": "game-w23",
       "title": "第 23 周 · 多人、合作与运营",
-      "group": "阶段 4",
+      "group": "阶段 4 · 品类实验",
       "local": "game/#plan/23"
     },
     {
       "id": "game-w24",
       "title": "第 24 周 · 制作范围与规格",
-      "group": "阶段 5",
+      "group": "阶段 5 · 试玩版交付",
       "local": "game/#plan/24"
     },
     {
       "id": "game-w25",
       "title": "第 25 周 · PC 兼容、QA 与记录",
-      "group": "阶段 5",
+      "group": "阶段 5 · 试玩版交付",
       "local": "game/#plan/25"
     },
     {
       "id": "game-w26",
       "title": "第 26 周 · 首轮毕业试玩",
-      "group": "阶段 5",
+      "group": "阶段 5 · 试玩版交付",
       "local": "game/#plan/26"
     },
     {
       "id": "game-w27",
       "title": "第 27 周 · 改版与复测",
-      "group": "阶段 5",
+      "group": "阶段 5 · 试玩版交付",
       "local": "game/#plan/27"
     },
     {
       "id": "game-w28",
       "title": "第 28 周 · 打包、发行与复盘",
-      "group": "阶段 5",
+      "group": "阶段 5 · 试玩版交付",
       "local": "game/#plan/28"
     },
     {

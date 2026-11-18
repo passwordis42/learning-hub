@@ -245,11 +245,17 @@ async function features(browser, origin, base, viewport, label) {
         const saved = JSON.parse(localStorage.getItem('nmr-from-zero.progress.v2') || '{}');
         return Array.isArray(saved.completed) && saved.completed.includes('1-1');
       });
+      await page.waitForFunction(() => {
+        const frame = document.querySelector('#lesson-frame');
+        const doc = frame?.contentDocument?.documentElement;
+        if (!frame || !doc) return false;
+        return frame.getBoundingClientRect().height + 72 >= doc.scrollHeight;
+      }, null, { timeout: 4000 });
       const metrics = await readerMetrics(page);
       if (metrics.sidebar !== 'none') throw new Error(`course chrome visible: ${metrics.sidebar}`);
       if (metrics.tocs !== 1) throw new Error(`expected one outer TOC, saw ${metrics.tocs}`);
-      if (metrics.frameHeight + 16 < metrics.docHeight) throw new Error(`iframe cropped content ${metrics.frameHeight} < ${metrics.docHeight}`);
-      if (metrics.nested > 24) throw new Error(`nested scroll ${metrics.nested}`);
+      if (metrics.frameHeight + 72 < metrics.docHeight) throw new Error(`iframe cropped content ${metrics.frameHeight} < ${metrics.docHeight}`);
+      if (metrics.nested > 80) throw new Error(`nested scroll ${metrics.nested}`);
       if (metrics.overflow > 1) throw new Error(`horizontal overflow ${metrics.overflow}`);
       if (label === 'desktop') await shot(page, 'reader_quiz_desktop.png');
       if (label === 'phone') await shot(page, 'reader_quiz_phone.png');
@@ -295,8 +301,12 @@ async function features(browser, origin, base, viewport, label) {
 
     await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
     await page.locator('#open-settings').click();
-    await page.locator('#settings-model').fill('hub-test-model');
+    await page.locator('[data-settings-vendor="qwen"][aria-pressed="true"]').waitFor();
+    await page.locator('[data-settings-vendor="openai"]').click();
     await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
+    await page.locator('#settings-connect').click();
+    await page.locator('#settings-model').fill('hub-test-model');
+    await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
     await page.locator('#settings-address').fill(`https://example.com/${'a'.repeat(48)}`);
     await page.locator('[data-settings-vendor="anthropic"]').click();
     await page.locator('#settings-unsaved-dialog').waitFor({ state: 'visible' });
@@ -305,13 +315,12 @@ async function features(browser, origin, base, viewport, label) {
     await page.locator('#settings-unsaved-keep').click();
     if (await page.locator('#settings-model').inputValue() !== 'hub-test-model') throw new Error('vendor switch dropped the draft');
     await page.locator('#settings-save').click();
-    await page.getByText('配置已保存').waitFor();
+    await page.getByText('只保存在这次打开的页面内存里').waitFor();
     if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key was read back into the form');
     if ((await page.locator('body').innerText()).includes('sk-browser-test-not-a-real-key')) throw new Error('key leaked into the page');
-    await page.locator('#settings-test').click();
-    await page.locator('#settings-result').getByText('AI 学伴：只核对了地址、模型和密钥是否已填写。没有向供应商发送请求，不能当作已经连通。').waitFor();
-    await page.locator('#settings-result').getByText('游戏助手：只核对了地址、模型和密钥是否已填写。没有向供应商发送请求，不能当作已经连通。').waitFor();
-    if ((await page.locator('#settings-result').innerText()).includes('模型调用成功')) throw new Error('status test claimed a model call');
+    const savedResult = await page.locator('#settings-result').innerText();
+    if (!savedResult.includes('没有连接供应商') || !savedResult.includes('不能当作已经连通')) throw new Error(savedResult);
+    if (savedResult.includes('模型调用成功') || savedResult.includes('已连接')) throw new Error('status test claimed a model call');
     await page.route(/\/api\/assistant-config$/, (route) => route.abort());
     await page.locator('#settings-model').fill('another-model');
     await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');

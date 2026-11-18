@@ -335,6 +335,21 @@ export default function App() {
               <h1 id="map-title">AI 学习图谱</h1>
               <p>沿着 {chapters.length} 章路线，从第一个可验证的练习开始。</p>
             </div>
+            <section className="atlas-start-banner panel" aria-label="推荐学习路径">
+              <div className="atlas-start-copy">
+                <span className="label-chip">{dayDone || completedWeeks > 0 ? `已完成 ${completedWeeks} / ${weekCount} 周` : '新手起步路线'}</span>
+                <strong>怎么用这张图谱最高效？按三步循序推进：</strong>
+                <ol className="atlas-start-steps">
+                  <li><b>① 第一天起步</b><span>用 10 行工单表养成「先手算真值、再让 AI 写代码、最后核对验收」的基本功。</span></li>
+                  <li><b>② 第 01–18 周主线</b><span>从数据清洗、特征与评估指标一路打通到大模型检索增强（RAG）与上线评测。</span></li>
+                  <li><b>③ 第 19–58 周方向课</b><span>主线稳固后，按兴趣选学强化学习、多模态、因果推断等五个进阶方向。</span></li>
+                </ol>
+              </div>
+              <div className="atlas-start-actions">
+                <a href={learningHref} className="action primary">{learningAction === '开始学习' ? '从第一天课程开始' : learningAction} <ArrowRight size={17} /></a>
+                {learningHref !== '#day-1' && <a href="#day-1" className="action secondary">回看第一天起步课</a>}
+              </div>
+            </section>
             <div className="atlas-grid">
               <section className="graph-panel panel" aria-label="交互式知识图谱">
                 <Suspense fallback={<div className="graph-loading" role="status">正在打开知识图谱…</div>}>

@@ -93,8 +93,15 @@ async function scan(dist, base) {
 }
 
 async function save(page, address, key) {
-  await page.locator('#settings-model').fill('direct-browser-model');
+  if (await page.locator('[data-settings-vendor="openai"][aria-pressed="true"]').count() === 0) {
+    await page.locator('[data-settings-vendor="openai"]').click();
+    const discard = page.locator('#settings-unsaved-discard');
+    if (await discard.isVisible()) await discard.click();
+  }
   await page.locator('#settings-key').fill(key);
+  await page.locator('#settings-connect').click();
+  await page.locator('#settings-model').fill('direct-browser-model');
+  await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
   await page.locator('#settings-address').fill(address);
   await page.locator('#settings-save').click();
   await page.getByText('只保存在这次打开的页面内存里').waitFor();
@@ -149,7 +156,6 @@ try {
     await page.locator('#open-settings').click();
     const before = calls.length;
     await save(page, `http://127.0.0.1:${mockPort}/v1`, firstKey);
-    await page.locator('#settings-test').click();
     await page.getByText('不能当作已经连通').first().waitFor();
     check(`${label} 配置核对没有请求供应商`, calls.length === before);
     await page.screenshot({ path: path.join(outDir, `direct_settings_${label}.png`) });

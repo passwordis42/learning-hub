@@ -113,26 +113,117 @@
 .guide-outline-item[data-state="current"] .guide-step-dot { border-color: var(--accent); background: var(--accent); color: white; }
 .guide-outline-item[data-state="done"] .guide-step-dot { border-color: #d4caed; background: var(--violet); color: var(--accent-deep); }
 
-html.is-hub-embed .guide-quiz-table thead { background: #f4f7f1; }
-html.is-hub-embed .guide-sample summary,
-html.is-hub-embed .guide-resources summary,
-html.is-hub-embed .guide-prompt-label,
-html.is-hub-embed .guide-resources a,
-html.is-hub-embed .guide-file-flow code,
-html.is-hub-embed .guide-instructions code,
-html.is-hub-embed .guide-block > p code { color: #183f4b; }
-html.is-hub-embed .guide-outline-item > :is(button, a):hover:not(:disabled) { background: #e7f0ea; }
-html.is-hub-embed .guide-outline-item[data-state="current"] { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
-html.is-hub-embed .guide-outline-item[data-state="done"] .guide-step-dot { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
-html.is-hub-embed .guide-step-dot { border-color: #a8bab0; background: #fffef4; color: #42606a; }
-html.is-hub-embed .guided-lesson { --guide-tint: #f4f7f1; }
-html.is-hub-embed .guide-progress progress,
-html.is-hub-embed .guide-progress progress::-webkit-progress-bar { background: #e7f0ea; }
-html.is-hub-embed .guide-content .concept-grid article { border-color: #c8d4c3; background: #f4f7f1; }
-html.is-hub-embed .guide-note { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }
-html.is-hub-embed .guide-file-flow li { border-color: #d5e0d6; }
-html.is-hub-embed .guide-code { background: #fffef4; border-color: #c8d4c3; color: #183f4b; }
-html.is-hub-embed .guide-test-cases article { border-color: #c8d4c3; }
+.onboarding-banner {
+  display: grid;
+  gap: 12px;
+  padding: 15px 18px;
+  margin-bottom: 18px;
+  border-left: 4px solid var(--accent);
+}
+.onboarding-banner-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 11px;
+}
+.onboarding-banner-head strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.onboarding-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.onboarding-pillars > div {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--guide-soft-line);
+  border-radius: 9px;
+  background: var(--guide-tint);
+}
+.onboarding-pillars b {
+  color: var(--accent-deep);
+  font-size: 13px;
+}
+.onboarding-pillars p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.why-step-banner {
+  display: grid;
+  gap: 3px;
+  margin-top: 11px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--guide-tint);
+  font-size: 13px;
+  line-height: 1.58;
+}
+.why-step-banner strong {
+  color: var(--accent-deep);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.why-step-banner span {
+  color: var(--ink);
+}
+
+.guide-action-hint {
+  flex: 1 1 200px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+html.is-hub-embed:not([data-theme="night"]) .guide-quiz-table thead { background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .guide-sample summary,
+html.is-hub-embed:not([data-theme="night"]) .guide-resources summary,
+html.is-hub-embed:not([data-theme="night"]) .guide-prompt-label,
+html.is-hub-embed:not([data-theme="night"]) .guide-resources a,
+html.is-hub-embed:not([data-theme="night"]) .guide-file-flow code,
+html.is-hub-embed:not([data-theme="night"]) .guide-instructions code,
+html.is-hub-embed:not([data-theme="night"]) .guide-block > p code { color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .guide-outline-item > :is(button, a):hover:not(:disabled) { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .guide-outline-item[data-state="current"] { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .guide-outline-item[data-state="done"] .guide-step-dot { border-color: #7a9d8c; background: #e7f0ea; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .guide-step-dot { border-color: #a8bab0; background: #fffef4; color: #42606a; }
+html.is-hub-embed:not([data-theme="night"]) .guided-lesson { --guide-tint: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .guide-progress progress,
+html.is-hub-embed:not([data-theme="night"]) .guide-progress progress::-webkit-progress-bar { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .guide-content .concept-grid article { border-color: #c8d4c3; background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .guide-note { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .guide-file-flow li { border-color: #d5e0d6; }
+html.is-hub-embed:not([data-theme="night"]) .guide-code { background: #fffef4; border-color: #c8d4c3; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .guide-test-cases article { border-color: #c8d4c3; }
+
+html.is-hub-embed[data-theme="night"] .guided-lesson {
+  --guide-soft-line: rgba(210, 224, 240, 0.14);
+  --guide-tint: rgba(86, 179, 168, 0.1);
+}
+html.is-hub-embed[data-theme="night"] .guide-note { color: var(--ink); border-left-color: var(--accent); }
+html.is-hub-embed[data-theme="night"] .guide-file-flow li,
+html.is-hub-embed[data-theme="night"] .guide-code,
+html.is-hub-embed[data-theme="night"] .guide-prompt,
+html.is-hub-embed[data-theme="night"] .guide-quiz-table thead {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+  color: var(--ink);
+}
+html.is-hub-embed[data-theme="night"] .guide-outline-item[data-state="current"] {
+  border-color: rgba(86, 179, 168, 0.45);
+  background: rgba(86, 179, 168, 0.16);
+}
+html.is-hub-embed[data-theme="night"] .guide-step-dot {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+}
 .guide-step-dot svg { width: 13px; height: 13px; }
 
 @container (min-width: 520px) {
@@ -141,6 +232,10 @@ html.is-hub-embed .guide-test-cases article { border-color: #c8d4c3; }
 
 @media (max-width: 980px) and (min-width: 851px) {
   .guide-layout { grid-template-columns: minmax(0, 1fr) minmax(180px, 205px); gap: 12px; }
+}
+
+@media (max-width: 820px) {
+  .onboarding-pillars { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 690px) {
