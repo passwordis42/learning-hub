@@ -625,9 +625,22 @@
     window.scrollTo(0, 0);
   }
 
+  function showOffline() {
+    stopHarbor();
+    activeCourse = null;
+    activeChapter = null;
+    document.body.classList.add('in-course', 'course');
+    shell.hidden = false;
+    if (hub) hub.hidden = false;
+    document.title = '课程已下线 · 学习入口';
+    main.innerHTML = '<article class="lesson lesson-article"><h1>这门课已下线</h1><p>AI 教程已从学习站撤下，这里不再打开原来的课程。</p><p><a data-hub-route href="' + esc(location.pathname) + '">返回首页</a></p></article>';
+    if (!document.body.classList.contains('assist-open')) document.body.dataset.view = 'reader';
+    window.scrollTo(0, 0);
+  }
   function show(courseId, moduleId) {
-    var course = courseBy(courseId) || courseBy('ai');
-    if (!course) return;
+    if (courseId === 'ai') { showOffline(); return; }
+    var course = courseBy(courseId);
+    if (!course) { showOffline(); return; }
     document.body.classList.add('in-course', 'course');
     shell.hidden = false;
     if (hub) hub.hidden = false;

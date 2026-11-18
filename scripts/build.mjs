@@ -35,13 +35,29 @@ assertNode();
 const hubBase = normalizeHubBase(process.env.HUB_BASE ?? '/');
 const dist = path.join(root, 'dist');
 await rm(dist, { recursive: true, force: true });
-await run('npm', ['run', 'build'], path.join(root, 'sites/ai-learning-atlas'), siteEnv());
 await run('npm', ['run', 'build'], path.join(root, 'sites/nmr-from-zero'), siteEnv({ HUB_BASE: hubBase }));
 await mkdir(dist, { recursive: true });
 for (const name of await readdir(path.join(root, 'portal'))) {
   await cp(path.join(root, 'portal', name), path.join(dist, name), { recursive: true });
 }
-await cp(path.join(root, 'sites/ai-learning-atlas/dist'), path.join(dist, 'ai'), { recursive: true });
+const offline = `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课程已下线 · 学习入口</title>
+</head>
+<body>
+<main>
+<h1>这门课已下线</h1>
+<p>AI 教程已从学习站撤下。</p>
+<p><a href="../">返回首页</a></p>
+</main>
+</body>
+</html>
+`;
+await mkdir(path.join(dist, 'ai'), { recursive: true });
+await writeFile(path.join(dist, 'ai', 'index.html'), offline);
 await cp(path.join(root, 'sites/nmr-from-zero/dist'), path.join(dist, 'nmr-from-zero'), { recursive: true });
 await cp(path.join(root, 'sites/game-design-atlas/docs'), path.join(dist, 'game'), { recursive: true });
 await cp(path.join(root, 'sites/game-design-atlas/AI-DEVELOPMENT.md'), path.join(dist, 'game', 'AI-DEVELOPMENT.md'));
