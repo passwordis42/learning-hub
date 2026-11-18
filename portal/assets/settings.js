@@ -126,12 +126,19 @@
     if (qwen && phase === 'fallback') moveNode(customField, $('custom-model-fallback-slot'));
     else if (qwen) moveNode(customField, $('custom-model-advanced-slot'));
     else moveNode(customField, $('manual-model-slot'));
-    customField.hidden = false;
+    const savedModel = item?.enteredModel || '';
+    const savedConfig = Boolean(savedModel || item?.enteredBaseUrl || item?.apiKeyConfigured);
+    const showTools = (qwen && (phase === 'list' || phase === 'fallback')) || (!qwen && phase === 'manual') || savedConfig;
+    customField.hidden = !qwen && !(phase === 'manual' || savedModel);
     $('settings-model-label').textContent = qwen ? '自定义模型名' : '模型名称';
+    const advanced = $('settings-advanced');
+    if (!showTools) advanced.open = false;
+    advanced.hidden = !showTools;
+    $('apply-actions').hidden = !showTools;
+    $('settings-hint').hidden = !showTools;
     $('model-panel').hidden = !(qwen && phase === 'list');
     $('fallback-pending').hidden = !(qwen && phase === 'fallback');
     $('preset-model').textContent = assistant.presetModel;
-    const savedModel = item?.enteredModel || '';
     const savedNote = $('saved-model-note');
     if (savedModel) {
       savedNote.hidden = false;
@@ -154,18 +161,28 @@
       changeRegion.hidden = true;
     }
     const addressHint = $('address-auto-hint');
-    if (qwen && region && official) {
+    const addressDetail = $('official-address-detail');
+    if (qwen && region && !panel) {
       addressHint.hidden = false;
-      addressHint.textContent = `官方地址已按通义千问和已选择的地区配置：${official}。无需手填。自定义地址在高级设置里，默认折叠。`;
-    } else if (qwen && region && !official) {
+      addressHint.textContent = official
+        ? '官方地址已按通义千问和已选择的地区自动配置，无需手填。完整地址在高级设置里。'
+        : '这个地区还不能生成不带工作空间的官方地址。请填写工作空间后再连接和发送。';
+    } else if (!qwen) {
       addressHint.hidden = false;
-      addressHint.textContent = '这个地区还不能生成不带工作空间的官方地址。请填写工作空间后再连接和发送。';
-    } else if (!qwen && official) {
-      addressHint.hidden = false;
-      addressHint.textContent = `官方地址已按该厂商配置。AI 学伴：${item?.protocols?.ai?.url || ''}。游戏助手：${item?.protocols?.game?.url || ''}。`;
+      addressHint.textContent = '官方地址已按该厂商自动配置，无需手填。完整地址在高级设置里。';
     } else {
       addressHint.hidden = true;
       addressHint.textContent = '';
+    }
+    if (qwen && official) {
+      addressDetail.hidden = false;
+      addressDetail.textContent = `当前自动配置的对话地址：${official}`;
+    } else if (!qwen && item?.protocols?.ai?.url) {
+      addressDetail.hidden = false;
+      addressDetail.textContent = `AI 学伴：${item.protocols.ai.url}。游戏助手：${item.protocols.game.url || ''}。`;
+    } else {
+      addressDetail.hidden = true;
+      addressDetail.textContent = '';
     }
     if (phase === 'list') fillModelSelect();
     $('model-source-hint').textContent = phase === 'list' ? listNote : '';
@@ -385,7 +402,7 @@
     }
     $('settings-key').setAttribute('aria-invalid', 'false');
     if (active !== 'qwen') {
-      phase = 'idle';
+      phase = 'manual';
       setResult('ready', '此厂商没有已纳入本次实现的官方模型列表请求，因此不会编造列表，也不会把密钥发出。请自行填写模型名称。这不是已连接，也没有验证权限。');
       setPermission('', '', false);
       render();
@@ -523,11 +540,11 @@
   });
   $('settings-key').addEventListener('input', onSecretChanged);
   ['settings-region'].forEach((id) => $(id).addEventListener('change', onRouteChanged));
-  ['settings-workspace', 'settings-address'].forEach((id) => {
+  ['settings-workspace', 'settings-address', 'settings-ai-address', 'settings-game-address'].forEach((id) => {
     $(id).addEventListener('input', onRouteChanged);
     $(id).addEventListener('change', onRouteChanged);
   });
-  ['settings-model', 'settings-model-select', 'settings-ai-address', 'settings-ai-model', 'settings-game-address', 'settings-game-model', 'settings-token'].forEach((id) => {
+  ['settings-model', 'settings-model-select', 'settings-ai-model', 'settings-game-model', 'settings-token'].forEach((id) => {
     $(id).addEventListener('input', () => { mark(); render(); });
   });
   ['settings-ai-mode', 'settings-game-mode'].forEach((id) => {

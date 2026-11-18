@@ -143,12 +143,24 @@ export function listPlan({ region = '', workspaceId = '', customUrl = '' } = {})
 export function listUrlAllowed(raw) {
   let url;
   try { url = new URL(raw); } catch { return false; }
-  if (url.protocol !== 'https:') return false;
-  if (url.username || url.password || url.hash) return false;
-  const path = url.pathname;
-  if (path !== '/api/v1/models' && path !== '/api/v1/models/permissions') return false;
-  if (url.hostname === 'dashscope-us.aliyuncs.com') return path === '/api/v1/models';
-  return /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.(cn-beijing|ap-southeast-1|cn-hongkong|ap-northeast-1)\.maas\.aliyuncs\.com$/.test(url.hostname);
+  if (url.protocol !== 'https:' || url.port || url.username || url.password || url.hash) return false;
+  const entries = [...url.searchParams.entries()];
+  const exact = (pairs) => entries.length === pairs.length && pairs.every(([key, value], index) => entries[index][0] === key && entries[index][1] === value);
+  const workspace = (region) => new RegExp(`^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.${region}\\.maas\\.aliyuncs\\.com$`).test(url.hostname);
+  if (url.pathname === '/api/v1/models/permissions' && workspace('cn-beijing')) {
+    return exact([
+      ['authorization_scope', 'AUTHORIZED'],
+      ['action', 'INFERENCE'],
+      ['page_no', '1'],
+      ['page_size', '100'],
+    ]);
+  }
+  const catalogHost = url.hostname === 'dashscope-us.aliyuncs.com'
+    || ['ap-southeast-1', 'cn-hongkong', 'ap-northeast-1'].some((region) => workspace(region));
+  if (url.pathname === '/api/v1/models' && catalogHost) {
+    return exact([['page_no', '1'], ['page_size', '100']]);
+  }
+  return false;
 }
 
 function modelId(value) {

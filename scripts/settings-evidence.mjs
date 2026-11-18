@@ -117,7 +117,9 @@ try {
     await openSettings(page);
     await banner(page, '实现页初始态。未调用供应商。空白配置默认百炼，没有预设模型。');
     check(`${label} 初始没有预设面板`, !(await page.locator('#fallback-pending').isVisible()));
-    check(`${label} 初始高级设置折叠`, !(await page.locator('#settings-advanced').evaluate((el) => el.open)));
+    check(`${label} 初始高级设置隐藏`, await page.locator('#settings-advanced').isHidden());
+    check(`${label} 初始应用设置隐藏`, await page.locator('#settings-save').isHidden());
+    check(`${label} 初始主路径没有完整官方地址`, !(await page.locator('#settings-page').innerText()).includes('https://'));
     await shot(page, `settings_initial_${label}`);
 
     await page.locator('#settings-key').fill(key);
@@ -164,6 +166,28 @@ try {
     check(`${label} 成功态写明不是已验证可调用`, successCopy.includes('不是已验证可调用'));
     await page.locator('#settings-model-select').scrollIntoViewIfNeeded();
     await shot(page, `settings_list_success_mock_${label}`);
+    if (label === '1280') {
+      for (const side of ['ai', 'game']) {
+        if (side === 'game') {
+          await page.locator('#settings-connect').click();
+          await page.getByText('已取得这次的模型列表').waitFor();
+        }
+        await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
+        await page.locator('#settings-overrides').evaluate((el) => { el.open = true; });
+        await page.locator(`#settings-${side}-mode`).selectOption('custom');
+        const leaked = [];
+        const watch = (request) => {
+          if (request.url().includes('override.example')) leaked.push(request.url());
+        };
+        page.on('request', watch);
+        await page.locator(`#settings-${side}-address`).fill('https://override.example/v1');
+        await page.getByText('请重新连接').waitFor();
+        const after = await page.locator('#settings-result').innerText();
+        check(`1280 ${side} 覆盖地址作废已取得列表`, !after.includes('已取得这次的模型列表') && after.includes('请重新连接'), after);
+        check(`1280 ${side} 覆盖地址没有外发`, leaked.length === 0, leaked.join(' '));
+        page.off('request', watch);
+      }
+    }
 
     await page.unrouteAll({ behavior: 'ignoreErrors' });
     await page.route('https://dashscope-us.aliyuncs.com/**', (route) => route.abort('failed'));
@@ -178,7 +202,8 @@ try {
     const failureText = await page.locator('#settings-result').innerText();
     check(`${label} 失败写网络或跨域`, failureText.includes('网络或跨域访问失败'), failureText);
     check(`${label} 失败不称已取得列表`, !failureText.includes('已取得这次的模型列表'));
-    check(`${label} 失败时高级设置折叠`, !(await page.locator('#settings-advanced').evaluate((el) => el.open)));
+    check(`${label} 失败时高级设置可见但折叠`, await page.locator('#settings-advanced').isVisible() && !(await page.locator('#settings-advanced').evaluate((el) => el.open)));
+    check(`${label} 失败主路径没有完整官方地址`, !(await page.locator('#settings-page').innerText()).includes('https://'));
     check(`${label} 自定义模型入口可见`, await page.locator('#settings-model').isVisible());
     await page.locator('#preset-model').scrollIntoViewIfNeeded();
     await shot(page, `settings_failure_preset_${label}`);
@@ -248,11 +273,17 @@ try {
 
 async function captureNativeZoom() {
   const profile = await mkdtemp(path.join(tmpdir(), 'settings-zoom-'));
+  await mkdir(path.join(profile, 'Default'), { recursive: true });
+  await writeFile(path.join(profile, 'Default', 'Preferences'), JSON.stringify({
+    credentials_enable_service: false,
+    profile: { password_manager_enabled: false },
+  }));
   const chrome = spawn('/usr/bin/google-chrome', [
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--no-first-run',
     '--disable-translate',
+    '--disable-features=PasswordManager,PasswordManagerOnboarding',
     '--lang=zh-CN',
     `--user-data-dir=${profile}`,
     '--window-size=1440,900',
@@ -294,24 +325,80 @@ async function captureNativeZoom() {
       && at200.scale === 1 && at200.font === at100.font && at200.zoom === '1';
     check('Chrome 原生页面缩放 200%', native, JSON.stringify({ at100, at200 }));
     if (!native) return;
+    await writeFile(path.join(outDir, 'settings-zoom200-metrics.json'), JSON.stringify({
+      method: '真实 Chrome 窗口：Ctrl+0 后 Ctrl+= 五次。未使用 deviceScaleFactor，未改 CSS zoom。',
+      at100, at200,
+      widthRatio: at100.width / at200.width,
+      dprRatio: at200.dpr / at100.dpr,
+      nativeBrowserZoom: true,
+      deviceScaleFactorUsed: false,
+      cssZoomUsed: false,
+    }, null, 2));
+    const dismissPassword = async () => {
+      const never = page.getByRole('button', { name: 'Never' });
+      if (await never.isVisible().catch(() => false)) await never.click();
+    };
     await page.locator('#btnAssist').click();
     await page.locator('#settings-connect').waitFor();
-    await banner(page, '原生 200% 初始态。不是 CSS zoom。');
+    await dismissPassword();
+    await banner(page, '原生浏览器 200%。不是 deviceScaleFactor，不是 CSS zoom。初始态。');
+    check('200% 初始高级设置隐藏', await page.locator('#settings-advanced').isHidden());
     grabWindow('settings_initial_zoom200');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     check('200% 初始没有横向溢出', overflow <= 1, `overflow=${overflow}`);
     await page.locator('#settings-key').fill(key);
+    await dismissPassword();
     await page.locator('#settings-connect').click();
     await page.getByRole('heading', { name: '请补选密钥所在地区' }).waitFor();
-    await banner(page, '原生 200% 缺地区。未向供应商发送密钥。');
+    await page.getByRole('heading', { name: '请补选密钥所在地区' }).scrollIntoViewIfNeeded();
+    await banner(page, '原生浏览器 200%。请补选密钥所在地区。未向供应商发送密钥。');
     grabWindow('settings_missing_region_zoom200');
+    await page.locator('#settings-region').selectOption('tokyo');
+    await page.locator('#settings-continue').click();
+    await page.locator('#workspace-error').waitFor();
+    await page.locator('#settings-workspace').scrollIntoViewIfNeeded();
+    await banner(page, '原生浏览器 200%。东京缺少必要工作空间。高级设置保持隐藏。');
+    grabWindow('settings_missing_workspace_zoom200');
+    await page.route('https://dashscope-us.aliyuncs.com/**', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': `http://127.0.0.1:${port}` },
+      body: JSON.stringify({ success: true, output: { total: 1, models: [{ model: 'mock-catalog-item' }] } }),
+    }));
+    await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'domcontentloaded' });
+    await page.locator('#btnAssist').click();
+    await page.locator('#settings-key').fill(key);
+    await dismissPassword();
+    await page.locator('#settings-connect').click();
+    await page.locator('#settings-region').selectOption('virginia');
+    await page.locator('#settings-continue').click();
+    await page.locator('#settings-model-select').selectOption('mock-catalog-item');
+    await dismissPassword();
+    await page.locator('#settings-model-select').scrollIntoViewIfNeeded();
+    await page.getByText('已取得这次的模型列表').waitFor();
+    await banner(page, '原生浏览器 200%。模拟平台目录 mock-catalog-item。不是真实密钥，不是已验证推理。无保存密码框。');
+    grabWindow('settings_list_success_mock_zoom200');
+    await page.unroute('https://dashscope-us.aliyuncs.com/**').catch(() => {});
     await page.route('https://dashscope-us.aliyuncs.com/**', (route) => route.abort('failed'));
+    await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'domcontentloaded' });
+    await page.locator('#btnAssist').click();
+    await page.locator('#settings-key').fill(key);
+    await dismissPassword();
+    await page.locator('#settings-connect').click();
     await page.locator('#settings-region').selectOption('virginia');
     await page.locator('#settings-continue').click();
     await page.locator('#preset-model').waitFor();
     await page.locator('#preset-model').scrollIntoViewIfNeeded();
-    await banner(page, '原生 200% 模拟网络失败后的预设。不是已连接。');
+    await banner(page, '原生浏览器 200%。模拟网络失败。预设 qwen3.7-flash（未验证权限）。高级设置折叠。不是已连接。');
     grabWindow('settings_failure_preset_zoom200');
+    await page.evaluate(() => {
+      window.ATLAS_ASSISTANT.saveVendor('openai', { model: 'kept-openai-model', apiKey: 'sk-screenshot-not-real' });
+      window.ATLAS_ASSISTANT.saveVendor('qwen', { region: 'singapore', workspaceId: 'wsdemo1', model: 'kept-qwen-model', apiKey: 'sk-screenshot-not-real' });
+      window.ATLAS_SETTINGS.reload();
+    });
+    await page.getByText('kept-qwen-model').scrollIntoViewIfNeeded();
+    await banner(page, '原生浏览器 200%。已有非空千问配置。预设没有覆盖 kept-qwen-model。');
+    grabWindow('settings_old_config_qwen_zoom200');
   } catch (error) {
     check('Chrome 原生页面缩放 200%', false, error.message);
   } finally {

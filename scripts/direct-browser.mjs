@@ -98,8 +98,9 @@ async function save(page, address, key) {
     const discard = page.locator('#settings-unsaved-discard');
     if (await discard.isVisible()) await discard.click();
   }
-  await page.locator('#settings-model').fill('direct-browser-model');
   await page.locator('#settings-key').fill(key);
+  await page.locator('#settings-connect').click();
+  await page.locator('#settings-model').fill('direct-browser-model');
   await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
   await page.locator('#settings-address').fill(address);
   await page.locator('#settings-save').click();

@@ -23,6 +23,11 @@ test('official list URLs follow the documented hosts and never guess a region', 
   assert.equal(virginia.source, 'catalog');
   assert.equal(virginia.url, 'https://dashscope-us.aliyuncs.com/api/v1/models?page_no=1&page_size=100');
   assert.equal(listUrlAllowed(virginia.url), true);
+  assert.equal(listUrlAllowed(listPlan({ region: 'beijing', workspaceId: 'wsdemo1' }).url), true);
+  assert.equal(listUrlAllowed('https://dashscope-us.aliyuncs.com:8443/api/v1/models?page_no=1&page_size=100'), false);
+  assert.equal(listUrlAllowed('https://wsdemo1.cn-beijing.maas.aliyuncs.com/api/v1/models/permissions?authorization_scope=AUTHORIZABLE&action=INFERENCE&page_no=1&page_size=100'), false);
+  assert.equal(listUrlAllowed('https://wsdemo1.cn-beijing.maas.aliyuncs.com/api/v1/models?page_no=1&page_size=100'), false);
+  assert.equal(listUrlAllowed('https://dashscope-us.aliyuncs.com/api/v1/models?page_no=1&page_size=20'), false);
   assert.doesNotMatch(virginia.url, /compatible-mode/);
   const beijing = listPlan({ region: 'beijing', workspaceId: 'wsdemo1' });
   assert.equal(beijing.source, 'authorized');

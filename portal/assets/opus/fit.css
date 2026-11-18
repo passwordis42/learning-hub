@@ -92,6 +92,22 @@ body.in-course.assist-open #scrim {
   color: var(--paper);
   border-color: rgba(255,255,255,.2);
 }
+.assist .settings-vendors.is-quiet { margin: 0; }
+.assist .settings-vendors.is-quiet button {
+  font-size: .8rem;
+  font-weight: 600;
+  background: rgba(255,255,255,.4);
+  color: var(--ink-2);
+  box-shadow: none;
+  border-color: var(--paper-line);
+}
+.assist .settings-vendors.is-quiet button:hover { background: rgba(255,255,255,.7); color: var(--ink); }
+.assist .settings-vendors.is-quiet button[aria-pressed="true"] {
+  background: rgba(255,255,255,.92);
+  color: var(--ink);
+  border-color: var(--lagoon);
+  box-shadow: 0 0 0 1px var(--lagoon);
+}
 .assist .settings-back {
   width: auto;
   display: inline-flex;

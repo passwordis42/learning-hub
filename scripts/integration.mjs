@@ -297,8 +297,9 @@ async function features(browser, origin, base, viewport, label) {
     await page.locator('#open-settings').click();
     await page.locator('[data-settings-vendor="qwen"][aria-pressed="true"]').waitFor();
     await page.locator('[data-settings-vendor="openai"]').click();
-    await page.locator('#settings-model').fill('hub-test-model');
     await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
+    await page.locator('#settings-connect').click();
+    await page.locator('#settings-model').fill('hub-test-model');
     await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
     await page.locator('#settings-address').fill(`https://example.com/${'a'.repeat(48)}`);
     await page.locator('[data-settings-vendor="anthropic"]').click();

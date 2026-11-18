@@ -180,17 +180,18 @@
 <div class="model-pill" aria-describedby="fallback-copy"><code id="preset-model">qwen3.7-flash</code><small>预设（未验证权限）</small></div>
 <div id="custom-model-fallback-slot"></div>
 </div>
-<p id="address-auto-hint" class="settings-status" hidden></p>
+<p id="address-auto-hint" class="settings-status" hidden>官方地址将按当前厂商和已明确地区自动配置，无需手填。完整地址在高级设置里。</p>
 <div id="manual-model-slot"></div>
 <div class="field" id="custom-model-field">
 <label for="settings-model" id="settings-model-label">模型名称</label>
 <input id="settings-model" autocomplete="off" spellcheck="false" placeholder="填写模型名称。通义列表失败时不填则使用预设 qwen3.7-flash（未验证权限）">
 <small class="hint">其他厂商不预填千问模型，也不提供未核验的模型短列表。</small>
 </div>
-<details class="adv" id="settings-advanced">
+<details class="adv" id="settings-advanced" hidden>
 <summary>高级设置</summary>
 <div class="adv-body">
 <div id="custom-model-advanced-slot"></div>
+<p id="official-address-detail" class="hint" hidden></p>
 <div class="field">
 <label for="settings-address">自定义地址</label>
 <input id="settings-address" autocomplete="off" spellcheck="false" placeholder="仅在需要覆盖自动配置时填写">
@@ -240,10 +241,10 @@
 </details>
 </div>
 </details>
-<div class="settings-actions" id="apply-actions">
+<div class="settings-actions" id="apply-actions" hidden>
 <button type="button" class="btn-ghost" id="settings-save">应用设置</button>
 </div>
-<small class="settings-hint" id="settings-hint">应用设置只把已选模型等项留在本页内存。列表成功不等于推理成功，也不表示已验证可调用。没有全站每日额度上限。</small>
+<small class="settings-hint" id="settings-hint" hidden>应用设置只把已选模型等项留在本页内存。列表成功不等于推理成功，也不表示已验证可调用。没有全站每日额度上限。</small>
 <button type="button" class="settings-danger" id="settings-clear">清除此厂商配置</button>
 </article>
 </div>

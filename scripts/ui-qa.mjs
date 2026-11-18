@@ -6,6 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+process.stderr.write('已废弃：scripts/ui-qa.mjs 仍按旧的 #settings-test 和托管设置文案编写。它不能当作当前设置区的通过结果，也不计入本 PR 的测试计数。\n');
+process.exit(2);
+const rootUnused = root;
 const sha = process.env.QA_SHA || 'uncommitted';
 const outDirs = ['/opt/cursor/artifacts', '/cursor/stores/self/artifacts'];
 const shots = [];
