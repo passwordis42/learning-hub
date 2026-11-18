@@ -269,14 +269,30 @@
   }
 }
 
-html.is-hub-embed .atlas-graph {
+html.is-hub-embed:not([data-theme="night"]) .atlas-graph {
   --graph-ink: #183f4b;
   --graph-muted: #42606a;
   --graph-accent: #2d6a69;
   --graph-line: #d5e0d6;
   --graph-core: #f4f7f1;
 }
-html.is-hub-embed .atlas-graph-node-button { border-color: #c8d4c3; }
-html.is-hub-embed .atlas-graph-node--external .atlas-graph-node-button { border-color: #7a9d8c; background: #fffef4; }
-html.is-hub-embed .atlas-graph-node--active .atlas-graph-node-button { border-color: #2d6a69; background: #e7f0ea; }
-html.is-hub-embed .atlas-graph-node-meta { color: #2d6a69; }
+html.is-hub-embed:not([data-theme="night"]) .atlas-graph-node-button { border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .atlas-graph-node--external .atlas-graph-node-button { border-color: #7a9d8c; background: #fffef4; }
+html.is-hub-embed:not([data-theme="night"]) .atlas-graph-node--active .atlas-graph-node-button { border-color: #2d6a69; background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .atlas-graph-node-meta { color: #2d6a69; }
+
+html.is-hub-embed[data-theme="night"] .atlas-graph {
+  --graph-ink: #e8eef4;
+  --graph-muted: #9eb0c2;
+  --graph-accent: #56b3a8;
+  --graph-line: rgba(210, 224, 240, 0.16);
+  --graph-core: #1e2d3d;
+  --graph-special: #2a2822;
+}
+html.is-hub-embed[data-theme="night"] .atlas-graph-viewport,
+html.is-hub-embed[data-theme="night"] .atlas-graph-switch,
+html.is-hub-embed[data-theme="night"] .atlas-graph-stage-filter { background: #141f2c; border-color: var(--graph-line); }
+html.is-hub-embed[data-theme="night"] .atlas-graph-node-button { border-color: rgba(210, 224, 240, 0.2); }
+html.is-hub-embed[data-theme="night"] .atlas-graph-node--external .atlas-graph-node-button { border-color: rgba(86, 179, 168, 0.4); background: #182534; }
+html.is-hub-embed[data-theme="night"] .atlas-graph-node--active .atlas-graph-node-button { border-color: #56b3a8; background: #213a44; }
+html.is-hub-embed[data-theme="night"] .atlas-graph-node-meta { color: #86d3c9; }

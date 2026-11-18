@@ -95,6 +95,121 @@
       "path": "sites/game-design-atlas/server/coach.mjs",
       "originalBlob": "e55e5308faeeb5645e51ccfa9411e023fdc44f81",
       "reason": "Honor a validated OPENAI_BASE_URL, ANTHROPIC_BASE_URL, DEEPSEEK_BASE_URL, or QWEN_BASE_URL. Unset variables keep the original endpoints and model defaults."
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/App.jsx",
+      "originalBlob": "a7b296af3fffee3508b105da975976929b3395ed",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/DayOne.jsx",
+      "originalBlob": "06c5f8f3c710b3dcc4544cb1351249d4379a926d",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/PracticeLabs.jsx",
+      "originalBlob": "c122ca607c488183662e7dbe58a1f69cf033e06f",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/ai-learning-atlas/src/WeeklyLesson.jsx",
+      "originalBlob": "6970976456f8ebacd4c7fd72d6f7b127ad26f2fd",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/App.tsx",
+      "originalBlob": "f0867a2923b710348dc072f6c1aaaeb184e320d8",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/ActivityHost.tsx",
+      "originalBlob": "cc3360f9a0ef725676ebbdfdada31ffd75c8a23c",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/BuildGuide.tsx",
+      "originalBlob": "eff2ebc1c72bc1857bd2a9aa41456bb53463872b",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/GuidedActivity.tsx",
+      "originalBlob": "d04cf2955ee18f27d891150e81b970e1222d1671",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/Lab.tsx",
+      "originalBlob": "93afa7aaccf0b7c80bc3677bf1757de7889479c7",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/LearningHelp.tsx",
+      "originalBlob": "ea77b76d9884a308ae4e6429619e3cff0ab26967",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/SteppedLesson.tsx",
+      "originalBlob": "cfc9e59d8054b9d69d8bf42911854307b60f8d94",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/build-guide.css",
+      "originalBlob": "1cd056c4461274d75b5620bfd86f1bd13ee790b3",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/learning-help.css",
+      "originalBlob": "c80c0cde3e7ba7ac788e4fc5d7b27061bd4d0eea",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/components/stepped-lesson.css",
+      "originalBlob": "849fbcdc9ee460cbc11fb8698050921eba72e2a7",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/nmr-from-zero/src/styles.css",
+      "originalBlob": "79ce80a2ca9a88fc27eb60043b7ab4b645f03d94",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/app.js",
+      "originalBlob": "fba955fdd6ce72bb1a14fbb5925f8993492400ae",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/data/lessons-19-28.js",
+      "originalBlob": "a4d08ef93dd30d73f5005db77fc2523e4a1326bd",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/experiment-notebook.js",
+      "originalBlob": "3bb3528b0e0ab12500dd5955f0997044efd4281d",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/genre-labs-20-23.js",
+      "originalBlob": "9217dd4d879ee62f53e68a112c11eba0c0dc59c7",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/lab-briefs.js",
+      "originalBlob": "b28b721401a47be6deba8aa75e5d76d0b453e2b8",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/prototype-lab.js",
+      "originalBlob": "0a6dcf29c567009a8a79eb511f23f7a5eea06744",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/study.css",
+      "originalBlob": "6f6177a71ba407d3fa560fea30c053d655964c8a",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
+    },
+    {
+      "path": "sites/game-design-atlas/docs/study.js",
+      "originalBlob": "b2fce2ad08af67c96b52422f8b9e709976121b72",
+      "reason": "Course UI polish, pedagogical step-by-step scaffolding, next-step guidance, and embed night-mode synchronization"
     }
   ],
   "sources": [

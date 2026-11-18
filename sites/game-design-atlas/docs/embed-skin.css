@@ -1,17 +1,61 @@
-@import url('../assets/fonts/sans.css');
-@import url('../assets/fonts/serif.css');
+html.is-hub-embed {
+  --hub-reading-size: 18px;
+  --hub-accent: #2bb3a3;
+  --eb-bg: transparent;
+  --eb-surface: #f5f0e4;
+  --eb-card: #fffdf8;
+  --eb-ink: #1e3342;
+  --eb-head: #0f2535;
+  --eb-muted: #5b7180;
+  --eb-line: rgba(15, 37, 53, 0.13);
+  --eb-input: #fffef9;
+  --eb-code: #efe7d6;
+  --eb-primary: #143647;
+  --eb-primary-ink: #fbf8f1;
+}
+
+html.is-hub-embed[data-theme="night"] {
+  color-scheme: dark;
+  --eb-bg: transparent;
+  --eb-surface: #132c3e;
+  --eb-card: #163347;
+  --eb-ink: #d4e3ea;
+  --eb-head: #eff6f9;
+  --eb-muted: #93aebd;
+  --eb-line: rgba(255, 255, 255, 0.13);
+  --eb-input: #0d202e;
+  --eb-code: #0b1b27;
+  --eb-primary: #2fb5ad;
+  --eb-primary-ink: #07202b;
+  /* Sync course custom variables in night mode */
+  --ink: #eff6f9;
+  --text: #d4e3ea;
+  --muted: #93aebd;
+  --line: rgba(255, 255, 255, 0.13);
+  --border: rgba(255, 255, 255, 0.13);
+  --paper: #0f2433;
+  --surface: #153144;
+  --surface-soft: #122a3b;
+  --card: #153144;
+  --bg: transparent;
+  --accent-deep: #7fe3d6;
+  --violet: rgba(47, 181, 173, 0.16);
+  --guide-soft-line: rgba(255, 255, 255, 0.1);
+}
 
 html.is-hub-embed,
 html.is-hub-embed body {
   height: auto !important;
   min-height: 0 !important;
+  margin: 0 !important;
   overflow: visible !important;
-  background: #f7f4ea;
-  color: #183f4b;
-  font-family: IslandSans, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--eb-bg) !important;
+  color: var(--eb-ink) !important;
+  font-family: IslandSans, "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 17px;
-  line-height: 1.85;
+  line-height: 1.82;
 }
+
 html.is-hub-embed .sidebar,
 html.is-hub-embed .topbar,
 html.is-hub-embed .footer,
@@ -24,22 +68,28 @@ html.is-hub-embed .skip-link,
 html.is-hub-embed .skip {
   display: none !important;
 }
+
 html.is-hub-embed .atlas-shell,
 html.is-hub-embed .workspace,
-html.is-hub-embed .study-grid {
+html.is-hub-embed .study-grid,
+html.is-hub-embed .app-shell,
+html.is-hub-embed #root {
   display: block !important;
   margin: 0 !important;
   min-height: 0 !important;
   height: auto !important;
   max-width: none !important;
+  background: transparent !important;
 }
+
 html.is-hub-embed main,
 html.is-hub-embed #main {
-  width: min(928px, 100%) !important;
-  max-width: 928px !important;
+  width: 100% !important;
+  max-width: 960px !important;
   margin-inline: auto !important;
-  padding: 4px 0 28px !important;
+  padding: 2px 0 20px !important;
 }
+
 html.is-hub-embed h1 {
   position: absolute !important;
   width: 1px !important;
@@ -51,16 +101,31 @@ html.is-hub-embed h1 {
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* Unified interactive controls */
 html.is-hub-embed .primary-button,
 html.is-hub-embed .action.primary,
 html.is-hub-embed .primary-link,
 html.is-hub-embed button.primary-button {
-  background: #183f4b;
-  color: #f7f4ea;
-  border: 1px solid #183f4b;
-  border-radius: 4px;
-  min-height: 44px;
+  background: var(--eb-primary) !important;
+  color: var(--eb-primary-ink) !important;
+  border: 1px solid var(--eb-primary) !important;
+  border-radius: 10px;
+  min-height: 42px;
+  font-weight: 700;
+  transition: filter 0.18s ease, transform 0.18s ease;
 }
+html.is-hub-embed .primary-button:hover:not(:disabled),
+html.is-hub-embed .action.primary:hover:not(:disabled),
+html.is-hub-embed .primary-link:hover {
+  filter: brightness(1.08);
+}
+html.is-hub-embed .primary-button:disabled,
+html.is-hub-embed .action.primary:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
 html.is-hub-embed .secondary-button,
 html.is-hub-embed .action.secondary,
 html.is-hub-embed .outline-button,
@@ -68,18 +133,21 @@ html.is-hub-embed .quiz-option,
 html.is-hub-embed .study-step-nav a,
 html.is-hub-embed .lab-tabs a,
 html.is-hub-embed .filter-row button {
-  border-radius: 4px;
+  border-radius: 10px;
   min-height: 40px;
 }
-html.is-hub-embed input,
+
+html.is-hub-embed input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 html.is-hub-embed textarea,
 html.is-hub-embed select {
-  border: 1px solid #7a9d8c;
-  border-radius: 3px;
-  background: #fffef4;
-  color: #183f4b;
+  border: 1px solid var(--eb-line);
+  border-color: color-mix(in srgb, var(--eb-ink) 26%, transparent);
+  border-radius: 8px;
+  background: var(--eb-input) !important;
+  color: var(--eb-ink) !important;
   font: inherit;
 }
+
 html.is-hub-embed .machine-diagram,
 html.is-hub-embed .intro-machine .machine-diagram {
   min-width: 0 !important;
@@ -90,17 +158,133 @@ html.is-hub-embed .hardware,
 html.is-hub-embed .math {
   overflow-x: auto;
 }
-html.is-hub-embed {
-  --hub-reading-size: 18px;
-}
-html.is-hub-embed :is(p, li, dd, blockquote) {
+
+/* Reading typography & scale hierarchy */
+html.is-hub-embed :is(p, li, dd, blockquote):not(.eyebrow, .kicker, .section-kicker, .fineprint, .quiet, .badge, .pill) {
   font-size: var(--hub-reading-size) !important;
+  line-height: 1.82;
   overflow-wrap: break-word;
 }
-html.is-hub-embed :is(h2, h3) {
-  font-size: calc(var(--hub-reading-size) * 1.45) !important;
-  line-height: 1.35;
+html.is-hub-embed h2 {
+  font-family: "Noto Serif CJK SC", "Noto Serif SC", "Songti SC", serif;
+  font-size: calc(var(--hub-reading-size) * 1.35) !important;
+  line-height: 1.34;
+  color: var(--eb-head);
+}
+html.is-hub-embed h3 {
+  font-size: calc(var(--hub-reading-size) * 1.14) !important;
+  line-height: 1.38;
+  color: var(--eb-head);
+}
+html.is-hub-embed h4 {
+  font-size: calc(var(--hub-reading-size) * 1.02) !important;
+  line-height: 1.42;
+  color: var(--eb-head);
 }
 html.is-hub-embed .katex {
   font-size: 20px !important;
+}
+
+/* Night mode deep surface overrides across AI, NMR, and Game courses */
+html.is-hub-embed[data-theme="night"] :is(
+  .panel,
+  .card,
+  .guide-card,
+  .guide-step,
+  .review-box,
+  .stage-card,
+  .lesson-card,
+  .step-panel,
+  .activity-host,
+  .lab-panel,
+  .lab-box,
+  .quiz-box,
+  .callout,
+  .formula,
+  .study-panel,
+  .study-overview,
+  .notebook-card,
+  .reasoning-box,
+  .prev-next a,
+  .atlas-graph,
+  .help-dialog,
+  .lesson-completion,
+  .onboarding-banner,
+  .why-step-banner,
+  .lab-preview-card
+) {
+  background: var(--eb-card) !important;
+  color: var(--eb-ink) !important;
+  border-color: var(--eb-line) !important;
+}
+
+html.is-hub-embed[data-theme="night"] :is(
+  .week-flow > div,
+  .week-data,
+  .week-trace-result,
+  .week-work-columns > div,
+  .week-feedback li,
+  .lesson-lab-state,
+  .lesson-lab-grid td,
+  .guide-file,
+  .concept-example,
+  .concept-misconception,
+  .ask-location,
+  .help-footer,
+  .step-bar,
+  .study-step-nav,
+  .lab-controls,
+  .lab-readout,
+  .quiz-option,
+  .secondary-button,
+  .action.secondary,
+  .outline-button,
+  table th
+) {
+  background: var(--eb-surface) !important;
+  color: var(--eb-ink) !important;
+  border-color: var(--eb-line) !important;
+}
+
+html.is-hub-embed[data-theme="night"] :is(
+  .week-choices label,
+  table td
+) {
+  background: rgba(13, 32, 46, 0.72) !important;
+  color: var(--eb-ink) !important;
+  border-color: var(--eb-line) !important;
+}
+
+html.is-hub-embed[data-theme="night"] .week-choices label:hover,
+html.is-hub-embed[data-theme="night"] .week-choices .selected,
+html.is-hub-embed[data-theme="night"] .quiz-option:hover {
+  background: rgba(47, 181, 173, 0.18) !important;
+  border-color: #2fb5ad !important;
+}
+
+html.is-hub-embed[data-theme="night"] :is(code, pre) {
+  background: var(--eb-code) !important;
+  color: #dff0f5 !important;
+  border-color: var(--eb-line) !important;
+}
+
+html.is-hub-embed[data-theme="night"] :is(strong, b, th, summary, legend, label) {
+  color: var(--eb-head);
+}
+
+html.is-hub-embed[data-theme="night"] a:not(.primary-button):not(.primary-link) {
+  color: #7fe3d6;
+}
+
+html.is-hub-embed[data-theme="night"] .atlas-graph-viewport {
+  background: #0d202e !important;
+}
+html.is-hub-embed[data-theme="night"] .atlas-graph-node-button {
+  background: #163347 !important;
+  color: #eff6f9 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+html.is-hub-embed[data-theme="night"] .atlas-graph-node--active .atlas-graph-node-button {
+  border-color: #2fb5ad !important;
+  box-shadow: 0 0 0 2px rgba(47, 181, 173, 0.35) !important;
 }

@@ -42,7 +42,7 @@ export default function BuildGuide({ stepId }: { stepId?: string }) {
   return <article className="build-guide build-detail">
     <a className="text-button" href="#/build"><ArrowLeft size={15}/>硬件工坊总览</a>
     <div className="page-heading"><span className="build-eyebrow">制造学习 · 第 {String(index + 1).padStart(2, '0')} / {buildSteps.length} 步</span><h1>{stripTerms(step.title)}</h1><ExplainedParagraph text={step.goal} context={context('这一步要完成什么')} /></div>
-    <nav className="build-step-nav" aria-label="制造步骤">{buildSteps.map((s, i) => <a key={s.id} href={`#/build/${s.id}`} aria-label={`第 ${i + 1} 步：${stripTerms(s.title)}`} aria-current={s.id === step.id ? 'step' : undefined} title={stripTerms(s.title)}>{String(i + 1).padStart(2, '0')}</a>)}</nav>
+    <nav className="build-step-nav" aria-label="制造步骤">{buildSteps.map((s, i) => <a key={s.id} href={`#/build/${s.id}`} aria-label={`第 ${i + 1} 步：${stripTerms(s.title)}`} aria-current={s.id === step.id ? 'step' : undefined} title={stripTerms(s.title)}><span>{String(i + 1).padStart(2, '0')}</span><em>{stripTerms(s.title)}</em></a>)}</nav>
     <section className="build-why"><h2 className="accent-heading">为什么先做这件事</h2><ExplainedParagraph text={step.why} context={context('为什么先做')} /></section>
     <section className="build-prerequisites"><h2>开始前，需要确认</h2><ul>{step.prerequisites.map(p => <li key={p}><ExplainedParagraph text={p} context={context('操作前提')} /></li>)}</ul></section>
     <div className="build-preparation"><section><h2>要找齐的文件</h2><ul>{step.files.map(p => <li key={p}><ExplainedParagraph text={p} context={context('文件与版本')} /></li>)}</ul></section><section><h2>会用到的工具</h2><ul>{step.tools.map(p => <li key={p}><ExplainedParagraph text={p} context={context('测量工具')} /></li>)}</ul></section></div>

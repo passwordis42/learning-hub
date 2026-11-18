@@ -41,13 +41,43 @@
   },
   {
     "week": 16,
-    "lab": "timing",
-    "file": "docs/data/lessons-10-18.js"
+    "lab": "genre-platform",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 17,
+    "lab": "genre-shooter",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 18,
+    "lab": "genre-puzzle",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 19,
+    "lab": "genre-rpg",
+    "file": "docs/data/lessons.js"
   },
   {
     "week": 20,
-    "lab": "economy",
-    "file": "docs/data/lessons-19-28.js"
+    "lab": "genre-management",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 21,
+    "lab": "genre-sandbox",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 22,
+    "lab": "genre-rogue",
+    "file": "docs/data/lessons.js"
+  },
+  {
+    "week": 23,
+    "lab": "genre-coop",
+    "file": "docs/data/lessons.js"
   },
   {
     "week": 25,
