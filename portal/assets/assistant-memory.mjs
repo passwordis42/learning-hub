@@ -1,3 +1,17 @@
+import {
+  chatUrl,
+  describeUpstreamFailure,
+  isCurrentGeneration,
+  listPlan,
+  listUrlAllowed,
+  NETWORK_FAILURE,
+  parseListPayload,
+  QWEN_PRESET_MODEL,
+  regionKnown,
+  regionLabel,
+  regions as qwenRegionTable,
+} from './bailian-list.mjs';
+
 const vendorIds = Object.freeze(['openai', 'anthropic', 'deepseek', 'qwen']);
 const protocols = Object.freeze(['ai', 'game']);
 const vendors = {
@@ -5,13 +19,6 @@ const vendors = {
   anthropic: { label: 'Anthropic', defaultBase: 'https://api.anthropic.com/v1', paths: { ai: '/messages', game: '/messages' } },
   deepseek: { label: 'DeepSeek', defaultBase: 'https://api.deepseek.com', paths: { ai: '/chat/completions', game: '/chat/completions' } },
   qwen: { label: '通义千问', defaultBase: '', paths: { ai: '', game: '' } },
-};
-const qwenRegions = {
-  beijing: 'cn-beijing',
-  singapore: 'ap-southeast-1',
-  hongkong: 'cn-hongkong',
-  virginia: 'us-east-1',
-  tokyo: 'ap-northeast-1',
 };
 const KEY_REBIND = 'clear-key-for-new-upstream';
 
@@ -62,13 +69,7 @@ function joinUrl(base, suffix) {
 
 function qwenUrl(vendor, protocol) {
   const custom = vendor.protocols[protocol].baseUrl || vendor.baseUrl;
-  if (custom) return custom;
-  const region = qwenRegions[vendor.region || 'beijing'];
-  if (vendor.workspaceId) return `https://${vendor.workspaceId}.${region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`;
-  const legacy = (protocol === 'game'
-    ? { 'cn-beijing': 'dashscope.aliyuncs.com', 'ap-southeast-1': 'dashscope-intl.aliyuncs.com', 'cn-hongkong': 'cn-hongkong.dashscope.aliyuncs.com' }
-    : { 'cn-beijing': 'dashscope.aliyuncs.com', 'ap-southeast-1': 'dashscope-intl.aliyuncs.com' })[region];
-  return legacy ? `https://${legacy}/compatible-mode/v1/chat/completions` : '';
+  return chatUrl({ region: vendor.region, workspaceId: vendor.workspaceId, customUrl: custom });
 }
 
 function endpointOf(id, vendor, protocol) {
@@ -90,8 +91,10 @@ function normalizeVendor(id, input = {}, previous = emptyVendor()) {
   if (!vendors[id]) throw new Error('未知的模型服务。');
   const suppliedKey = text(input.apiKey, 400);
   if (suppliedKey && /[\r\n]/.test(suppliedKey)) throw Object.assign(new Error('密钥格式无效。'), { field: 'apiKey' });
-  const region = text(input.region, 20) || previous.region || (id === 'qwen' ? 'beijing' : '');
-  if (id === 'qwen' && !Object.hasOwn(qwenRegions, region)) throw Object.assign(new Error('通义地区无效。'), { field: 'region' });
+  const region = id === 'qwen'
+    ? (input.region === undefined ? previous.region : text(input.region, 20))
+    : '';
+  if (id === 'qwen' && region && !regionKnown(region)) throw Object.assign(new Error('通义地区无效。'), { field: 'region' });
   const workspaceId = input.workspaceId === undefined ? previous.workspaceId : text(input.workspaceId, 80);
   if (workspaceId && !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(workspaceId)) {
     throw Object.assign(new Error('工作空间标识无效。'), { field: 'workspaceId' });
@@ -133,7 +136,7 @@ function publicVendor(id) {
     apiKeyConfigured: Boolean(vendor.apiKey),
     enteredModel: vendor.model,
     enteredBaseUrl: vendor.baseUrl,
-    region: vendor.region || (id === 'qwen' ? 'beijing' : ''),
+    region: id === 'qwen' ? vendor.region : '',
     workspaceId: vendor.workspaceId,
     protocols: {
       ai: { ...vendor.protocols.ai },
@@ -154,6 +157,12 @@ function prepare(course, vendorId) {
   const vendor = state.vendors[vendorId];
   const url = endpointOf(vendorId, vendor, course);
   const model = vendor.protocols[course].model || vendor.model;
+  if (vendorId === 'qwen' && !vendor.protocols[course].baseUrl && !vendor.baseUrl && !vendor.region) {
+    return { ok: false, code: 'region', error: '请先选择通义密钥所在地区。不会默认北京，也不会向多个地区试探。' };
+  }
+  if (vendorId === 'qwen' && !url) {
+    return { ok: false, code: 'workspace', error: '该地区需要工作空间才能生成接口，请填写后再发送。' };
+  }
   if (!url || !model || !vendor.apiKey) {
     return { ok: false, code: 'unconfigured', error: '请先在助手设置里填写模型名称和 API 密钥。密钥只留在这次打开的页面内存里。' };
   }
@@ -201,6 +210,17 @@ function installBridge() {
 export const assistantMemory = {
   keyRebind: KEY_REBIND,
   vendorIds,
+  presetModel: QWEN_PRESET_MODEL,
+  regions: qwenRegionTable,
+  listPlan,
+  listUrlAllowed,
+  parseListPayload,
+  describeUpstreamFailure,
+  networkFailure: NETWORK_FAILURE,
+  isCurrentGeneration,
+  regionLabel,
+  chatUrl,
+  peekKey(id) { return state.vendors[id]?.apiKey || ''; },
   reset() { state = emptyState(); },
   saveVendor(id, input) {
     state.vendors[id] = normalizeVendor(id, input, state.vendors[id]);

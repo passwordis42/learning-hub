@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+process.stderr.write('已废弃：scripts/domain-browser.mjs 仍按旧的托管管理口令和设置保存文案编写。它不能当作当前设置区的通过结果，也不计入本 PR 的测试计数。\n');
+process.exit(2);
+const rootUnused = root;
 const outDir = '/opt/cursor/artifacts';
 const hostName = 'learn.hub.test';
 const adminToken = `domain-admin-${'a'.repeat(24)}`;
