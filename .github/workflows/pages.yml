@@ -26,6 +26,10 @@ jobs:
       - run: npm run build
         env:
           HUB_BASE: /learning-hub/
+          LEARNING_HUB_PUBLIC_BAILIAN_KEY: ${{ secrets.LEARNING_HUB_PUBLIC_BAILIAN_KEY }}
+          LEARNING_HUB_PUBLIC_BAILIAN_REGION: ${{ vars.LEARNING_HUB_PUBLIC_BAILIAN_REGION }}
+          LEARNING_HUB_PUBLIC_BAILIAN_MODEL: ${{ vars.LEARNING_HUB_PUBLIC_BAILIAN_MODEL }}
+          LEARNING_HUB_PUBLIC_BAILIAN_WORKSPACE: ${{ vars.LEARNING_HUB_PUBLIC_BAILIAN_WORKSPACE }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

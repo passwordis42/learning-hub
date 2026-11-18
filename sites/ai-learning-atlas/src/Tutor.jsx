@@ -186,7 +186,7 @@ export default function Tutor({ context = '' }) {
           ))}
         </div>
         {embedded ? (
-          <p>配置来自统一入口这次打开的页面内存。刷新或关闭入口后要重新填写。此页不接收密钥，也不把密钥写入浏览器存储。</p>
+          <p>提问使用站点预设。预设未经验证，不能当作已连接。没有可用预设时助手暂不可用，不会打开配置页。此页不接收访客密钥。</p>
         ) : (
           <details className="atlas-tutor__settings">
             <summary>设置模型连接</summary>

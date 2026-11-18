@@ -42,7 +42,7 @@
     <button class="chip" id="btnHome" title="回到群岛全景">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span class="lbl">群岛总览</span>
     </button>
-    <button class="chip" id="btnAssist" aria-expanded="false" aria-controls="assist">
+    <button class="chip" id="btnAssist" hidden aria-expanded="false" aria-controls="assist">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span class="lbl">助手设置</span>
     </button>
     <button class="chip" id="btnMotion" aria-pressed="false" title="暂停 / 继续动态">
@@ -116,7 +116,7 @@
 <article class="settings-card">
 <button type="button" class="settings-back" id="settings-back">返回课程</button>
 <h1 id="settings-title">助手连接设置</h1>
-<p class="lede">填写密钥并连接，成功获取列表后选择模型。AI 学伴和游戏助手共用配置；核磁仍使用复制提问。</p>
+<p class="lede" id="settings-lede">填写密钥并连接，成功获取列表后选择模型。AI 学伴和游戏助手共用配置；核磁仍使用复制提问。</p>
 <div class="vendors-wrap">
 <p class="vendors-label" id="vendors-label">厂商</p>
 <nav class="settings-vendors is-quiet" aria-labelledby="vendors-label">
@@ -133,7 +133,7 @@
 <div class="field">
 <label for="settings-key">API 密钥 <span class="req" aria-hidden="true">*</span></label>
 <input id="settings-key" type="password" autocomplete="off" spellcheck="false" value="" placeholder="在此页填写，刷新或关闭后需重填">
-<small class="hint">密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站服务器。不会向多个地区传递密钥。</small>
+<small class="hint" id="settings-key-hint">密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站服务器。不会向多个地区传递密钥。</small>
 </div>
 <div class="settings-actions" id="connect-actions">
 <button type="button" class="btn-primary" id="settings-connect">连接</button>
@@ -271,7 +271,7 @@
     <button class="chip icon" id="btnToc" type="button" aria-label="目录" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
     <button class="chip icon" id="btnTheme" type="button" aria-label="切换 沙白 / 夜航 主题"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
     <button class="chip icon" id="btnCourseMotion" type="button" aria-pressed="false" aria-label="暂停动态"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg></button>
-    <button class="chip" id="open-settings" type="button" aria-expanded="false">助手设置</button>
+    <button class="chip" id="open-settings" type="button" hidden aria-expanded="false">助手设置</button>
   </div>
   <div class="tide" aria-hidden="true"><i id="tideBar"></i></div>
 </header>
@@ -292,6 +292,7 @@
 <script src="assets/opus/iso-art.js"></script>
 <script src="assets/opus/ocean.js"></script>
 <script src="assets/opus/hub.js"></script>
+<script src="assets/public-bailian-config.js"></script>
 <script type="module" src="assets/assistant-memory.mjs"></script>
 <script defer src="assets/settings.js"></script>
 <script src="assets/opus/reader.js"></script>

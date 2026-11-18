@@ -265,10 +265,18 @@ async function features(browser, origin, base, viewport, label) {
         window.scrollTo({ top: 640, behavior: 'instant' });
       });
       await page.waitForFunction(() => window.scrollY === 640);
-      await page.evaluate(() => document.getElementById('open-settings').click());
-      await page.waitForFunction(() => document.body.dataset.view === 'settings' && document.querySelector('#settings-vendor')?.textContent);
-      await page.evaluate(() => document.getElementById('settings-back').click());
-      await page.waitForFunction(() => location.search.includes('module=nmr-1-1') && document.body.dataset.view === 'reader' && Math.abs(window.scrollY - 640) <= 2);
+      await page.evaluate(() => {
+        document.getElementById('open-settings').click();
+        document.getElementById('btnAssist').click();
+      });
+      const settingsStayedClosed = await page.evaluate(() => (
+        !document.body.classList.contains('assist-open')
+        && document.body.dataset.view !== 'settings'
+        && getComputedStyle(document.getElementById('assist')).display === 'none'
+        && location.search.includes('module=nmr-1-1')
+      ));
+      if (!settingsStayedClosed) throw new Error('settings page opened from the reader');
+      if (Math.abs(await page.evaluate(() => window.scrollY) - 640) > 2) throw new Error('closed settings entry moved the reader');
 
       await openReader(page, origin, base, 'nmr', 'nmr-lab-waves', '波');
       const opposed = (await frameBody(page)).getByRole('button', { name: '反相 · 180°' });
@@ -292,56 +300,35 @@ async function features(browser, origin, base, viewport, label) {
       });
       await openReader(page, origin, base, 'ai', 'ai-tutor', 'AI 学伴');
       const tutor = await frameBody(page);
-      await tutor.getByText('配置来自统一入口这次打开的页面内存').waitFor();
+      await tutor.getByText('没有可用预设时助手暂不可用，不会打开配置页').waitFor();
       if (await tutor.locator('input[placeholder*="8787"]').count()) throw new Error('embed tutor still asks for a service address');
       if ((await tutor.innerText()).includes('模型调用成功')) throw new Error('tutor claimed a model call');
       if (tutorCalls.some((url) => url.includes('/api/tutor'))) throw new Error(`embed tutor still called the hub: ${tutorCalls.join(' ')}`);
       if (label === 'desktop') await shot(page, 'reader_tutor_desktop.png');
     }
 
-    await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
-    await page.locator('#open-settings').click();
-    await page.locator('[data-settings-vendor="qwen"][aria-pressed="true"]').waitFor();
-    await page.locator('[data-settings-vendor="openai"]').click();
-    await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
-    await page.locator('#settings-connect').click();
-    await page.locator('#settings-model').fill('hub-test-model');
-    await page.locator('#settings-advanced').evaluate((el) => { el.open = true; });
-    await page.locator('#settings-address').fill(`https://example.com/${'a'.repeat(48)}`);
-    await page.locator('[data-settings-vendor="anthropic"]').click();
-    await page.locator('#settings-unsaved-dialog').waitFor({ state: 'visible' });
-    const focused = await page.evaluate(() => document.activeElement?.id);
-    if (focused !== 'settings-unsaved-keep') throw new Error(`unsaved focus ${focused}`);
-    await page.locator('#settings-unsaved-keep').click();
-    if (await page.locator('#settings-model').inputValue() !== 'hub-test-model') throw new Error('vendor switch dropped the draft');
-    await page.locator('#settings-save').click();
-    await page.getByText('只保存在这次打开的页面内存里').waitFor();
-    if (await page.locator('#settings-key').inputValue() !== '') throw new Error('key was read back into the form');
-    if ((await page.locator('body').innerText()).includes('sk-browser-test-not-a-real-key')) throw new Error('key leaked into the page');
-    const savedResult = await page.locator('#settings-result').innerText();
-    if (!savedResult.includes('没有连接供应商') || !savedResult.includes('不能当作已经连通')) throw new Error(savedResult);
-    if (savedResult.includes('模型调用成功') || savedResult.includes('已连接')) throw new Error('status test claimed a model call');
-    await page.route(/\/api\/assistant-config$/, (route) => route.abort());
-    await page.locator('#settings-model').fill('another-model');
-    await page.locator('#settings-key').fill('sk-browser-test-not-a-real-key');
-    await page.locator('#settings-save').click();
-    await page.getByText('只保存在这次打开的页面内存里').waitFor();
-    await page.unrouteAll({ behavior: 'ignoreErrors' });
-    await page.locator('#settings-clear').click();
-    await page.locator('#settings-clear-dialog').waitFor({ state: 'visible' });
-    const cancelFocused = await page.evaluate(() => document.activeElement?.id);
-    if (cancelFocused !== 'settings-clear-cancel') throw new Error(`clear focus ${cancelFocused}`);
-    await page.locator('#settings-clear-cancel').click();
-    await page.locator('#settings-clear').click();
-    await page.locator('#settings-clear-confirm').click();
-    await page.getByText('此厂商配置已清除').waitFor();
+    await page.goto(`${origin}${base}?demo=assist`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(700);
+    await page.keyboard.press('Escape');
+    const closed = await page.evaluate(() => {
+      const assist = document.getElementById('assist');
+      const harbor = document.getElementById('btnAssist');
+      const course = document.getElementById('open-settings');
+      return !document.body.classList.contains('assist-open')
+        && document.body.dataset.view !== 'settings'
+        && getComputedStyle(assist).display === 'none'
+        && harbor.hidden
+        && course.hidden
+        && !document.body.innerText.includes('API 密钥');
+    });
+    if (!closed) throw new Error('visitor can still open network settings');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 1) throw new Error(`settings overflow ${overflow}`);
-    if (label === 'desktop') await shot(page, 'settings_desktop.png');
-    if (label === 'phone') await shot(page, 'settings_phone.png');
-    if (label === 'narrow') await shot(page, 'settings_narrow.png');
-    await page.locator('#settings-back').click();
-    await page.waitForFunction(() => location.search.includes('module=nmr-1-1'));
+    if (label === 'desktop') await shot(page, 'settings_closed_desktop.png');
+    if (label === 'phone') await shot(page, 'settings_closed_phone.png');
+    if (label === 'narrow') await shot(page, 'settings_closed_narrow.png');
+    await page.goto(new URL(`${base}?view=reader&course=nmr&module=nmr-1-1`, origin).href, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => location.search.includes('module=nmr-1-1') && document.body.dataset.view === 'reader');
   } finally {
     await fetch(`${origin}${base}api/assistant-config/clear`, {
       method: 'POST',

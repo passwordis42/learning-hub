@@ -11,6 +11,7 @@ import {
   regionLabel,
   regions as qwenRegionTable,
 } from './bailian-list.mjs';
+import { readPublicBailian } from './public-bailian.mjs';
 
 const vendorIds = Object.freeze(['openai', 'anthropic', 'deepseek', 'qwen']);
 const protocols = Object.freeze(['ai', 'game']);
@@ -164,7 +165,7 @@ function prepare(course, vendorId) {
     return { ok: false, code: 'workspace', error: '该地区需要工作空间才能生成接口，请填写后再发送。' };
   }
   if (!url || !model || !vendor.apiKey) {
-    return { ok: false, code: 'unconfigured', error: '请先在助手设置里填写模型名称和 API 密钥。密钥只留在这次打开的页面内存里。' };
+    return { ok: false, code: 'unconfigured', error: '助手暂不可用。没有可用的站点预设配置。这次没有连接供应商，也没有自动探测。' };
   }
   let origin = '';
   try { origin = new URL(url).origin; } catch { return { ok: false, error: '服务地址无法解析。' }; }
@@ -221,6 +222,7 @@ export const assistantMemory = {
   regionLabel,
   chatUrl,
   peekKey(id) { return state.vendors[id]?.apiKey || ''; },
+  publicBailian() { return readPublicBailian(globalThis.LEARNING_HUB_PUBLIC_BAILIAN); },
   reset() { state = emptyState(); },
   saveVendor(id, input) {
     state.vendors[id] = normalizeVendor(id, input, state.vendors[id]);
