@@ -111,7 +111,147 @@
 
 <div class="assist panel-card" id="assist" role="dialog" aria-labelledby="assistTitle">
 <button class="chip icon dock-close" id="assistClose" type="button" aria-label="关闭">关闭</button>
-<section class="settings-page shell" id="settings-page"><div class="settings-layout"><nav class="settings-vendors" aria-label="厂商"><button type="button" data-settings-vendor="openai" aria-pressed="true">OpenAI</button><button type="button" data-settings-vendor="anthropic" aria-pressed="false">Anthropic</button><button type="button" data-settings-vendor="deepseek" aria-pressed="false">DeepSeek</button><button type="button" data-settings-vendor="qwen" aria-pressed="false">通义千问</button></nav><article class="settings-card"><button type="button" class="settings-back" id="settings-back">返回课程</button><h1>助手连接设置</h1><p>AI 学伴和游戏助手共用配置；核磁仍使用复制提问。</p><h2 id="settings-vendor">OpenAI</h2><p id="settings-status" class="settings-status" role="status">密钥只留在这次打开的页面里。</p><p id="settings-key-status" class="settings-status"></p><label for="settings-address">服务地址</label><input id="settings-address" autocomplete="off" spellcheck="false" placeholder="留空使用官方地址"><label for="settings-model">模型名称</label><input id="settings-model" autocomplete="off" spellcheck="false" placeholder="填写模型名称，不自动套用其他课程默认值"><label for="settings-key">API 密钥</label><input id="settings-key" type="password" autocomplete="off" spellcheck="false" placeholder="留空保留原密钥"><small>密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站服务器。</small><details id="settings-overrides"><summary>按课程覆盖</summary><p>没有单独设置时继承共用地址和模型。</p><div class="settings-override"><section><h3>AI 学伴</h3><label for="settings-ai-mode">配置来源</label><select id="settings-ai-mode"><option value="inherit">继承共用</option><option value="custom">单独设置</option></select><div id="settings-ai-fields" hidden><label for="settings-ai-address">覆盖地址</label><input id="settings-ai-address" autocomplete="off" spellcheck="false"><label for="settings-ai-model">覆盖模型</label><input id="settings-ai-model" autocomplete="off" spellcheck="false"></div></section><section><h3>游戏助手</h3><label for="settings-game-mode">配置来源</label><select id="settings-game-mode"><option value="inherit">继承共用</option><option value="custom">单独设置</option></select><div id="settings-game-fields" hidden><label for="settings-game-address">覆盖地址</label><input id="settings-game-address" autocomplete="off" spellcheck="false"><label for="settings-game-model">覆盖模型</label><input id="settings-game-model" autocomplete="off" spellcheck="false"></div></section></div></details><details id="settings-advanced"><summary>高级设置</summary><label for="settings-region">通义地区</label><select id="settings-region"><option value="beijing">北京</option><option value="singapore">新加坡</option><option value="hongkong">香港</option><option value="virginia">弗吉尼亚</option><option value="tokyo">东京</option></select><label for="settings-workspace">工作空间</label><input id="settings-workspace" autocomplete="off" spellcheck="false" placeholder="留空表示不设置工作空间"><label for="settings-token">访问口令</label><input id="settings-token" type="password" autocomplete="off" spellcheck="false" placeholder="留空保留原口令"><small id="settings-token-status"></small><small>纯静态页面不使用访问口令或管理口令。浏览器会直接请求你填写的供应商地址，不经过本站后端。</small></details><div class="settings-actions"><button type="button" class="settings-primary" id="settings-save">保存配置</button><button type="button" id="settings-test" disabled>测试已保存配置</button><button type="button" id="settings-model-test" disabled>只核对填写项</button></div><small id="settings-hint">请先保存，再核对。核对只看这次页面内存里的地址、模型和密钥，不会连接供应商。</small><div id="settings-result" class="settings-result" role="status" aria-live="polite">尚未核对。填写完整不代表供应商已经连通。</div><button type="button" class="settings-danger" id="settings-clear">清除此厂商配置</button></article></div><dialog id="settings-clear-dialog"><h2>清除此厂商配置？</h2><p id="settings-clear-copy">将清除当前厂商的密钥、地址、模型和覆盖项。使用该配置的 AI／游戏助手将暂不可用；课程和学习进度不受影响。</p><div class="settings-actions"><button type="button" id="settings-clear-cancel">取消</button><button type="button" class="settings-danger" id="settings-clear-confirm">确认清除</button></div></dialog><dialog id="settings-rebind-dialog"><h2>更换地址需要重新绑定密钥</h2><p id="settings-rebind-copy">更换上游地址后，已保存的密钥不会发往新地址。请重新输入密钥，或确认清除该厂商密钥后再保存新地址。</p><div class="settings-actions"><button type="button" id="settings-rebind-cancel">重新输入密钥</button><button type="button" class="settings-danger" id="settings-rebind-clear">清除密钥并保存新地址</button></div></dialog><dialog id="settings-admin-dialog"><h2>确认这台服务器的管理口令</h2><p>这不是模型密钥。管理口令只用来打开已部署入口上的设置，不会写入课程配置，也不会出现在页面源码里。</p><label for="settings-admin-token">管理口令</label><input id="settings-admin-token" type="password" autocomplete="current-password"><div class="settings-actions"><button type="button" id="settings-admin-cancel">取消</button><button type="button" id="settings-admin-submit">继续</button></div></dialog><dialog id="settings-unsaved-dialog"><h2>有未保存的更改</h2><p>是否放弃更改？未保存的地址、模型和密钥不会写入。</p><div class="settings-actions"><button type="button" id="settings-unsaved-keep">继续编辑</button><button type="button" id="settings-unsaved-discard">放弃更改</button></div></dialog></section>
+<section class="settings-page shell" id="settings-page" data-phase="idle">
+<div class="settings-layout">
+<article class="settings-card">
+<button type="button" class="settings-back" id="settings-back">返回课程</button>
+<h1 id="settings-title">助手连接设置</h1>
+<p class="lede">填写密钥并连接，成功获取列表后选择模型。AI 学伴和游戏助手共用配置；核磁仍使用复制提问。</p>
+<div class="vendors-wrap">
+<p class="vendors-label" id="vendors-label">厂商</p>
+<nav class="settings-vendors is-quiet" aria-labelledby="vendors-label">
+<button type="button" data-settings-vendor="openai" aria-pressed="false">OpenAI</button>
+<button type="button" data-settings-vendor="anthropic" aria-pressed="false">Anthropic</button>
+<button type="button" data-settings-vendor="deepseek" aria-pressed="false">DeepSeek</button>
+<button type="button" data-settings-vendor="qwen" aria-pressed="true">通义千问</button>
+</nav>
+</div>
+<h2 id="settings-vendor">通义千问（百炼）</h2>
+<p id="settings-status" class="settings-status" role="status">密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站。</p>
+<p id="settings-key-status" class="settings-status">尚未填写密钥</p>
+<p id="saved-model-note" class="settings-status" hidden></p>
+<div class="field">
+<label for="settings-key">API 密钥 <span class="req" aria-hidden="true">*</span></label>
+<input id="settings-key" type="password" autocomplete="off" spellcheck="false" value="" placeholder="在此页填写，刷新或关闭后需重填">
+<small class="hint">密钥只留在这次打开的页面内存。刷新或关闭后消失。不写入浏览器存储，也不送到本站服务器。不会向多个地区传递密钥。</small>
+</div>
+<div class="settings-actions" id="connect-actions">
+<button type="button" class="btn-primary" id="settings-connect">连接</button>
+</div>
+<small class="settings-hint" id="connect-hint">请先填写密钥，再点连接。成功取得列表后才出现可选模型。无法根据密钥自动判断地区：曾明确选择过的地区会沿用，否则请补选。不会默认北京，也不会先出现「识别中」。</small>
+<div id="region-panel" class="region-panel" hidden>
+<div class="neutral-panel">
+<h3>请补选密钥所在地区</h3>
+<p>无法根据密钥自动判断地区。若您曾选择过地区，将沿用该选择；否则请先选择密钥所在地区，再继续连接。不会猜测，不会默认北京，也不会向多个地区接口传递密钥。</p>
+<div class="field">
+<label for="settings-region">地区 <span class="req" aria-hidden="true">*</span></label>
+<select id="settings-region">
+<option value="" selected>请选择地区</option>
+<option value="beijing">北京</option>
+<option value="singapore">新加坡</option>
+<option value="hongkong">香港</option>
+<option value="virginia">弗吉尼亚</option>
+<option value="tokyo">东京</option>
+</select>
+<small class="hint" id="region-hint">地区只使用你明确选择的值。未选择时不会回退到北京。</small>
+<span class="field-error" id="region-error" hidden></span>
+</div>
+<p id="workspace-required-note" class="settings-status" hidden>该地区的已记载模型列表需要工作空间。这里只补这一项，不会打开全部高级设置。</p>
+<div id="workspace-required-slot"></div>
+<div class="settings-actions">
+<button type="button" class="btn-primary" id="settings-continue">继续连接</button>
+</div>
+</div>
+</div>
+<p id="inherited-region-hint" class="settings-status" hidden></p>
+<button type="button" class="btn-ghost" id="settings-change-region" hidden>更换地区</button>
+<div id="settings-result" class="settings-result" role="status" aria-live="polite"><p>尚未连接。填写密钥并连接，成功获取列表后选择模型。密钥只留在这次打开的页面内存里，没有连接供应商。</p></div>
+<div id="model-permission" class="settings-result model-permission" role="status" hidden></div>
+<div id="model-panel" hidden>
+<div class="field">
+<label for="settings-model-select">模型</label>
+<select id="settings-model-select"><option value="">请选择模型</option></select>
+<small class="hint" id="model-source-hint"></small>
+</div>
+</div>
+<div id="fallback-pending" class="fallback-pending" hidden>
+<div class="condition-banner"><strong>列表读取失败</strong>可以使用下面的预设模型，或填写自定义模型名。这不是连接成功，也不证明该模型可调用。地址和工作空间仍留在折叠的高级设置里。</div>
+<p class="lede" id="fallback-copy">预设模型（未验证权限）。不是已验证可调用，也不是列表已成功。</p>
+<div class="model-pill" aria-describedby="fallback-copy"><code id="preset-model">qwen3.7-flash</code><small>预设（未验证权限）</small></div>
+<div id="custom-model-fallback-slot"></div>
+</div>
+<p id="address-auto-hint" class="settings-status" hidden></p>
+<div id="manual-model-slot"></div>
+<div class="field" id="custom-model-field">
+<label for="settings-model" id="settings-model-label">模型名称</label>
+<input id="settings-model" autocomplete="off" spellcheck="false" placeholder="填写模型名称。通义列表失败时不填则使用预设 qwen3.7-flash（未验证权限）">
+<small class="hint">其他厂商不预填千问模型，也不提供未核验的模型短列表。</small>
+</div>
+<details class="adv" id="settings-advanced">
+<summary>高级设置</summary>
+<div class="adv-body">
+<div id="custom-model-advanced-slot"></div>
+<div class="field">
+<label for="settings-address">自定义地址</label>
+<input id="settings-address" autocomplete="off" spellcheck="false" placeholder="仅在需要覆盖自动配置时填写">
+<small class="hint">普通流程无需填写。官方地址按厂商和已明确选择的地区自动配置。只有在此填写才会覆盖。有效地址仍按原来的 http 或 https 规则校验。</small>
+</div>
+<div id="workspace-advanced-slot">
+<div class="field" id="workspace-field">
+<label for="settings-workspace">工作空间</label>
+<input id="settings-workspace" autocomplete="off" spellcheck="false" placeholder="仅在该地区的官方接口需要时填写">
+<small class="hint" id="workspace-hint">北京、新加坡、香港、东京的已记载模型列表地址需要工作空间。弗吉尼亚的列表地址不需要。东京的对话地址也需要工作空间。</small>
+<span class="field-error" id="workspace-error" hidden></span>
+</div>
+</div>
+<div class="field">
+<label for="settings-token">访问口令</label>
+<input id="settings-token" type="password" autocomplete="off" spellcheck="false" placeholder="纯静态页面通常不使用">
+<small class="hint" id="settings-token-status"></small>
+<small class="hint">纯静态页面不使用访问口令或管理口令。浏览器直接请求供应商，不经过本站后端，也没有全站额度上限。</small>
+</div>
+<details id="settings-overrides">
+<summary>按课程覆盖</summary>
+<p class="lede">没有单独设置时继承共用配置。</p>
+<div class="settings-override">
+<section>
+<h3>AI 学伴</h3>
+<div class="field">
+<label for="settings-ai-mode">配置来源</label>
+<select id="settings-ai-mode"><option value="inherit">继承共用</option><option value="custom">单独设置</option></select>
+</div>
+<div id="settings-ai-fields" hidden>
+<div class="field"><label for="settings-ai-address">覆盖地址</label><input id="settings-ai-address" autocomplete="off" spellcheck="false"></div>
+<div class="field"><label for="settings-ai-model">覆盖模型</label><input id="settings-ai-model" autocomplete="off" spellcheck="false"></div>
+</div>
+</section>
+<section>
+<h3>游戏助手</h3>
+<div class="field">
+<label for="settings-game-mode">配置来源</label>
+<select id="settings-game-mode"><option value="inherit">继承共用</option><option value="custom">单独设置</option></select>
+</div>
+<div id="settings-game-fields" hidden>
+<div class="field"><label for="settings-game-address">覆盖地址</label><input id="settings-game-address" autocomplete="off" spellcheck="false"></div>
+<div class="field"><label for="settings-game-model">覆盖模型</label><input id="settings-game-model" autocomplete="off" spellcheck="false"></div>
+</div>
+</section>
+</div>
+</details>
+</div>
+</details>
+<div class="settings-actions" id="apply-actions">
+<button type="button" class="btn-ghost" id="settings-save">应用设置</button>
+</div>
+<small class="settings-hint" id="settings-hint">应用设置只把已选模型等项留在本页内存。列表成功不等于推理成功，也不表示已验证可调用。没有全站每日额度上限。</small>
+<button type="button" class="settings-danger" id="settings-clear">清除此厂商配置</button>
+</article>
+</div>
+<dialog id="settings-clear-dialog" aria-labelledby="clear-title"><h2 id="clear-title">清除此厂商配置？</h2><p id="settings-clear-copy">将清除当前厂商在本页内存中的密钥、地址、模型和覆盖项。使用该配置的 AI／游戏助手将暂不可用；课程和学习进度不受影响。</p><div class="settings-actions"><button type="button" id="settings-clear-cancel">取消</button><button type="button" class="settings-danger" id="settings-clear-confirm">确认清除</button></div></dialog>
+<dialog id="settings-rebind-dialog" aria-labelledby="rebind-title"><h2 id="rebind-title">更换地址需要重新绑定密钥</h2><p id="settings-rebind-copy">更换上游地址后，已保存的密钥不会发往新地址。请重新输入密钥，或确认清除该厂商密钥后再保存新地址。</p><div class="settings-actions"><button type="button" id="settings-rebind-cancel">重新输入密钥</button><button type="button" class="settings-danger" id="settings-rebind-clear">清除密钥并保存新地址</button></div></dialog>
+<dialog id="settings-admin-dialog" aria-labelledby="admin-title"><h2 id="admin-title">确认这台服务器的管理口令</h2><p>这不是模型密钥。纯静态页面不使用管理口令。请直接在本页填写供应商密钥。</p><label for="settings-admin-token">管理口令</label><input id="settings-admin-token" type="password" autocomplete="off"><div class="settings-actions"><button type="button" id="settings-admin-cancel">取消</button><button type="button" id="settings-admin-submit">继续</button></div></dialog>
+<dialog id="settings-unsaved-dialog" aria-labelledby="unsaved-title"><h2 id="unsaved-title">有未保存的更改</h2><p>是否放弃更改？未应用的密钥、地区和模型不会保留。</p><div class="settings-actions"><button type="button" class="btn-primary" id="settings-unsaved-keep">继续编辑</button><button type="button" class="btn-ghost" id="settings-unsaved-discard">放弃更改</button></div></dialog>
+</section>
 </div>
 <div class="veil" id="veil">
   <div class="veil-inner">
