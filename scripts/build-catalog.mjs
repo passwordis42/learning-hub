@@ -1,33 +1,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { electiveEntries, weeklyEntries } from '../sites/ai-learning-atlas/src/data/lesson-index.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => readFileSync(path.join(root, relative), 'utf8');
-
-const ai = [
-  { id: 'ai-map', title: '图谱总览', group: '入口', local: 'ai/#map' },
-  { id: 'ai-day1', title: '第一天：让 AI 写第一个 CSV 清洗脚本', group: '入口', local: 'ai/#day-1' },
-  { id: 'ai-tutor', title: 'AI 学伴', group: '入口', local: 'ai/#tutor', note: '学伴表单在本节里面。密钥仍在本地服务，设置页还没有统一。' },
-];
-for (const entry of weeklyEntries) {
-  ai.push({
-    id: entry.key,
-    title: `第 ${String(entry.week).padStart(2, '0')} 周 · ${entry.title}`,
-    group: entry.stage.title,
-    local: `ai/#${entry.key}`,
-  });
-}
-for (const entry of electiveEntries) {
-  ai.push({
-    id: entry.key,
-    title: entry.title,
-    group: '选学',
-    local: `ai/#${entry.key}`,
-    note: entry.reason,
-  });
-}
+const ai = [];
 
 const nmrText = read('sites/nmr-from-zero/src/content/course.ts');
 const nmr = [{ id: 'nmr-path', title: '学习路线', group: '入口', local: 'nmr-from-zero/#/path' }];

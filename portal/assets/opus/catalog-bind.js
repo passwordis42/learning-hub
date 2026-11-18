@@ -31,7 +31,7 @@
     }
   };
   var planned = (window.HUB.COURSES || []).filter(function (c) { return c.planned; });
-  var courses = ['ai', 'nmr', 'game'].map(function (id) {
+  var courses = ['nmr', 'game'].map(function (id) {
     var course = base[id];
     var modules = catalog[id] || [];
     course.chapters = modules.map(function (mod) {

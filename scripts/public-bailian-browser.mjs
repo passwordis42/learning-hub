@@ -35,9 +35,10 @@ await mkdir(outDir, { recursive: true });
 const buildEnv = { ...process.env, HUB_BASE: '/' };
 delete buildEnv.LEARNING_HUB_PUBLIC_BAILIAN_KEY;
 await run(process.execPath, ['scripts/build.mjs'], buildEnv);
-const tutorBundle = (await readdir(path.join(root, 'dist/ai/assets'))).find((name) => name.startsWith('Tutor-') && name.endsWith('.js'));
-const tutorBuilt = await readFile(path.join(root, 'dist/ai/assets', tutorBundle), 'utf8');
-check('构建产物的学伴请求关闭千问思考', /enable_thinking\s*:\s*(?:!1|false)/.test(tutorBuilt), tutorBundle);
+const aiFiles = await readdir(path.join(root, 'dist/ai'));
+check('发布目录只有下线页', aiFiles.length === 1 && aiFiles[0] === 'index.html', aiFiles.join(','));
+const offlineHtml = await readFile(path.join(root, 'dist/ai/index.html'), 'utf8');
+check('下线页不含教程正文', offlineHtml.includes('已下线') && !offlineHtml.includes('用三种样本检查清洗规则'));
 
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' };
 const site = http.createServer(async (request, response) => {
@@ -153,10 +154,9 @@ try {
       localStorage.setItem('learning-atlas:day-one-scope', 'true');
     });
     await page.goto(`${origin}/?view=reader&course=ai&module=ai-tutor`, { waitUntil: 'domcontentloaded' });
-    const tutor = page.frameLocator('#lesson-frame');
-    await tutor.getByText('没有可用预设时助手暂不可用，不会打开配置页').waitFor();
-    const stayed = await page.evaluate(() => location.search.includes('module=ai-tutor') && !document.body.classList.contains('assist-open'));
-    check('助手不可用时留在课程页', stayed);
+    await page.getByRole('heading', { name: '这门课已下线' }).waitFor();
+    const stayed = await page.evaluate(() => !document.querySelector('#lesson-frame') && !document.body.classList.contains('assist-open'));
+    check('旧学伴深链只显示下线页', stayed && !(await page.locator('body').innerText()).includes('用三种样本检查清洗规则'));
     await page.screenshot({ path: path.join(outDir, 'unavailable_1280.png') });
     await page.close();
   }

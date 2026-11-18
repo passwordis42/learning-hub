@@ -140,14 +140,14 @@ async function exercise(browser, origin, base, viewport, label) {
 
   requests.length = 0;
   await page.goto(new URL(`${base}ai/#week-01`, origin).href, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.title.includes('第 1 周') && !document.body.innerText.includes('正在打开站内课程'));
+  await page.waitForFunction(() => document.title.includes('已下线') && !document.body.innerText.includes('用三种样本检查清洗规则'));
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.title.includes('第 1 周') && location.hash === '#week-01' && !document.body.innerText.includes('正在打开站内课程'));
+  await page.waitForFunction(() => document.title.includes('已下线') && location.hash === '#week-01' && !document.body.innerText.includes('用三种样本检查清洗规则'));
   const aiRequests = requests.filter((url) => url.startsWith(origin));
-  if (aiRequests.some((url) => url.includes('/game/') || url.includes('/nmr-from-zero/'))) {
-    throw new Error(`AI page requested another site: ${aiRequests.join(' ')}`);
+  if (aiRequests.some((url) => url.includes('/assets/') && url.includes('Tutor-'))) {
+    throw new Error(`offline AI page loaded a lesson bundle: ${aiRequests.join(' ')}`);
   }
-  if (label === 'desktop-root') await shot(page, 'ai_week_refresh_desktop.png');
+  if (label === 'desktop-root') await shot(page, 'ai_offline_refresh_desktop.png');
 
   requests.length = 0;
   await page.goto(new URL(`${base}nmr-from-zero/#/learn/1-1`, origin).href, { waitUntil: 'domcontentloaded' });
@@ -294,17 +294,15 @@ async function features(browser, origin, base, viewport, label) {
       await game.getByText('需要 5 格电').waitFor();
       if (label === 'desktop') await shot(page, 'reader_game_lab_desktop.png');
 
-      await page.evaluate(() => {
-        localStorage.setItem('learning-atlas:day-one-reflection', JSON.stringify({ rows: 2, reason: '因为示例里有重复。', evidence: '第 1 行和第 2 行。' }));
-        localStorage.setItem('learning-atlas:day-one-scope', 'true');
-      });
-      await openReader(page, origin, base, 'ai', 'ai-tutor', 'AI 学伴');
-      const tutor = await frameBody(page);
-      await tutor.getByText('没有可用预设时助手暂不可用，不会打开配置页').waitFor();
-      if (await tutor.locator('input[placeholder*="8787"]').count()) throw new Error('embed tutor still asks for a service address');
-      if ((await tutor.innerText()).includes('模型调用成功')) throw new Error('tutor claimed a model call');
-      if (tutorCalls.some((url) => url.includes('/api/tutor'))) throw new Error(`embed tutor still called the hub: ${tutorCalls.join(' ')}`);
-      if (label === 'desktop') await shot(page, 'reader_tutor_desktop.png');
+      await page.goto(new URL(`${base}?view=reader&course=ai&module=ai-tutor`, origin).href, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: '这门课已下线' }).waitFor();
+      if (await page.locator('#lesson-frame').count()) throw new Error('offline AI reader still embedded a lesson');
+      if ((await page.locator('body').innerText()).includes('用三种样本检查清洗规则')) throw new Error('offline page includes AI lesson text');
+      if (tutorCalls.some((url) => url.includes('/api/tutor'))) throw new Error(`offline page called the hub tutor: ${tutorCalls.join(' ')}`);
+      const home = page.locator('a[data-hub-route]', { hasText: '返回首页' });
+      await home.click();
+      await page.waitForFunction(() => !location.search.includes('course=ai') && document.body.innerText.includes('今天，去哪座岛'));
+      if (label === 'desktop') await shot(page, 'reader_ai_offline_desktop.png');
     }
 
     await page.goto(`${origin}${base}?demo=assist`, { waitUntil: 'domcontentloaded' });
