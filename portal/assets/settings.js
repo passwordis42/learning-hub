@@ -15,6 +15,8 @@
   let listNote = '';
   let generation = 0;
   let inflight = null;
+  let advancedHeld = false;
+  let routeSignature = '';
 
   function record() {
     return saved?.vendors?.find((item) => item.id === active) || null;
@@ -61,6 +63,23 @@
 
   function addressValue() {
     return $('settings-address').value.trim();
+  }
+
+  function currentRouteSignature() {
+    const shared = addressValue();
+    const region = active === 'qwen' ? regionValue() : '';
+    const workspace = active === 'qwen' ? workspaceValue() : '';
+    const official = active === 'qwen'
+      ? assistant.chatUrl({ region, workspaceId: workspace, customUrl: shared })
+      : shared;
+    const target = (modeId, addressId) => {
+      const typed = $(addressId).value.trim();
+      return $(modeId).value === 'custom' && typed ? typed : official;
+    };
+    const plan = active === 'qwen'
+      ? assistant.listPlan({ region, workspaceId: workspace, customUrl: shared })
+      : { ok: false, code: 'other' };
+    return `${plan.ok ? plan.url : plan.code}\n${target('settings-ai-mode', 'settings-ai-address')}\n${target('settings-game-mode', 'settings-game-address')}`;
   }
 
   function moveNode(node, slot) {
@@ -128,7 +147,9 @@
     else moveNode(customField, $('manual-model-slot'));
     const savedModel = item?.enteredModel || '';
     const savedConfig = Boolean(savedModel || item?.enteredBaseUrl || item?.apiKeyConfigured);
-    const showTools = (qwen && (phase === 'list' || phase === 'fallback')) || (!qwen && phase === 'manual') || savedConfig;
+    const baseTools = (qwen && (phase === 'list' || phase === 'fallback')) || (!qwen && phase === 'manual') || savedConfig;
+    if (baseTools) advancedHeld = false;
+    const showTools = baseTools || advancedHeld;
     customField.hidden = !qwen && !(phase === 'manual' || savedModel);
     $('settings-model-label').textContent = qwen ? '自定义模型名' : '模型名称';
     const advanced = $('settings-advanced');
@@ -190,6 +211,7 @@
     $('settings-continue').disabled = phase === 'loading';
     $('settings-ai-fields').hidden = $('settings-ai-mode').value !== 'custom';
     $('settings-game-fields').hidden = $('settings-game-mode').value !== 'custom';
+    routeSignature = currentRouteSignature();
     const configured = Boolean(item?.apiKeyConfigured);
     $('settings-key-status').textContent = configured && !typedKey()
       ? '已留在这次打开的页面内存里。刷新或关闭后消失。输入框保持空白，不回显密钥。'
@@ -235,11 +257,21 @@
     render();
   }
 
-  function onRouteChanged() {
+  function onRouteChanged(event) {
+    const advanced = $('settings-advanced');
+    if (event?.target && advanced.contains(event.target) && advanced.open && !advanced.hidden) advancedHeld = true;
     const hadList = phase === 'loading' || phase === 'list' || phase === 'fallback';
     cancelInflight(hadList ? RECONNECT : '');
     mark();
     render();
+  }
+
+  function onProtocolModeChanged(event) {
+    if (currentRouteSignature() !== routeSignature) onRouteChanged(event);
+    else {
+      mark();
+      render();
+    }
   }
 
   function chosenModel() {
@@ -326,6 +358,8 @@
     const seq = generation;
     if (inflight) inflight.abort();
     inflight = new AbortController();
+    const advanced = $('settings-advanced');
+    if (advanced.open && !advanced.hidden) advancedHeld = true;
     phase = 'loading';
     models = [];
     listNote = '';
@@ -487,6 +521,7 @@
   }
 
   function activate(id, focusButton) {
+    advancedHeld = false;
     generation += 1;
     if (inflight) inflight.abort();
     inflight = null;
@@ -548,7 +583,7 @@
     $(id).addEventListener('input', () => { mark(); render(); });
   });
   ['settings-ai-mode', 'settings-game-mode'].forEach((id) => {
-    $(id).addEventListener('change', () => { mark(); render(); });
+    $(id).addEventListener('change', onProtocolModeChanged);
   });
   $('settings-connect').addEventListener('click', connectFromForm);
   $('settings-continue').addEventListener('click', continueConnect);
@@ -599,6 +634,7 @@
     const next = pending;
     pending = null;
     dirty = false;
+    advancedHeld = false;
     $('settings-unsaved-dialog').close();
     paint();
     if (next) next();
