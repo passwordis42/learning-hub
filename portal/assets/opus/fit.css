@@ -39,14 +39,15 @@ body.in-course.assist-open #scrim {
   #courseShell .top-actions { margin-left: auto; }
 }
 @media (max-width: 420px) {
-  #open-settings { width: 2.6rem; padding: 0; font-size: 0; }
-  #open-settings::after { content: "设"; font-size: .85rem; font-weight: 700; }
+  #courseShell #open-settings { width: 2.55rem; padding: 0; font-size: 0; justify-content: center; gap: 0; }
+  #courseShell #open-settings::after { content: "设"; font-size: .85rem; font-weight: 700; }
 }
 #courseShell { position: relative; z-index: 5; min-height: 100%; background: var(--bg, #f6f1e6); }
 #courseShell[hidden] { display: none !important; }
 .harbor.harbor-fallback .fallback,
 .no-gl .harbor .fallback { display: block; }
 .lesson-embed { width: 100%; min-height: 70vh; border: 0; background: transparent; display: block; }
+.lesson-embed[hidden] { display: none !important; }
 .assist { width: min(42rem, calc(100vw - 1.5rem)); }
 .assist .settings-page { max-width: none; margin: 0; padding: 0; }
 .assist .settings-layout { display: block; }

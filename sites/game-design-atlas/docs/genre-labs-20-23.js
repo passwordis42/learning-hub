@@ -51,15 +51,26 @@ function mountManagement(root) {
   let last;
   root.innerHTML = '<p>经营一间维修铺。起始有 4 份材料、每轮产能 3。每轮先执行你安排的一项行动，再服务订单。第 4 轮有停机风险，未提前维护会使该轮产能减少 3。</p>' +
     '<p>储料增加 2 份材料。扩充花 3 份材料，立刻并永久增加 2 产能。提前维护花 2 份材料，可以免除第 4 轮停机。服务订单本身不影响材料。对比急单和稳定订单时，尽量锁住另一个变量。</p>' +
-    '<form data-management><div class="lab-controls"><label>订单曲线<select name="profile"><option value="steady">稳定订单</option><option value="spike">中期急单</option></select></label></div>' +
+    '<form data-management><div class="lab-controls"><label>订单曲线<select name="profile"><option value="steady">稳定订单</option><option value="spike">中期急单</option></select></label>' +
+    '<button class="outline-button" type="button" data-plan-preset="expand-first">填入「先扩产再维护」</button>' +
+    '<button class="outline-button" type="button" data-plan-preset="no-repair">填入「激进扩产不维护」</button></div>' +
     '<div class="lab-sliders">' + Array.from({ length: 6 }, (_, i) => '<label>第 ' + (i + 1) + ' 轮行动<select name="round' + i + '" required><option value="">请选择</option>' +
       Object.entries(managementActions).map(([key, action]) => '<option value="' + key + '">' + action.title + '</option>').join('') + '</select></label>').join('') +
     '</div><button class="primary-button" type="submit">模拟六轮经营</button></form>' +
-    '<div class="lab-metrics" data-metrics aria-live="polite"></div><p class="lab-reading" data-status role="status">计划好六轮，再开始模拟。</p>' +
+    '<div class="lab-metrics" data-metrics aria-live="polite"></div><p class="lab-reading" data-status role="status">可先点上方预设填入六轮行动，再点「模拟六轮经营」，随后逐轮微调对比。</p>' +
     '<div class="lab-table" data-table hidden><table><caption>实际经营结果</caption><thead><tr><th scope="col">回合</th><th scope="col">实际行动</th><th scope="col">产能</th><th scope="col">服务／订单</th><th scope="col">剩余材料</th></tr></thead><tbody></tbody></table></div>' +
     '<p class="lab-question">第一份扩建和一次提前维护，你各会放在哪轮？用未满足订单量、停机和库存说明代价。一个总量相同的方案，可能在急单那一轮表现更差。</p>';
   const form = root.querySelector('[data-management]');
   const status = root.querySelector('[data-status]');
+  const presets = {
+    'expand-first': ['expand', 'harvest', 'repair', 'harvest', 'expand', 'harvest'],
+    'no-repair': ['expand', 'harvest', 'harvest', 'expand', 'harvest', 'expand']
+  };
+  root.querySelectorAll('[data-plan-preset]').forEach((btn) => btn.addEventListener('click', () => {
+    const plan = presets[btn.dataset.planPreset];
+    plan.forEach((act, idx) => { form.elements['round' + idx].value = act; });
+    status.textContent = '已填入六轮预设方案。点击「模拟六轮经营」查看结果，再试着切换订单曲线对比。';
+  }));
   form.addEventListener('input', () => {
     if (last) status.textContent = '表格仍显示上次运行。重新模拟可比较新计划。';
   });

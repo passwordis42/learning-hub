@@ -71,12 +71,17 @@ nmr.push(
 );
 
 const game = [{ id: 'game-graph', title: '知识图谱', group: '入口', local: 'game/#graph' }];
-const weekTitles = [...read('sites/game-design-atlas/docs/data/curriculum.js').matchAll(/id: (\d+), phase: (\d+), title: '([^']+)'/g)];
+const curriculumText = read('sites/game-design-atlas/docs/data/curriculum.js');
+const phaseTitles = new Map(
+  [...curriculumText.matchAll(/\{\s*id:\s*(\d+),\s*title:\s*'([^']+)'/g)].map((match) => [match[1], match[2]])
+);
+const weekTitles = [...curriculumText.matchAll(/id: (\d+), phase: (\d+), title: '([^']+)'/g)];
 for (const match of weekTitles) {
+  const phaseTitle = phaseTitles.get(match[2]);
   game.push({
     id: `game-w${match[1].padStart(2, '0')}`,
     title: `第 ${match[1].padStart(2, '0')} 周 · ${match[3]}`,
-    group: `阶段 ${match[2]}`,
+    group: phaseTitle ? `阶段 ${match[2]} · ${phaseTitle}` : `阶段 ${match[2]}`,
     local: `game/#plan/${match[1].padStart(2, '0')}`,
   });
 }
@@ -85,15 +90,24 @@ game.push(
   { id: 'game-ai-dev', title: 'AI 开发守则', group: '资料', kind: 'document', local: 'game/AI-DEVELOPMENT.md', note: '这是仓库里的 Markdown 原文，不是互动课。' },
 );
 
-const labsByWeek = [];
+const genreLabs = [
+  'genre-platform', 'genre-shooter', 'genre-puzzle', 'genre-rpg',
+  'genre-management', 'genre-sandbox', 'genre-rogue', 'genre-coop',
+];
+const labsByWeekMap = new Map();
 for (const file of ['docs/data/lessons-01-09.js', 'docs/data/lessons-10-18.js', 'docs/data/lessons-19-28.js']) {
   const text = read(`sites/game-design-atlas/${file}`);
   for (const part of text.split(/\n  (?=\d+: \{)/)) {
     const week = part.match(/^(\d+): \{/);
     const lab = part.match(/lab: '([^']+)'/);
-    if (week && lab) labsByWeek.push({ week: Number(week[1]), lab: lab[1], file });
+    if (week && lab) labsByWeekMap.set(Number(week[1]), { week: Number(week[1]), lab: lab[1], file });
   }
 }
+for (let i = 0; i < genreLabs.length; i += 1) {
+  const weekNum = 16 + i;
+  labsByWeekMap.set(weekNum, { week: weekNum, lab: genreLabs[i], file: 'docs/data/lessons.js' });
+}
+const labsByWeek = [...labsByWeekMap.values()].sort((a, b) => a.week - b.week);
 
 const catalog = { ai, nmr, game };
 writeFileSync(path.join(root, 'portal/data/catalog.js'), `window.ATLAS_CATALOG = ${JSON.stringify(catalog, null, 2)};\n`);

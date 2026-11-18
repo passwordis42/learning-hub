@@ -7,10 +7,26 @@ import { gradePractice, practiceReady } from './data/lesson-check.js';
 import './weekly-lesson.css';
 
 const phases = [
-  { title: '先弄明白', intro: '先看这件事要解决什么问题，再认清参与的人、工具和材料。' },
-  { title: '看一遍演示', intro: '一次看一个动作，观察输入经过处理后变成什么。' },
-  { title: '换一份材料，自己试', intro: '用刚才的方法做一遍，再提交你得到的结果。' },
-  { title: '核对结果', intro: '把自己的结果和参考结果对照，找出第一次分歧发生在哪里。' },
+  {
+    title: '先弄明白',
+    intro: '先看这件事要解决什么问题，再认清参与的人、工具和材料。',
+    why: '先搞清「谁对什么输入做了什么、产出什么」，后面看代码或公式时才不会迷失在细节里。',
+  },
+  {
+    title: '看一遍演示',
+    intro: '一次看一个动作，观察输入经过处理后变成什么。',
+    why: '在极小样本上逐步追踪每一次状态变化，把抽象规则变成肉眼可见的中间结果。',
+  },
+  {
+    title: '换一份材料，自己试',
+    intro: '用刚才的方法做一遍，再提交你得到的结果。',
+    why: '看懂演示不等于真正掌握；换一组新数据亲手算一遍，才能暴露容易忽略的边界情况。',
+  },
+  {
+    title: '核对结果',
+    intro: '把自己的结果和参考结果对照，找出第一次分歧发生在哪里。',
+    why: '重点不是分数高低，而是定位你的推理链条与标准过程在哪一步出现了分歧。',
+  },
 ];
 const flowLabels = [['actor', '谁来做'], ['input', '对什么做'], ['action', '怎样做'], ['output', '做完看到什么']];
 const optional = (entry) => entry.chapter !== undefined;
@@ -32,9 +48,13 @@ function LessonTerms({ terms }) {
   return <div className="week-terms">{terms.map((term) => <LessonTerm key={term.word} term={term.word} definition={term} />)}</div>;
 }
 
-function Explain({ lesson, definitions }) {
+function Explain({ lesson, entry, definitions }) {
   return (
     <>
+      <div className="week-stage-context">
+        <strong>本阶段目标 · {entry.stage.title}</strong>
+        <span>{entry.reason ? entry.reason : `围绕阶段项目「${entry.stage.project.title}」推进：先在小样本上算清规则，再把方法迁移到真实代码与模型。`}</span>
+      </div>
       <div className="week-explanation">
         {lesson.plain.split('\n').filter(Boolean).map((part, index) => <p key={index}><GlossaryText text={part} definitions={definitions} /></p>)}
       </div>
@@ -43,7 +63,7 @@ function Explain({ lesson, definitions }) {
           <div key={key}><dt>{label}</dt><dd><GlossaryText text={lesson.flow[key]} definitions={definitions} /></dd></div>
         ))}
       </dl>
-      <div className="week-glossary"><strong>本课术语</strong><LessonTerms terms={lesson.terms} /></div>
+      <div className="week-glossary"><strong>本课术语（点击可展开白话与例子）</strong><LessonTerms terms={lesson.terms} /></div>
     </>
   );
 }
@@ -53,16 +73,23 @@ function Demo({ demo, seen, update, definitions }) {
   return (
     <>
       <p><GlossaryText text={demo.intro} definitions={definitions} /></p>
-      {seen > 0 && <ol className="week-trace">
-        {demo.steps.slice(0, seen).map(({ action, result }, index) => (
-          <li key={index}>
-            <span className="week-trace-number">{index + 1}</span>
-            <div><p><GlossaryText text={action} definitions={definitions} /></p><p className="week-trace-result"><strong>看到的结果</strong> <GlossaryText text={result} definitions={definitions} /></p></div>
-          </li>
-        ))}
-      </ol>}
+      {seen === 0 ? (
+        <div className="week-demo-empty">
+          <strong>准备开始逐步演示（共 {total} 步）</strong>
+          <p>每点一次下方按钮会展开一步操作与对应结果。建议边看边在心里先猜一步结果，全部看完后即可进入动手练习。</p>
+        </div>
+      ) : (
+        <ol className="week-trace">
+          {demo.steps.slice(0, seen).map(({ action, result }, index) => (
+            <li key={index}>
+              <span className="week-trace-number">{index + 1}</span>
+              <div><p><GlossaryText text={action} definitions={definitions} /></p><p className="week-trace-result"><strong>看到的结果</strong> <GlossaryText text={result} definitions={definitions} /></p></div>
+            </li>
+          ))}
+        </ol>
+      )}
       <div className="week-demo-controls">
-        <span role="status">演示 {seen} / {total} 步</span>
+        <span role="status">演示进度：{seen} / {total} 步{seen === total ? '（已看完，可进入下一步）' : ''}</span>
         {seen < total ? (
           <button className="action secondary" type="button" onClick={() => update({ seen: seen + 1 })}>
             {seen === 0 ? '开始演示' : '演示下一步'} <ArrowRight size={16} />
@@ -113,12 +140,12 @@ function Practice({ practice, answers, work, onWork, onAnswer, onSubmit, definit
           </fieldset>
         ))}
       </form>
-      {!ready && <p className="fineprint">写下操作记录并答完两题后，就能核对。</p>}
+      {!ready && <p className="fineprint">写下操作记录并答完上方题目后，即可点击右下角「提交并核对结果」。</p>}
     </>
   );
 }
 
-function Results({ lesson, entry, scores, update, state, definitions }) {
+function Results({ lesson, entry, scores, update, state, definitions, nextTitle }) {
   const correctCount = scores.filter((result) => result.correct).length;
   const further = entry.week ? electiveEntries.filter(({ after }) => after === entry.week) : [];
   return (
@@ -131,7 +158,7 @@ function Results({ lesson, entry, scores, update, state, definitions }) {
         </div>
         <p className="fineprint">逐步检查用了哪条规则、得到了什么。写法可以不同，关键是步骤与结果能对上。</p>
       </section>
-      <p className="guide-note" role="status">{correctCount} / {scores.length} 题与参考结果一致。你可以对照下面的过程，再决定是否重试。</p>
+      <p className="guide-note" role="status">{correctCount} / {scores.length} 题与参考结果一致。你可以对照下面的解析，也可以点左下角「回到练习」修改重测。</p>
       <ol className="week-feedback">
         {lesson.practice.questions.map(({ prompt, explanation }, index) => {
           const result = scores[index];
@@ -151,17 +178,21 @@ function Results({ lesson, entry, scores, update, state, definitions }) {
           <textarea rows={3} maxLength={1200} value={state.note ?? ''} placeholder="记下你的过程、结果，或下一次要检查的地方。" onChange={(event) => update({ note: event.target.value })} />
         </label>
       </div>
-      {lesson.project && <details className="review-box">
-        <summary>把本阶段方法用到项目里</summary>
+      {lesson.project && <details className="review-box" open>
+        <summary>阶段里程碑 · 把本阶段方法用到项目里</summary>
         <p><strong>任务</strong>　<GlossaryText text={lesson.project.task} definitions={definitions} /></p>
         <p><strong>怎样验收</strong>　<GlossaryText text={lesson.project.acceptance} definitions={definitions} /></p>
       </details>}
       {further.length > 0 && <details className="review-box">
-        <summary>感兴趣时可以选学</summary>
+        <summary>支线拓展 · 感兴趣时可以选学</summary>
         <ul className="week-options">
           {further.map((option) => <li key={option.key}><a href={'#' + option.key}>{option.title} <ArrowRight size={14} /></a><p>{option.reason}</p></li>)}
         </ul>
       </details>}
+      <div className="week-next-banner">
+        <strong>下一步路线</strong>
+        <span>核对无误后点击下方按钮标记本课完成，接下来将前往：{nextTitle}</span>
+      </div>
     </>
   );
 }
@@ -177,7 +208,8 @@ function LessonGuide({ lesson, entry, state, onUpdate, next, overviewHref, onCon
   const answers = state.practice?.answers ?? noAnswers;
   const work = state.practice?.work ?? '';
   const demonstrated = state.seen ?? 0;
-  const demoReady = demonstrated === lesson.demo.steps.length || stepLimit > 1;
+  const demoTotal = lesson.demo.steps.length;
+  const demoReady = demonstrated === demoTotal || stepLimit > 1;
   const ready = Boolean(work.trim()) && practiceReady(lesson.practice.questions, answers);
   const scores = state.submission ? gradePractice(lesson.practice.questions, state.submission.answers) : [];
 
@@ -212,6 +244,13 @@ function LessonGuide({ lesson, entry, state, onUpdate, next, overviewHref, onCon
   const stageNumber = entry.stage.id.slice(1).toUpperCase();
   const lessonLabel = entry.chapter ? '选学 · 第 ' + entry.chapter + ' 章' : '阶段 ' + stageNumber + ' · 第 ' + entry.week + ' 周';
   const longer = phases[phase];
+  const footerHint = phase === 0
+    ? `下一步：观看 ${demoTotal} 步实例演示`
+    : phase === 1
+      ? (!demoReady ? `先点上方「${demonstrated === 0 ? '开始演示' : '演示下一步'}」看完剩余 ${demoTotal - demonstrated} 步即可解锁练习` : '演示已看完，现在换一份新材料自己试试')
+      : phase === 2
+        ? (!ready ? '填写「我的操作记录」并答完题目后可提交核对' : '已填写完毕，提交后对照参考过程')
+        : (state.completed ? `本课已完成 · 下一站：${nextTitle}` : `确认理解后点击右侧按钮完成本课`);
 
   return (
     <div className="guided-lesson weekly-lesson">
@@ -221,29 +260,34 @@ function LessonGuide({ lesson, entry, state, onUpdate, next, overviewHref, onCon
         {entry.reason && <p>{entry.reason}</p>}
       </header>
       <div className="guide-progress">
-        <div className="guide-progress-copy"><strong>第 {phase + 1} / {phases.length} 步</strong><span>读懂 · 演示 · 实践 · 核对</span></div>
+        <div className="guide-progress-copy"><strong>第 {phase + 1} / {phases.length} 步 · {longer.title}</strong><span>1 读懂 → 2 演示 → 3 实践 → 4 核对</span></div>
         <progress aria-label="本课步骤进度" value={state.completed ? phases.length : phase} max={phases.length} />
       </div>
       <div className="guide-layout">
         <section className="guide-card panel" aria-labelledby="week-step-title">
           <div className="guide-card-head">
-            <span className="guide-kicker">现在学</span>
+            <span className="guide-kicker">步骤 {phase + 1} / {phases.length}</span>
             <h2 id="week-step-title" ref={heading} tabIndex={-1}>{longer.title}</h2>
             <p>{longer.intro}</p>
-            <div className="guide-next"><ArrowRight size={15} /><strong>接下来</strong><span>{nextHeading}</span></div>
+            <div className="why-step-banner">
+              <strong>为什么要做这一步？</strong>
+              <span>{longer.why}</span>
+            </div>
+            <div className="guide-next"><ArrowRight size={15} /><strong>下一步预告</strong><span>{nextHeading}</span></div>
           </div>
           <div className="guide-content" key={phase}>
             {phase > 0 && <details className="review-box week-review-terms"><summary>随手查本课术语</summary><LessonTerms terms={lesson.terms} /></details>}
-            {phase === 0 && <Explain lesson={lesson} definitions={definitions} />}
+            {phase === 0 && <Explain lesson={lesson} entry={entry} definitions={definitions} />}
             {phase === 1 && <Demo demo={lesson.demo} seen={demonstrated} update={onUpdate} definitions={definitions} />}
             {phase === 2 && <Practice practice={lesson.practice} answers={answers} work={work} onWork={(value) => onUpdate({ practice: { ...state.practice, work: value } })}
               onAnswer={writeAnswer} onSubmit={check} definitions={definitions} week={entry.week} ready={ready} />}
             {phase === 3 && (state.submission
-              ? <Results lesson={lesson} entry={entry} scores={scores} update={onUpdate} state={state} definitions={definitions} />
+              ? <Results lesson={lesson} entry={entry} scores={scores} update={onUpdate} state={state} definitions={definitions} nextTitle={nextTitle} />
               : <><p className="guide-note">这课的练习已更新。你可以回到练习，提交这次的操作过程和答案。</p>{state.note && <div className="week-old-note"><strong>上次的学习笔记</strong><p>{state.note}</p></div>}</>)}
           </div>
           <div className="guide-actions">
             {phase > 0 && <button className="action secondary" type="button" onClick={() => move(phase - 1)}><ArrowLeft size={16} />{phase === 3 ? '回到练习' : '上一步'}</button>}
+            <span className="guide-action-hint">{footerHint}</span>
             {phase === 0 && <button className="action primary" type="button" onClick={() => move(1)}>去看演示 <ArrowRight size={17} /></button>}
             {phase === 1 && <button className="action primary" type="button" onClick={() => move(2)} disabled={!demoReady}>开始自己试 <ArrowRight size={17} /></button>}
             {phase === 2 && <button className="action primary" type="submit" form="weekly-practice" disabled={!ready}>提交并核对结果 <ArrowRight size={17} /></button>}

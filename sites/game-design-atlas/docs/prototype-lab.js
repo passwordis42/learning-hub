@@ -60,8 +60,11 @@ export function prototypeLab(root) {
       <fieldset class="lab-switch"><legend>按重开键时恢复哪些对象或变量？</legend>
         <label><input type="checkbox" name="resetBox"> 盒子</label><label><input type="checkbox" name="resetCount"> 计数</label><label><input type="checkbox" name="resetDoor"> 门</label>
       </fieldset>
-      <button class="primary-button" type="submit">应用这些规则</button>
-      <p class="lab-reading" data-rule-status role="status">重开总是回到起点和游玩状态，物品与门按你勾选的规则处理。</p>
+      <div class="lab-controls">
+        <button class="primary-button" type="submit">应用这些规则</button>
+        <button class="outline-button" type="button" data-fill-preset>填入推荐基线规则（40 px 按键拾取）</button>
+      </div>
+      <p class="lab-reading" data-rule-status role="status">不知道怎么选？可先点「填入推荐基线规则」，再点「应用这些规则」解锁试跑房间；之后每次只改一项规则对比。</p>
     </form>
     <fieldset class="prototype-controls lab-switch" disabled><legend>试跑房间</legend>
       <label>目标距离 <select data-distance><option value="39">39 像素</option><option value="40">40 像素</option><option value="41">41 像素</option></select></label>
@@ -88,6 +91,21 @@ export function prototypeLab(root) {
   function display() {
     summary.innerHTML = `<span>状态 <strong>${phaseLabels[state.phase]}</strong></span><span>距离 <strong>${state.distance} px</strong></span><span>盒子 <strong>${state.box ? '在场' : '已移除'}</strong></span><span>计数 <strong>${state.count}</strong></span><span>门 <strong>${state.doorOpen ? '开' : '关'}</strong></span>`;
   }
+
+  root.querySelector('[data-fill-preset]')?.addEventListener('click', () => {
+    form.elements.pickupTrigger.value = 'interact';
+    form.elements.distanceComparison.value = 'inclusive';
+    form.elements.pickupDistance.value = '40';
+    form.elements.pickupPhase.value = 'playing';
+    form.elements.pickupAction.value = 'collect';
+    form.elements.doorCondition.value = 'requires-box';
+    form.elements.doorAction.value = 'open';
+    form.elements.resetBox.checked = true;
+    form.elements.resetCount.checked = true;
+    form.elements.resetDoor.checked = true;
+    controls.disabled = true;
+    ruleStatus.textContent = '已填入标准基线规则。现在点击「应用这些规则」即可解锁试跑房间！';
+  });
 
   form.addEventListener('input', () => {
     controls.disabled = true;

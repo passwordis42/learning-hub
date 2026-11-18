@@ -19,16 +19,20 @@ let lastStudyStep;
 let zoom = 100;
 let announcementTimer;
 
-const resumeLink = document.createElement('a');
-resumeLink.className = 'hero-resume text-link';
-el('graph-view').querySelector('.hero > div').append(resumeLink);
+const resumeBox = document.createElement('div');
+resumeBox.className = 'hero-start-bar';
+el('graph-view').querySelector('.hero > div').append(resumeBox);
 
 function renderResume() {
   const week = validResumeWeek(resumeWeek) ? weeks[resumeWeek - 1] : undefined;
-  resumeLink.hidden = !week;
-  if (!week) return;
-  resumeLink.href = `#plan/${weekLabel(week.id)}`;
-  resumeLink.textContent = `继续上次学习 · 第 ${week.id} 周 ${week.title}`;
+  const nextIncomplete = weeks.find(({ id }) => !courseFinished(id)) ?? weeks[0];
+  if (week) {
+    resumeBox.innerHTML = `<a class="primary-button" href="#plan/${weekLabel(week.id)}">继续上次学习 · 第 ${weekLabel(week.id)} 周 ${esc(week.title)} →</a>`
+      + (week.id !== 1 ? `<a class="outline-button" href="#plan/01">回看第 01 周起步</a>` : '');
+    return;
+  }
+  resumeBox.innerHTML = `<a class="primary-button" href="#plan/${weekLabel(nextIncomplete.id)}">从第 ${weekLabel(nextIncomplete.id)} 周开始学习 · ${esc(nextIncomplete.title)} →</a>`
+    + `<span class="quiet">推荐路线：每课按「概念 → 案例 → 交互实验 → 动手练习 → 陌生案例推理」推进</span>`;
 }
 
 function showNotice(message) {
