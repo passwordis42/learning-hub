@@ -46,7 +46,7 @@
     [].forEach.call(document.querySelectorAll('.w-isle[data-course]'), function (button) {
       var course = COURSES.filter(function (item) { return item.id === button.getAttribute('data-course'); })[0];
       var meter = button.querySelector('.meter');
-      if (!course || !meter) return;
+      if (!course || !meter || courseDisabled(course)) return;
       meter.textContent = '已完成 ' + progressOf(course.id).done.length + ' / ' + course.total;
     });
   }
@@ -61,25 +61,38 @@
    * 结构：.anchor（每帧 translate3d）> .fac-pos（每帧 scale，无过渡）> .facility（悬停/选中过渡）
    *                                   > .tag-pos（每帧位移，无过渡）> .tag（悬停/选中过渡）
    * 每帧只写 transform，不改 CSS 变量和尺寸，避免与过渡打架造成卡顿。 */
+  function courseDisabled(course) { return !!(course && course.disabled); }
   var anchors = COURSES.map(function (c, i) {
     var el = document.createElement('div');
-    el.className = 'anchor' + (c.planned ? ' planned' : '');
+    el.className = 'anchor' + (c.planned ? ' planned' : '') + (c.disabled ? ' is-disabled' : '');
     el.style.setProperty('--accent', c.accent);
     el.style.setProperty('--r', c.r);
-    var meta = c.planned ? '新课程预留' : c.facility;
+    var meta = c.disabled ? '已下线' : (c.planned ? '新课程预留' : c.facility);
+    var label = c.disabled
+      ? (c.fullName + '已下线，不能进入这门课。')
+      : (c.planned ? '预留航道：新课程筹建中' : c.fullName + '课程岛，' + c.facility + '。' + (c.blurb || ''));
     el.innerHTML =
       '<div class="fac-pos"><div class="land"></div><div class="facility">' +
         '<div class="boot" aria-hidden="true"><i class="b-beam"></i><i class="burst"></i><i class="burst b2"></i><i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i><i class="spark s5"></i></div>' +
         (ART[c.planned ? 'planned' : c.id] || '') + '</div></div>' +
-      '<div class="tag-pos"><button class="tag" type="button" aria-label="' + (c.planned ? '预留航道：新课程筹建中' : c.fullName + '课程岛，' + c.facility + '。' + (c.blurb || '')) + '">' +
+      '<div class="tag-pos"><button class="tag" type="button"' + (c.disabled ? ' aria-disabled="true"' : '') + ' aria-label="' + label + '">' +
       '<span class="badge" style="font-size:' + (c.code.length > 2 ? '.62rem' : '.78rem') + '">' + c.code + '</span>' +
       '<span class="t-col"><span class="t-name">' + (c.planned ? '预留航道' : c.name) + '</span><span class="t-meta">' + meta + '</span>' +
-      '<span class="t-desc"><span>' + (c.blurb || '') + '</span></span></span></button></div>';
+      '<span class="t-desc"><span>' + (c.disabled ? '这门课已下线，不能进入。' : (c.blurb || '')) + '</span></span></span></button></div>';
     var tag = el.querySelector('.tag');
-    tag.addEventListener('click', function (e) { e.stopPropagation(); select(i); });
-    tag.addEventListener('mouseenter', function () { setHover(i); });
+    tag.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (courseDisabled(c)) { e.preventDefault(); return; }
+      select(i);
+    });
+    tag.addEventListener('keydown', function (e) {
+      if (!courseDisabled(c) || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    tag.addEventListener('mouseenter', function () { if (!courseDisabled(c)) setHover(i); });
     tag.addEventListener('mouseleave', function () { setHover(-1); });
-    tag.addEventListener('focus', function () { setHover(i); });
+    tag.addEventListener('focus', function () { if (!courseDisabled(c)) setHover(i); });
     tag.addEventListener('blur', function () { setHover(-1); });
     $('#anchors').appendChild(el);
     return el;
@@ -92,14 +105,22 @@
       '<g stroke="#0f2533" stroke-opacity=".12">' + [0, 45, 90, 135].map(function (a) { return '<path d="M0 -44 V44" transform="rotate(' + a + ')"/>'; }).join('') + '</g>' +
       '<text y="-35" text-anchor="middle" font-size="7" font-weight="800" fill="#f2775a" font-family="serif">N</text>';
     COURSES.forEach(function (c, i) {
-      s += '<circle class="mm-isl" data-i="' + i + '" cx="' + (c.x * 1.3).toFixed(1) + '" cy="' + (c.z * 1.3).toFixed(1) + '" r="' + (c.r * 1.1).toFixed(1) + '" fill="' + (c.planned ? '#efe3c4' : c.accent) + '" ' + (c.planned ? 'stroke="#8aa3b1" stroke-dasharray="1.5 1.5"' : '') + '><title>' + (c.planned ? '预留航道' : c.name) + '</title></circle>';
+      var disabled = courseDisabled(c);
+      s += '<circle class="mm-isl' + (disabled ? ' is-disabled' : '') + '" data-i="' + i + '" cx="' + (c.x * 1.3).toFixed(1) + '" cy="' + (c.z * 1.3).toFixed(1) + '" r="' + (c.r * 1.1).toFixed(1) + '" fill="' + (c.planned ? '#efe3c4' : (disabled ? '#8d9898' : c.accent)) + '" ' + (c.planned ? 'stroke="#8aa3b1" stroke-dasharray="1.5 1.5"' : '') + (disabled ? ' role="button" tabindex="0" aria-disabled="true" aria-label="' + c.name + '已下线，不能进入" stroke="#5c6b73" stroke-width="0.6"' : '') + '><title>' + (c.planned ? '预留航道' : (disabled ? c.name + '已下线' : c.name)) + '</title></circle>';
     });
     s += '<clipPath id="mmc"><circle r="44"/></clipPath><polygon id="mmView" clip-path="url(#mmc)" fill="rgba(15,37,51,.08)" stroke="#0f2533" stroke-width="1" stroke-linejoin="round"/>';
     $('#mm').innerHTML = s;
-    $('#mm').addEventListener('click', function (e) {
+    function minimapActivate(e) {
       var t = e.target.closest('.mm-isl');
-      if (t) select(+t.dataset.i);
-    });
+      if (!t) return;
+      var i = +t.dataset.i;
+      if (courseDisabled(COURSES[i])) { e.preventDefault(); e.stopPropagation(); return; }
+      if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+      if (e.type === 'keydown') e.preventDefault();
+      select(i);
+    }
+    $('#mm').addEventListener('click', minimapActivate);
+    $('#mm').addEventListener('keydown', minimapActivate);
   })();
 
   /* ---------- 航线面板 ---------- */
@@ -113,11 +134,16 @@
         (c.planned ? '<polygon points="20,3 35,11.5 35,28.5 20,37 5,28.5 5,11.5" fill="none" stroke="#8aa3b1" stroke-dasharray="2 2"/>' : '') +
         '</svg>';
     }
-    var real = COURSES.filter(function (c) { return !c.planned; });
+    var real = COURSES.filter(function (c) { return !c.planned && !c.disabled; });
     var planned = COURSES.filter(function (c) { return c.planned; });
     $('#wCount').textContent = real.length + ' 座课程岛';
-    var rows = real.map(function (c) {
+    var rows = COURSES.filter(function (c) { return !c.planned; }).map(function (c) {
       var i = COURSES.indexOf(c);
+      if (courseDisabled(c)) {
+        return '<li><button type="button" class="w-isle is-disabled" aria-disabled="true" data-i="' + i + '" data-course="' + c.id + '" style="--accent:' + c.accent + '" aria-label="' + c.fullName + '已下线，不能进入"><span class="gem">' + gem(c) + '<b style="font-size:.44rem">' + c.code + '</b></span>' +
+          '<span class="txt"><strong>' + c.fullName + '</strong><small>' + c.facility + '</small></span>' +
+          '<span class="meter">已下线</span></button></li>';
+      }
       return '<li><button class="w-isle" data-i="' + i + '" data-course="' + c.id + '" style="--accent:' + c.accent + '"><span class="gem">' + gem(c) + '<b' + (c.code.length > 3 ? ' style="font-size:.44rem"' : '') + '>' + c.code + '</b></span>' +
         '<span class="txt"><strong>' + c.fullName + '</strong><small>' + c.facility + '</small></span>' +
         '<span class="meter">已完成 0 / ' + c.total + '</span>' +
@@ -132,9 +158,17 @@
     $('#wIsles').innerHTML = rows.join('');
     [].forEach.call(document.querySelectorAll('.w-isle'), function (b) {
       var i = +b.dataset.i;
-      b.addEventListener('click', function () { select(i); });
-      b.addEventListener('mouseenter', function () { setHover(i); });
-      b.addEventListener('focus', function () { setHover(i); });
+      b.addEventListener('click', function (e) {
+        if (courseDisabled(COURSES[i])) { e.preventDefault(); e.stopPropagation(); return; }
+        select(i);
+      });
+      b.addEventListener('keydown', function (e) {
+        if (!courseDisabled(COURSES[i]) || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      b.addEventListener('mouseenter', function () { if (!courseDisabled(COURSES[i])) setHover(i); });
+      b.addEventListener('focus', function () { if (!courseDisabled(COURSES[i])) setHover(i); });
       b.addEventListener('mouseleave', function () { setHover(-1); });
       b.addEventListener('blur', function () { setHover(-1); });
     });
@@ -154,6 +188,11 @@
   function renderCatalog(q) {
     q = (q || '').trim().toLowerCase();
     $('#courseList').innerHTML = COURSES.map(function (c, i) {
+      if (courseDisabled(c)) {
+        var hay = (c.fullName + ' ' + c.facility + ' ' + c.name + ' 已下线').toLowerCase();
+        if (q && hay.indexOf(q) < 0) return '';
+        return '<div class="cat-course is-disabled" style="--accent:' + c.accent + '"><button type="button" class="course-row is-disabled" data-i="' + i + '" aria-disabled="true"><span class="badge" style="font-size:.62rem">' + c.code + '</span><span><b>' + c.fullName + '</b><span>已下线 · 不能进入</span></span></button></div>';
+      }
       if (c.planned) return q ? '' : '<button class="course-row planned" data-i="' + i + '" style="--accent:' + c.accent + '"><span class="badge">+</span><span><b>预留航道</b><span>筹建中 · 新课程从这里登陆</span></span></button>';
       var p = progressOf(c.id);
       var hits = c.chapters.map(function (ch, k) { return { ch: ch, k: k }; }).filter(function (o) { return !q || (o.ch.t + o.ch.g).toLowerCase().indexOf(q) >= 0; });
@@ -171,7 +210,17 @@
   $('#catClear').addEventListener('click', function () { $('#catSearch').value = ''; renderCatalog(''); $('#catSearch').focus(); });
   $('#courseList').addEventListener('click', function (e) {
     var b = e.target.closest('button.course-row, [data-fly]');
-    if (b) { e.preventDefault(); closeDrawer(); select(+(b.dataset.i || b.dataset.fly)); }
+    if (!b) return;
+    var i = +(b.dataset.i || b.dataset.fly);
+    if (courseDisabled(COURSES[i])) { e.preventDefault(); e.stopPropagation(); return; }
+    e.preventDefault(); closeDrawer(); select(i);
+  });
+  $('#courseList').addEventListener('keydown', function (e) {
+    var b = e.target.closest && e.target.closest('button.course-row');
+    if (!b || (e.key !== 'Enter' && e.key !== ' ')) return;
+    if (!courseDisabled(COURSES[+b.dataset.i])) return;
+    e.preventDefault();
+    e.stopPropagation();
   });
   function openDrawer() {
     if (body.classList.contains('assist-open')) { requestCloseAssist(); return; }
@@ -292,7 +341,7 @@
   }
 
   function select(i) {
-    if (i < 0 || i >= COURSES.length) return;
+    if (i < 0 || i >= COURSES.length || courseDisabled(COURSES[i])) return;
     var c = COURSES[i];
     var switching = sel >= 0 && sel !== i;
     if (sel === i) return;
@@ -317,7 +366,7 @@
     try { history.replaceState(null, '', location.pathname + location.search + '#' + c.id); } catch (e) {}
   }
   window.LH_SELECT = function (id) {
-    var idx = COURSES.findIndex(function (c) { return c.id === id; });
+    var idx = COURSES.findIndex(function (c) { return c.id === id && !courseDisabled(c); });
     if (idx >= 0) select(idx);
   };
   /* 让被选中的岛精确落在“可视区域”的中心：
@@ -387,7 +436,10 @@
   });
   canvas.addEventListener('pointermove', function (e) {
     if (!pointers[e.pointerId]) {
-      if (e.pointerType === 'mouse') setHover(pick(e.clientX, e.clientY));
+      if (e.pointerType === 'mouse') {
+        var hovered = pick(e.clientX, e.clientY);
+        setHover(hovered >= 0 && courseDisabled(COURSES[hovered]) ? -1 : hovered);
+      }
       return;
     }
     pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
@@ -420,7 +472,9 @@
     canvas.classList.remove('dragging');
     if (wasSingle && dragStart && moved <= 5) {
       var i = pick(e.clientX, e.clientY);
-      if (i >= 0) select(i); else deselect();
+      if (!(i >= 0 && courseDisabled(COURSES[i]))) {
+        if (i >= 0) select(i); else deselect();
+      }
     }
     if (!Object.keys(pointers).length) dragStart = null;
     pinch0 = 0;
@@ -437,7 +491,11 @@
   /* 降级模式下，锚点本身可点击 */
   $('#anchors').addEventListener('click', function (e) {
     if (!body.classList.contains('no-gl')) return;
-    var a = e.target.closest('.anchor'); if (a) select(anchors.indexOf(a));
+    var a = e.target.closest('.anchor');
+    if (!a) return;
+    var i = anchors.indexOf(a);
+    if (i >= 0 && courseDisabled(COURSES[i])) { e.preventDefault(); e.stopPropagation(); return; }
+    select(i);
   });
 
   /* ---------- 键盘 ---------- */
@@ -578,7 +636,7 @@
     var h = homeView(); camT.dist = h.dist;
     setTimeout(function () { $('#veil').classList.add('gone'); setTimeout(function () { var v = $('#veil'); if (v) v.remove(); }, 1500); }, 350);
     var m = location.hash.replace('#', '');
-    var idx = COURSES.findIndex(function (c) { return c.id === m; });
+    var idx = COURSES.findIndex(function (c) { return c.id === m && !courseDisabled(c); });
     if (idx >= 0) setTimeout(function () { select(idx); }, 600);
     if (/demo=catalog/.test(location.search)) setTimeout(openDrawer, 400);
     /* demo=assist 不再打开配置页。 */
