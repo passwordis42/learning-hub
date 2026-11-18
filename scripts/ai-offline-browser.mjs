@@ -76,7 +76,8 @@ const origin = `http://127.0.0.1:${port}`;
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, hasTouch: true });
+  const page = await context.newPage();
   await page.addInitScript(() => {
     localStorage.setItem('learning-atlas:weekly-study', JSON.stringify({ 'week-01': { completed: true } }));
     localStorage.setItem('learning-atlas:day-one-complete', 'true');
@@ -91,13 +92,80 @@ try {
   check('下线页刷新不循环', locationSafe(await page.url()));
   await page.getByRole('link', { name: '返回首页' }).click();
   await page.waitForFunction(() => document.body.innerText.includes('今天，去哪座岛') && !location.search.includes('course=ai'));
-  check('返回首页后没有 AI 岛', await page.locator('.w-isle[data-course="ai"]').count() === 0 && await page.locator('.w-isle[data-course="nmr"]').count() === 1);
+  const aiIsle = page.locator('.w-isle[data-course="ai"]');
+  check('首页保留变暗且不可进入的 AI 岛', await aiIsle.count() === 1 && await aiIsle.getAttribute('aria-disabled') === 'true' && await page.locator('.w-isle[data-course="nmr"]').count() === 1);
   await page.screenshot({ path: path.join(outDir, 'home_without_ai_1280.png') });
   const catalogText = await page.locator('body').innerText();
   check('首页没有教程章节标题', !catalogText.includes('用三种样本检查清洗规则'));
   await page.goto(`${origin}/#ai`, { waitUntil: 'domcontentloaded' });
-  check('旧岛哈希不打开教程', await page.locator('.w-isle[data-course="ai"]').count() === 0 && !(await page.locator('body').innerText()).includes(marker));
+  check('旧岛哈希不打开教程', await page.locator('.anchor.is-disabled .tag').count() === 1 && (await page.locator('#dock').getAttribute('aria-hidden')) === 'true' && !(await page.locator('body').innerText()).includes(marker));
 
+  async function stayedOut() {
+    return page.evaluate((needle) => {
+      const dock = document.getElementById('dock');
+      return dock && dock.getAttribute('aria-hidden') === 'true'
+        && !location.search.includes('course=')
+        && !document.body.classList.contains('has-sel')
+        && !document.body.innerText.includes(needle);
+    }, marker);
+  }
+  await page.goto(`${origin}/?demo=snap`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !document.querySelector('#veil') && document.querySelector('.anchor.is-disabled .tag'));
+  await page.screenshot({ path: path.join(outDir, 'home_ai_disabled_1280.png') });
+  await page.locator('.anchor.is-disabled .tag').click({ force: true });
+  check('鼠标点标签不进入', await stayedOut());
+  const mesh = await page.evaluate(() => {
+    const anchor = document.querySelector('.anchor.is-disabled');
+    const match = (anchor && anchor.style.transform || '').match(/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/);
+    return match ? { x: Number(match[1]), y: Number(match[2]) + 12 } : null;
+  });
+  check('能定位 AI 岛mesh', !!mesh, JSON.stringify(mesh));
+  if (mesh) await page.mouse.click(mesh.x, mesh.y);
+  check('鼠标点海面mesh不穿透到其他岛', await stayedOut());
+  await page.locator('.w-isle[data-course="ai"]').click({ force: true });
+  check('鼠标点列表不进入', await stayedOut());
+  await page.locator('.mm-isl.is-disabled').click({ force: true });
+  check('鼠标点小地图不进入', await stayedOut());
+  await page.locator('#btnList').click();
+  await page.locator('#catSearch').fill('用三种样本');
+  const searchState = await page.evaluate(() => ({
+    links: document.querySelectorAll('#courseList a[href*="course=ai"], #courseList a[href*="ai/"]').length,
+    lessons: document.querySelectorAll('#courseList .cat-list li').length,
+  }));
+  check('搜索没有旧教程结果', searchState.links === 0 && searchState.lessons === 0, JSON.stringify(searchState));
+  await page.locator('#catSearch').fill('AI');
+  const disabledRow = page.locator('#courseList button.course-row.is-disabled');
+  await disabledRow.evaluate((node) => node.focus());
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  check('键盘操作目录行不进入', await stayedOut() && await disabledRow.getAttribute('aria-disabled') === 'true');
+  await page.keyboard.press('Escape');
+  await page.locator('.anchor.is-disabled .tag').evaluate((node) => node.focus());
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  check('键盘操作岛标签不进入', await stayedOut());
+  await page.locator('.w-isle[data-course="nmr"]').click();
+  await page.waitForFunction(() => document.body.classList.contains('has-sel') && document.body.innerText.includes('从零看懂核磁共振'));
+  check('核磁岛仍可打开', !(await page.locator('#dock').innerText()).includes(marker));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.body.classList.contains('has-sel'));
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(outDir, 'home_ai_disabled_390.png') });
+  const touchTag = await page.locator('.anchor.is-disabled .tag').boundingBox();
+  if (touchTag) await page.touchscreen.tap(touchTag.x + touchTag.width / 2, touchTag.y + touchTag.height / 2);
+  const touchMesh = await page.evaluate(() => {
+    const anchor = document.querySelector('.anchor.is-disabled');
+    const match = (anchor && anchor.style.transform || '').match(/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/);
+    return match ? { x: Number(match[1]), y: Number(match[2]) + 12 } : null;
+  });
+  if (touchMesh) await page.touchscreen.tap(touchMesh.x, touchMesh.y);
+  const touchList = await page.locator('.w-isle[data-course="ai"]').boundingBox();
+  if (touchList) await page.touchscreen.tap(touchList.x + 20, touchList.y + 12);
+  check('触屏点标签、mesh和列表都不进入', await stayedOut() && !!touchTag && !!touchMesh && !!touchList);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(`${origin}/ai/#week-01`, { waitUntil: 'domcontentloaded' });
   await page.reload({ waitUntil: 'domcontentloaded' });
   const direct = await page.locator('body').innerText();

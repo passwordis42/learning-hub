@@ -85,7 +85,7 @@
     // ---------- 陆地高度（用于法线） ----------
     'float landH(vec2 p){float id;vec4 I,T;float d=scene(p,id,I,T);',
     ' float hn=clamp(-d/I.z,0.,1.);',
-    ' float plan=T.w;',
+    ' float plan=step(.5,T.w)*(1.-step(1.5,T.w));',
     ' float h=smoothstep(0.,.55,hn)*mix(1.,.15,plan)+fbm(p*.9+I.w*7.)*.35*smoothstep(.08,.5,hn)*(1.-plan);',
     ' return h;}',
 
@@ -106,7 +106,8 @@
     ' if(d<0.){',
     // ================= 陆地 =================
     '  float hn=clamp(-d/I.z,0.,1.);',
-    '  float plan=TT.w;',
+    '  float plan=step(.5,TT.w)*(1.-step(1.5,TT.w));',
+    '  float offline=step(1.5,TT.w);',
     '  float e=.06;',
     '  float hx=landH(p+vec2(e,0.))-landH(p-vec2(e,0.));',
     '  float hz=landH(p+vec2(0.,e))-landH(p-vec2(0.,e));',
@@ -145,6 +146,7 @@
     // 选中/悬停的陆地提亮
     '  float isSel=1.-step(.5,abs(id-uSel));float isHov=1.-step(.5,abs(id-uHov));',
     '  c*=1.+.08*isHov+.05*isSel;',
+    '  if(offline>.5){float gy=dot(c,vec3(.299,.587,.114));c=mix(vec3(gy),vec3(.42,.46,.48),.62)*.46;}',
     '  col=c;',
     ' } else {',
     // ================= 水面 =================
@@ -295,7 +297,7 @@
       state.islands.forEach(function (it, i) {
         islArr.set([it.x, it.z, it.r, it.seed || i * 1.37 + 0.4], i * 4);
         var c = it.tint || [0.5, 0.7, 0.5];
-        tintArr.set([c[0], c[1], c[2], it.planned ? 1 : 0], i * 4);
+        tintArr.set([c[0], c[1], c[2], it.disabled ? 2 : (it.planned ? 1 : 0)], i * 4);
       });
     }
 

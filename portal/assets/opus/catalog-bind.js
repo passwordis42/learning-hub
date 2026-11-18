@@ -31,6 +31,14 @@
     }
   };
   var planned = (window.HUB.COURSES || []).filter(function (c) { return c.planned; });
+  var ai = base.ai;
+  ai.disabled = true;
+  ai.chapters = [];
+  ai.total = 0;
+  ai.href = '';
+  ai.enter = '';
+  ai.firstStudyId = '';
+  ai.overviewId = '';
   var courses = ['nmr', 'game'].map(function (id) {
     var course = base[id];
     var modules = catalog[id] || [];
@@ -50,6 +58,6 @@
     course.href = course.enter;
     return course;
   });
-  window.HUB.COURSES = courses.concat(planned);
+  window.HUB.COURSES = [ai].concat(courses, planned);
   window.HUB_REAL = { courses: courses };
 })();
