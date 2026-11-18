@@ -10,6 +10,8 @@ dist/
 **/node_modules/
 **/dist/
 *.log
+__pycache__/
+*.pyc
 test-results/
 playwright-report/
 .playwright/

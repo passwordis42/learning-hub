@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { credentialMode } from './credential-mode.js'
-import { directFailure, listAssistant, prepareAssistant } from './parent-config.js'
-import { callTutorVendor } from './tutor-protocol.js'
+import { directFailure, listAssistant } from './parent-config.js'
+import { callManagedAi } from './managed-ai.js'
 import './tutor.css'
 
 const providers = [
@@ -77,11 +77,9 @@ export default function Tutor({ context = '' }) {
           setFeedback('只核对了入口页面里的配置。没有连接供应商，不能当作已经连通。')
           return
         }
-        const vendor = provider === 'claude' ? 'anthropic' : provider
-        const config = await prepareAssistant('ai', vendor)
         const input = lessonContext ? `课程资料\n${lessonContext}\n\n学习者的问题\n${question.trim()}` : question.trim()
-        const reply = await callTutorVendor(config, input)
-        setAnswer({ label: providers.find(({ id }) => id === provider).label, text: reply })
+        const reply = await callManagedAi('ai', input)
+        setAnswer({ label: '托管助手', text: reply })
       } catch (error) {
         setFeedback(directFailure(error))
       } finally {

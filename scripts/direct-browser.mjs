@@ -160,9 +160,9 @@ try {
     await tutor.getByText('配置来自统一入口这次打开的页面内存').waitFor();
     await tutor.locator('textarea').first().fill('请解释这一课的数据流。');
     await tutor.getByRole('button', { name: '向导师提问' }).click();
-    await tutor.getByText('模拟回复：课程上下文已收到').waitFor({ timeout: 20000 });
-    const tutorCall = calls.slice(before).find((item) => item.method === 'POST' && item.path.includes('/responses'));
-    check(`${label} AI 直连模拟供应商且带课程上下文`, Boolean(tutorCall && tutorCall.key === 'first' && tutorCall.hasCourse && !tutorCall.cookie), JSON.stringify(tutorCall));
+    await tutor.getByText('托管助手未接通').waitFor({ timeout: 20000 });
+    const tutorCall = calls.slice(before).find((item) => item.method === 'POST');
+    check(`${label} AI 受管入口没有直连供应商`, !tutorCall, JSON.stringify(tutorCall || null));
     await page.screenshot({ path: path.join(outDir, `direct_tutor_${label}.png`) });
     shots.push(path.join(outDir, `direct_tutor_${label}.png`));
 
@@ -177,9 +177,9 @@ try {
     await game.locator('#checkpoint-form').getByRole('button', { name: '确认是我的设计并保存' }).click();
     await game.locator('#coach-provider').selectOption('openai');
     await game.locator('#ask-ai').click();
-    await game.getByText('试玩时你准备记录什么？').waitFor({ timeout: 20000 });
-    const gameCall = calls.slice(gameBefore).find((item) => item.method === 'POST' && item.path.includes('/chat/completions'));
-    check(`${label} 游戏直连模拟供应商且带草案`, Boolean(gameCall && gameCall.key === 'first' && gameCall.hasDraft && !gameCall.cookie), JSON.stringify(gameCall));
+    await game.getByText('托管助手未接通').waitFor({ timeout: 20000 });
+    const gameCall = calls.slice(gameBefore).find((item) => item.method === 'POST');
+    check(`${label} 游戏受管入口没有直连供应商`, !gameCall, JSON.stringify(gameCall || null));
     await page.screenshot({ path: path.join(outDir, `direct_game_${label}.png`) });
     shots.push(path.join(outDir, `direct_game_${label}.png`));
 
@@ -203,17 +203,17 @@ try {
     await page.locator('a[data-lesson-module="ai-tutor"]').click();
     await page.frameLocator('#lesson-frame').locator('textarea').first().fill('换地址后再问一次。');
     await page.frameLocator('#lesson-frame').getByRole('button', { name: '向导师提问' }).click();
-    await page.frameLocator('#lesson-frame').getByText('模拟回复：课程上下文已收到').waitFor({ timeout: 20000 });
-    const second = calls.slice(switched).find((item) => item.method === 'POST' && item.key === 'second');
-    check(`${label} 新地址使用新密钥`, Boolean(second && second.origin.endsWith(`:${mockPort2}`)), JSON.stringify(second));
+    await page.frameLocator('#lesson-frame').getByText('托管助手未接通').waitFor({ timeout: 20000 });
+    const second = calls.slice(switched).find((item) => item.method === 'POST');
+    check(`${label} 换密钥后仍不直连供应商`, !second, JSON.stringify(second || null));
 
     await page.locator('#open-settings').click();
     await save(page, 'http://127.0.0.1:9/v1', firstKey);
     await page.locator('#settings-back').click();
     await page.frameLocator('#lesson-frame').locator('textarea').first().fill('这个地址没有服务。');
     await page.frameLocator('#lesson-frame').getByRole('button', { name: '向导师提问' }).click();
-    await page.frameLocator('#lesson-frame').getByText('浏览器无法区分这两种情况').waitFor({ timeout: 20000 });
-    check(`${label} 网络失败如实说明可能原因`, true);
+    await page.frameLocator('#lesson-frame').getByText('托管助手未接通').waitFor({ timeout: 20000 });
+    check(`${label} 旧地址失败也不会改走浏览器密钥`, calls.filter((item) => item.method === 'POST').length === 0);
     await page.screenshot({ path: path.join(outDir, `direct_error_${label}.png`) });
     shots.push(path.join(outDir, `direct_error_${label}.png`));
     check(`${label} 浏览器记录里没有把 Cookie 发给模拟供应商`, seen.every((item) => !item.cookie), JSON.stringify(seen));
