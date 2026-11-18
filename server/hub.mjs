@@ -7,6 +7,7 @@ import { createTutorServer } from '../sites/ai-learning-atlas/server/index.mjs';
 import { CoachError, assist, getProviderStatus } from '../sites/game-design-atlas/server/coach.mjs';
 import { clearConfig, loadConfig, publicConfig, saveConfig, toAiEnv, toGameEnv } from './assistant-config.mjs';
 import { probeVendor, statusReport } from './assistant-probe.mjs';
+import { dispatchManaged } from './managed-ai.mjs';
 import { bootstrapOk, browserNavigation, createGuard, listenAddress, originOk, remoteOptionsFromEnv, requestBoundaryOk, sessionCookie, sessionOk } from './hub-guard.mjs';
 
 export const GAME_UPSTREAM = 'http://127.0.0.1:4173';
@@ -168,6 +169,10 @@ async function tutorResponse(runtime, request, response) {
 }
 
 async function handleAssistants(runtime, request, response, pathname) {
+  if (pathname === '/api/ai/session' || pathname === '/api/ai/requests') {
+    if (request.method !== 'POST') return json(response, 405, { code: 'method', message: '只接受 POST', reading: true });
+    return dispatchManaged(request, response, request.socket.remoteAddress || '');
+  }
   if (!requestBoundaryOk(runtime.guard, request)) return json(response, 403, { error: '助手入口拒绝了这个来源。' });
   if (!originOk(runtime.guard, request)) return json(response, 403, { error: '助手入口拒绝了跨站请求。' });
   try {

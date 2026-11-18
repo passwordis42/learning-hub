@@ -1,4 +1,5 @@
-import { directFailure, prepareAssistant } from './parent-config.js';
+import { directFailure } from './parent-config.js';
+import { callManagedAi } from './managed-ai.js';
 
 const reviewDimensions = {
   goal: ['你希望哪个玩家在这个情境下获得什么感受？', '核对草案是否说明了目标玩家和体验。', '请补写这条规则服务的玩家体验。'],
@@ -83,35 +84,9 @@ function vendorBody(config, system, user) {
 }
 
 export async function askGameVendor(submission) {
-  const config = await prepareAssistant('game', submission.provider);
-  const { system, user } = buildMessages(submission);
-  const { headers, body } = vendorBody(config, system, user);
-  let response;
-  try {
-    response = await fetch(config.url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-      credentials: 'omit',
-      redirect: 'error',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(35_000),
-    });
-  } catch (error) {
-    throw new Error(directFailure(error));
-  }
-  if (!response.ok) throw new Error('供应商没有接受这次请求。不能当作已经连通。');
-  const payload = await response.json();
-  const content = config.id === 'anthropic'
-    ? payload?.content?.find((block) => block.type === 'text')?.text
-    : payload?.choices?.[0]?.message?.content;
-  const findings = parseFindings(content, submission);
-  if (submission.mode === 'coach') {
-    const questions = findings.map((finding) => formatFinding(finding, 0));
-    return { mode: 'coach', status: 'feedback', questions: questions.length ? questions : [reviewDimensions.test[0]], checks: [] };
-  }
-  const checks = findings.map((finding) => formatFinding(finding, 1));
-  return { mode: submission.mode, status: 'feedback', questions: [], checks: checks.length ? checks : [reviewDimensions.test[1]] };
+  const text = [submission.draft, submission.rationale, submission.evidence].filter(Boolean).join('\n');
+  const reply = await callManagedAi('game', text);
+  return { mode: submission.mode || 'coach', status: 'feedback', questions: [reply], checks: [] };
 }
 
 export { directFailure };
