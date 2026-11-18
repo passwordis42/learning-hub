@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   'use strict';
   var COURSES = HUB.COURSES, ART = HUB.ART, HERO = HUB.HERO;
   var $ = function (s) { return document.querySelector(s); };
@@ -261,9 +261,26 @@
     var actions = '';
     if (!c.planned) {
       var p = progressOf(c.id); var n = c.total || c.chapters.length || 1; var done = (p.done || []).length;
-      var nextIdx = 0;
+      var startIdx = 0;
+      c.chapters.forEach(function (ch, idx) {
+        if (c.firstStudyId && ch.id === c.firstStudyId) startIdx = idx;
+      });
+      var nextIdx = -1;
+      for (var m = startIdx; m < c.chapters.length; m++) {
+        var cand = c.chapters[m];
+        if (!p.map[cand.id] && cand.id !== 'ai-tutor' && cand.id !== 'game-coach' && cand.kind !== 'document') {
+          nextIdx = m;
+          break;
+        }
+      }
+      if (nextIdx < 0) nextIdx = startIdx;
+      var rec = c.chapters[nextIdx] || c.chapters[0];
+      var recLabel = done > 0 ? '推荐继续' : '新手起步第一课';
+      var recSub = done > 0
+        ? (rec.g + ' · 已完成 ' + done + ' 节，点击下方可继续推进')
+        : (rec.g + ' · 也可先在目录查看全景路线图');
       html += '<div class="stats"><div class="stat"><b>' + n + '</b><span>目录条目</span></div><div class="stat"><b id="dockDone">' + done + '</b><span>已完成</span></div></div>' +
-        '<div class="now-card"><span class="eyebrow">从这里进入</span><b>' + c.chapters[0].t + '</b><small>' + c.chapters[0].g + ' · 进度保存在各课自己的记录里</small></div>' +
+        '<a class="now-card" href="' + rec.href + '" style="display:block;text-decoration:none;color:inherit"><span class="eyebrow">' + recLabel + '</span><b>' + rec.t + '</b><small>' + recSub + '</small></a>' +
         '<div class="eyebrow" style="display:flex;justify-content:space-between">教学目录<span style="letter-spacing:.06em;text-transform:none">已完成 ' + done + '</span></div>' +
         '<label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input id="dockSearch" type="search" placeholder="搜索目录" aria-label="搜索 ' + c.fullName + ' 目录"></label>' +
         '<ol class="route" id="dockRoute">' + c.chapters.map(function (ch, k) {
@@ -272,7 +289,7 @@
         }).join('') + (n > c.chapters.length ? '<li class="more">… 其余 ' + (n - c.chapters.length) + ' 项在课程目录中</li>' : '') + '</ol>' +
         '<div class="links"><a href="' + c.origin + '" target="_blank" rel="noopener">课程原站 ↗</a><a href="https://github.com/passwordis42/learning-hub" target="_blank" rel="noopener">GitHub ↗</a></div>';
       actions = '<a class="btn-primary" href="' + c.enter + '">登岛 · 进入课程<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>' +
-        '<a class="btn-ghost" href="' + (c.chapters[nextIdx] && c.chapters[nextIdx].href || c.enter) + '">阅读第一节</a>';
+        '<a class="btn-ghost" href="' + (rec && rec.href || c.enter) + '">' + (done > 0 ? '继续下一课' : '直接开始第一课') + '</a>';
     } else {
       html += '<ol class="route"><li>在 <code>assets/data.js</code> 的课程列表中追加一项</li><li>给出岛屿坐标、半径与主题色</li><li>（可选）绘制岛上设施插画</li></ol>';
       actions = '<button class="btn-ghost" id="dockBack" style="flex:1">返回群岛</button>';

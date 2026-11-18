@@ -91,8 +91,15 @@
   .csv-walkthrough-flow > :last-child { grid-column: 1 / -1; }
 }
 
-html.is-hub-embed .csv-walkthrough { border-color: #c8d4c3; background: #fffef4; }
-html.is-hub-embed .csv-walkthrough-table thead { background: #f4f7f1; }
-html.is-hub-embed .csv-walkthrough-table [data-current="true"] { background: #e7f0ea; }
-html.is-hub-embed .csv-walkthrough-current { color: #183f4b; }
-html.is-hub-embed .csv-walkthrough-decision { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .csv-walkthrough { border-color: #c8d4c3; background: #fffef4; }
+html.is-hub-embed:not([data-theme="night"]) .csv-walkthrough-table thead { background: #f4f7f1; }
+html.is-hub-embed:not([data-theme="night"]) .csv-walkthrough-table [data-current="true"] { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .csv-walkthrough-current { color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .csv-walkthrough-decision { border-left-color: #2d6a69; background: #f4f7f1; color: #183f4b; }
+
+html.is-hub-embed[data-theme="night"] .csv-walkthrough { border-color: var(--line); background: rgba(255, 255, 255, 0.03); }
+html.is-hub-embed[data-theme="night"] .csv-walkthrough-table :is(th, td) { border-bottom-color: var(--line); }
+html.is-hub-embed[data-theme="night"] .csv-walkthrough-table thead { background: rgba(255, 255, 255, 0.05); }
+html.is-hub-embed[data-theme="night"] .csv-walkthrough-table [data-current="true"] { background: rgba(86, 179, 168, 0.16); }
+html.is-hub-embed[data-theme="night"] .csv-walkthrough-current { color: var(--accent-deep); }
+html.is-hub-embed[data-theme="night"] .csv-walkthrough-decision { border-left-color: var(--accent); background: rgba(86, 179, 168, 0.1); color: var(--ink); }

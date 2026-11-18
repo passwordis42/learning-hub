@@ -30,10 +30,13 @@
 .term-bubble > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
 .term-bubble h2 { font-size: 19px; line-height: 1.25; margin: 0; }
 .term-close { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; flex: none; border: 1px solid #e4dcef; border-radius: 8px; background: var(--violet); color: var(--accent-deep); }
-html.is-hub-embed .term-close { border-color: #c8d4c3; background: #f4f7f1; color: #183f4b; }
-html.is-hub-embed .term-close:hover { background: #e7f0ea; }
-html.is-hub-embed .term-bubble { border-color: #c8d4c3; }
-html.is-hub-embed .term-example { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .term-close { border-color: #c8d4c3; background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed:not([data-theme="night"]) .term-close:hover { background: #e7f0ea; }
+html.is-hub-embed:not([data-theme="night"]) .term-bubble { border-color: #c8d4c3; }
+html.is-hub-embed:not([data-theme="night"]) .term-example { background: #f4f7f1; color: #183f4b; }
+html.is-hub-embed[data-theme="night"] .term-bubble { background: #192635; border-color: var(--line); color: var(--ink); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48); }
+html.is-hub-embed[data-theme="night"] .term-close { border-color: var(--line); background: rgba(255, 255, 255, 0.06); color: var(--ink); }
+html.is-hub-embed[data-theme="night"] .term-example { background: rgba(86, 179, 168, 0.12); color: var(--ink); }
 .term-close:hover { background: #dcd2f7; }
 .term-example { margin: 10px 0; padding: 8px 10px; border-radius: 8px; background: #f1edf8; color: #413760; }
 .term-example p, .term-example pre, .term-academic p { margin: 3px 0 0; }
