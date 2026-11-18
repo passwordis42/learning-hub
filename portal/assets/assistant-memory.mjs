@@ -158,13 +158,8 @@ function prepare(course, vendorId) {
   const vendor = state.vendors[vendorId];
   const url = endpointOf(vendorId, vendor, course);
   const model = vendor.protocols[course].model || vendor.model;
-  if (vendorId === 'qwen' && !vendor.protocols[course].baseUrl && !vendor.baseUrl && !vendor.region) {
-    return { ok: false, code: 'region', error: '请先选择通义密钥所在地区。不会默认北京，也不会向多个地区试探。' };
-  }
-  if (vendorId === 'qwen' && !url) {
-    return { ok: false, code: 'workspace', error: '该地区需要工作空间才能生成接口，请填写后再发送。' };
-  }
-  if (!url || !model || !vendor.apiKey) {
+  const missingRegion = vendorId === 'qwen' && !vendor.protocols[course].baseUrl && !vendor.baseUrl && !vendor.region;
+  if (!vendor.apiKey || !model || missingRegion || (vendorId === 'qwen' && !url)) {
     return { ok: false, code: 'unconfigured', error: '助手暂不可用。没有可用的站点预设配置。这次没有连接供应商，也没有自动探测。' };
   }
   let origin = '';

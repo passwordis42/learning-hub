@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import http from 'node:http';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -35,6 +35,9 @@ await mkdir(outDir, { recursive: true });
 const buildEnv = { ...process.env, HUB_BASE: '/' };
 delete buildEnv.LEARNING_HUB_PUBLIC_BAILIAN_KEY;
 await run(process.execPath, ['scripts/build.mjs'], buildEnv);
+const tutorBundle = (await readdir(path.join(root, 'dist/ai/assets'))).find((name) => name.startsWith('Tutor-') && name.endsWith('.js'));
+const tutorBuilt = await readFile(path.join(root, 'dist/ai/assets', tutorBundle), 'utf8');
+check('构建产物的学伴请求关闭千问思考', /enable_thinking\s*:\s*(?:!1|false)/.test(tutorBuilt), tutorBundle);
 
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' };
 const site = http.createServer(async (request, response) => {
@@ -117,7 +120,8 @@ try {
         key: window.ATLAS_ASSISTANT.peekKey('qwen'),
       };
     });
-    check('未写地区时使用北京官方地址并用于 AI 和游戏', state.region === 'beijing' && state.model === 'qwen3.7-flash' && state.configured && state.key === mockKey && state.url === 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', state.url);
+    const prepared = await page.evaluate(() => window.ATLAS_ASSISTANT.prepare('ai', 'qwen'));
+    check('未写地区时使用北京官方地址并用于 AI 和游戏', state.region === 'beijing' && state.model === 'qwen3.7-flash' && state.configured && state.key === mockKey && state.url === 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' && prepared.ok === true && prepared.config.model === 'qwen3.7-flash', state.url);
     check('自动配置没有发起联网', outbound.length === 0, outbound.join(' '));
     check('首页没有打开配置页', await closed(page));
     check('首页画面没有密钥', await hidden(page));
@@ -140,7 +144,9 @@ try {
   {
     const { page, outbound } = await openPage(null);
     const key = await page.evaluate(() => window.ATLAS_ASSISTANT.peekKey('qwen'));
-    check('没有公开密钥时不放入内存', key === '');
+    const unavailable = await page.evaluate(() => window.ATLAS_ASSISTANT.prepare('ai', 'qwen'));
+    check('没有公开密钥时不放入内存', key === '' && unavailable.ok === false);
+    check('无预设文案是助手暂不可用', /助手暂不可用/.test(unavailable.error) && !/地区|设置填写|助手设置/.test(unavailable.error), unavailable.error);
     check('缺失配置时不探测', outbound.length === 0, outbound.join(' '));
     await page.evaluate(() => {
       localStorage.setItem('learning-atlas:day-one-reflection', JSON.stringify({ rows: 2, reason: '因为示例里有重复。', evidence: '第 1 行和第 2 行。' }));

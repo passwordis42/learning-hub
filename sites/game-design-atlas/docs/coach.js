@@ -1,5 +1,5 @@
 import { directFailure, listAssistant } from './parent-config.js';
-import { askGameVendor } from './coach-direct.js';
+import { askGameVendor, preferredVendor } from './coach-direct.js';
 import { weeks } from './data/curriculum.js';
 import { weekLabel } from './graph.js';
 import { checkpointReady, completeRules, downloadFile, ruledLines } from './records.js?v=guided-3';
@@ -76,8 +76,8 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
     if (!active()) return;
     const formatted = ruledLines(record.draft);
     const connection = apiProviders?.some((item) => item.configured)
-      ? '已连接本地助手。可用服务显示在下方。'
-      : '可先记下设计和验收。连接本地助手后，再选择启用的 AI 服务。';
+      ? '站点预设可用，显示在下方。这不是已经连通供应商。'
+      : '助手暂不可用。没有可用的站点预设。可先记下设计和验收。';
     root.innerHTML = `
       <div class="coach-column">
         <section class="panel coach-card">
@@ -132,7 +132,9 @@ export function mountCoach(container, week, initial, { save, notice, selectWeek,
       const providers = await listAssistant('game');
       apiRoot = 'memory';
       apiProviders = providers;
-      if (!apiProviders.some((item) => item.configured && item.id === selectedProvider)) selectedProvider = '';
+      if (!apiProviders.some((item) => item.configured && item.id === selectedProvider)) {
+        selectedProvider = preferredVendor(apiProviders);
+      }
       connectionMessage = apiProviders.some((item) => item.configured) ? '' : '助手暂不可用。没有可用的站点预设。没有连接供应商，也不会打开配置页。';
     } catch {
       apiProviders = null;

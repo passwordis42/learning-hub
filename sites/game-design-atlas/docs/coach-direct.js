@@ -1,5 +1,10 @@
 import { directFailure, prepareAssistant } from './parent-config.js';
 
+export function preferredVendor(providers) {
+  const ready = (providers || []).filter((item) => item?.configured);
+  return ready.find((item) => item.id === 'qwen')?.id || ready[0]?.id || '';
+}
+
 const reviewDimensions = {
   goal: ['你希望哪个玩家在这个情境下获得什么感受？', '核对草案是否说明了目标玩家和体验。', '请补写这条规则服务的玩家体验。'],
   decision: ['玩家当时有哪些可行选择？你想验证哪个取舍？', '观察玩家有哪些选择，以及为什么采用其中一种。', '请明确玩家可以做出的选择。'],

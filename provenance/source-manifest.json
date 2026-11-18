@@ -899,7 +899,9 @@
     "sites/game-design-atlas/docs/embed-bridge.js",
     "sites/ai-learning-atlas/src/parent-config.js",
     "sites/ai-learning-atlas/src/tutor-protocol.js",
+    "sites/ai-learning-atlas/src/tutor-protocol.test.js",
     "sites/game-design-atlas/docs/parent-config.js",
-    "sites/game-design-atlas/docs/coach-direct.js"
+    "sites/game-design-atlas/docs/coach-direct.js",
+    "sites/game-design-atlas/docs/coach-direct.test.mjs"
   ]
 }

@@ -52,9 +52,9 @@ function composePrompt(context, question) {
 export default function Tutor({ context = '' }) {
   const id = useId()
   const promptRef = useRef(null)
-  const [provider, setProvider] = useState('openai')
-  const [question, setQuestion] = useState('')
   const embedded = hubEmbed()
+  const [provider, setProvider] = useState(embedded ? 'qwen' : 'openai')
+  const [question, setQuestion] = useState('')
   const [gateway, setGateway] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [availability, setAvailability] = useState(null)
@@ -72,9 +72,13 @@ export default function Tutor({ context = '' }) {
       setFeedback('')
       try {
         if (mode !== 'ask') {
-          const providers = await listAssistant('ai')
-          setAvailability(new Set(providers.filter((item) => item.configured).map((item) => item.id === 'anthropic' ? 'claude' : item.id)))
-          setFeedback('只核对了入口页面里的配置。没有连接供应商，不能当作已经连通。')
+          const listed = await listAssistant('ai')
+          const ready = listed.filter((item) => item.configured)
+          setAvailability(new Set(ready.map((item) => item.id === 'anthropic' ? 'claude' : item.id)))
+          if (ready.some((item) => item.id === 'qwen')) setProvider('qwen')
+          setFeedback(ready.length
+            ? '只核对了这次页面里的站点预设。没有连接供应商，不能当作已经连通。'
+            : '助手暂不可用。没有可用的站点预设。没有连接供应商，也不会打开配置页。')
           return
         }
         const vendor = provider === 'claude' ? 'anthropic' : provider

@@ -27,6 +27,7 @@ export function tutorRequest(id, provider, input) {
         { role: 'user', content: input },
       ],
       ...(id === 'deepseek' ? { thinking: { type: 'disabled' } } : {}),
+      ...(id === 'qwen' ? { enable_thinking: false } : {}),
     },
   }
 }
